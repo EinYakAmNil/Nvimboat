@@ -1,0 +1,7 @@
+nvimboat.log
+go/go-nvimboat
+cache/*
+python/__pycache__/*
+python/test.*
+treesitter/*
+!treesitter/grammar.js
