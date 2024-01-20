@@ -35,6 +35,12 @@ func (nb *Nvimboat) Log(val ...any) {
 	nb.plugin.Nvim.Exec(fmt.Sprintf(`echo "%v"`, val), false)
 }
 
+func (nb *Nvimboat) SyncState(p Page) error {
+	nb.PageStack.Push(p)
+	err := nb.setPageType(p)
+	return err
+}
+
 func (nb *Nvimboat) setupLogging() {
 	var err error
 
@@ -48,7 +54,8 @@ func (nb *Nvimboat) setupLogging() {
 	log.SetFlags(0)
 }
 
-func (nb *Nvimboat) SetPageType(t string) error {
+func (nb *Nvimboat) setPageType(p Page) error {
+	t := pageTypeString(p)
 	err := nb.plugin.Nvim.ExecLua(nvimboatSetPageType, new(any), t)
 	if err != nil {
 		return err

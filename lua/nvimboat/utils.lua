@@ -1,7 +1,7 @@
 local api = vim.api
 local M = {}
 
-function M.seek_url(line, separator)
+function M.seek_id(line, separator)
 	local _, url_start = line:reverse():find(separator)
 
 	if url_start then
@@ -10,7 +10,7 @@ function M.seek_url(line, separator)
 	end
 end
 
-function M.seek_urls_visual(separator)
+function M.seek_ids_visual(separator)
 	local start_row = vim.fn.getpos("v")[2]
 	local end_row = vim.fn.getcurpos()[2]
 	local direction = 0
@@ -23,16 +23,16 @@ function M.seek_urls_visual(separator)
 	local urls = {}
 	for row_num = start_row, end_row, direction do
 		local line = api.nvim_buf_get_lines(0, row_num - 1, row_num, true)[1]
-		table.insert(urls, M.seek_url(line, separator))
+		table.insert(urls, M.seek_id(line, separator))
 	end
 
 	return urls
 end
 
-function M.line_url(separator)
+function M.line_id(separator)
 	local row_num = api.nvim_win_get_cursor(0)[1]
 	local line = api.nvim_buf_get_lines(0, row_num - 1, row_num, true)[1]
-	local url = M.seek_url(line, separator)
+	local url = M.seek_id(line, separator)
 
 	return url or "no url detected"
 end
