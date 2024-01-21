@@ -1,6 +1,7 @@
 package nvimboat
 
 import (
+	"database/sql"
 	"os"
 
 	"github.com/neovim/go-client/nvim"
@@ -21,6 +22,7 @@ type (
 		PageStack   PageStack
 		ConfigFeeds []map[string]any
 		LogFile     *os.File
+		DB          *sql.DB
 		plugin      *nvimPlugin.Plugin
 		batch       *nvim.Batch
 		buffer      *nvim.Buffer
@@ -31,8 +33,19 @@ type (
 		Feeds   []Feed
 	}
 	Filter struct {
+		Name         string
+		Query        string
+		IncludeTags  string
+		ExcludeTags  string
+		ArticleCount int
+		Articles     []Article
 	}
 	Feed struct {
+		Title        string
+		RssUrl       string
+		UnreadCount  int
+		ArticleCount int
+		Articles     []Article
 	}
 	Article struct {
 	}

@@ -1,7 +1,9 @@
 package nvimboat
 
 import (
+	"errors"
 	"fmt"
+	"os"
 	"strings"
 )
 
@@ -39,4 +41,9 @@ func pageTypeString(p Page) string {
 	fullName := fmt.Sprintf("%T", p)
 	_, name, _ := strings.Cut(fullName, "nvimboat.")
 	return name
+}
+
+func fileExists(f string) bool {
+	_, err := os.Stat(f)
+	return !errors.Is(err, os.ErrNotExist)
 }
