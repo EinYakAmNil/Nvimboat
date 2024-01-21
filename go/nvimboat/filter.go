@@ -1,6 +1,9 @@
 package nvimboat
 
-import "strconv"
+import (
+	"errors"
+	"strconv"
+)
 
 func (f *Filter) MainPrefix() string {
 	ratio := strconv.Itoa(f.UnreadCount) + "/" + strconv.Itoa(f.ArticleCount) + ")"
@@ -68,4 +71,13 @@ func (f *Filter) Render() ([][]string, error) {
 		return nil, err
 	}
 	return [][]string{f.PrefixCol(), dates, f.AuthorCol(), f.TitleCol(), f.UrlCol()}, nil
+}
+
+func (f *Filter) ElementIdx(article Page) (int, error) {
+	for i, a := range f.Articles {
+		if a.Url == article.(*Article).Url {
+			return i, nil
+		}
+	}
+	return 0, errors.New("Couldn't find article in feed.")
 }

@@ -18,3 +18,7 @@ func (mm *MainMenu) Render() ([][]string, error) {
 	}
 	return [][]string{prefixCol, titleCol, urlCol}, nil
 }
+
+func (mm *MainMenu) ElementIdx(feed Page) (int, error) {
+	return 0, nil
+}

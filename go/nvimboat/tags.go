@@ -1,16 +1,17 @@
 package nvimboat
 
 import (
+	"errors"
 	"fmt"
 	"sort"
 )
 
-func (f *TagsPage) Render() ([][]string, error) {
+func (tp *TagsPage) Render() ([][]string, error) {
 	var (
 		lines []string
 		prefix string
 	)
-	for tag, count := range f.TagFeedCount {
+	for tag, count := range tp.TagFeedCount {
 		lines = append(lines, fmt.Sprintf("%s %s (%d)", prefix, tag, count))
 	}
 	sort.Slice(lines, func(i, j int) bool {
@@ -31,4 +32,17 @@ func (tf *TagFeeds) Render() ([][]string, error) {
 		urlCol = append(urlCol, f.RssUrl)
 	}
 	return [][]string{prefixCol, titleCol, urlCol}, nil
+}
+
+func (tp *TagsPage) ElementIdx(feed Page) (int, error) {
+	return 0, nil
+}
+
+func (tf *TagFeeds) ElementIdx(feed Page) (int, error) {
+	for i, f := range tf.Feeds {
+		if f.RssUrl == feed.(*Feed).RssUrl {
+			return i, nil
+		}
+	}
+	return 0, errors.New("Couldn't find feed in tag.")
 }

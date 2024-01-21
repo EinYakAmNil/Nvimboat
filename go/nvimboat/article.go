@@ -41,3 +41,7 @@ func (a Article) Render() ([][]string, error) {
 
 	return [][]string{lines}, nil
 }
+
+func (a *Article) ElementIdx(Page) (int, error) {
+	return 0, nil
+}

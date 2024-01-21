@@ -49,7 +49,6 @@ func (nb *Nvimboat) Show(p Page) error {
 		}
 	case *TagFeeds:
 		cols, err := p.Render()
-		// nb.Log(cols)
 		if err != nil {
 			return err
 		}
@@ -107,13 +106,25 @@ func (nb *Nvimboat) Push(p Page) error {
 }
 
 func (nb *Nvimboat) Pop() error {
+	oldPage := nb.PageStack.top
 	nb.PageStack.Pop()
-	err := nb.Show(nb.PageStack.top)
+	pos, err := nb.PageStack.top.ElementIdx(oldPage)
+	if err != nil {
+		return err
+	}
+	err = nb.Show(nb.PageStack.top)
 	if err != nil {
 		return err
 	}
 	err = nb.setPageType(nb.PageStack.top)
-	return err
+	if err != nil {
+		return err
+	}
+	err = nb.plugin.Nvim.SetWindowCursor(*nb.window, [2]int{pos + 1, 0})
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (nb *Nvimboat) setupLogging() {

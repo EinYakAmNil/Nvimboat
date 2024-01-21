@@ -11,7 +11,7 @@ import (
 type (
 	Page interface {
 		Render() ([][]string, error)
-		// ElementIdx()
+		ElementIdx(Page) (int, error)
 	}
 	PageStack struct {
 		Pages []Page

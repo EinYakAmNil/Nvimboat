@@ -74,6 +74,7 @@ func (nb *Nvimboat) Disable() error {
 }
 
 func (nb *Nvimboat) Select(id string) error {
+	defer nb.plugin.Nvim.SetWindowCursor(*nb.window, [2]int{0, 1})
 	switch nb.PageStack.top.(type) {
 	case *MainMenu:
 		if id[:4] == "http" {
@@ -89,7 +90,6 @@ func (nb *Nvimboat) Select(id string) error {
 		if id[:6] == "query:" {
 			query, inTags, exTags, err := parseFilterID(id)
 			filter, err := nb.QueryFilter(query, inTags, exTags)
-			nb.Log(filter.Articles[0].Url)
 			filter.FilterID = id
 			if err != nil {
 				return err
@@ -127,11 +127,11 @@ func (nb *Nvimboat) Select(id string) error {
 			return err
 		}
 	case *TagFeeds:
-		article, err := nb.QueryArticle(id)
+		feed, err := nb.QueryFeed(id)
 		if err != nil {
 			return err
 		}
-		nb.Push(&article)
+		err = nb.Push(&feed)
 		if err != nil {
 			return err
 		}

@@ -35,7 +35,9 @@ function M.show_main_menu()
 end
 
 function M.show_tags()
-	vim.cmd.Nvimboat("show-tags")
+	if page.page_type ~= "TagsPage" then
+		vim.cmd.Nvimboat("show-tags")
+	end
 end
 
 function M.toggle_article_read()
