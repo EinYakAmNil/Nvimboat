@@ -20,5 +20,12 @@ func (mm *MainMenu) Render() ([][]string, error) {
 }
 
 func (mm *MainMenu) ElementIdx(feed Page) (int, error) {
-	return 0, nil
+	switch feed.(type) {
+	case *Filter:
+		return 10, nil
+	case *Feed:
+		return 10, nil
+	default:
+		return 0, nil
+	}
 }
