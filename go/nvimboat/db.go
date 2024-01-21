@@ -17,6 +17,13 @@ func (nb *Nvimboat) QueryFilter(query string, inTags, exTags []string) (Filter, 
 
 func (nb *Nvimboat) QueryTags() (TagsPage, error) {
 	var tp TagsPage
+	tp.TagFeedCount = make(map[string]int)
+	tp.Feeds = nb.ConfigFeeds
+	for _, feed := range tp.Feeds {
+		for _, tag := range feed["tags"].([]any) {
+			tp.TagFeedCount[tag.(string)]++
+		}
+	}
 	return tp, nil
 }
 

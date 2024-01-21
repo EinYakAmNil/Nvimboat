@@ -17,17 +17,18 @@ type (
 		top   Page
 	}
 	Nvimboat struct {
-		Config    map[string]any
-		PageStack PageStack
-		LogFile   *os.File
-		plugin    *nvimPlugin.Plugin
-		batch     *nvim.Batch
-		buffer    *nvim.Buffer
-		window    *nvim.Window
+		Config      map[string]any
+		PageStack   PageStack
+		ConfigFeeds []map[string]any
+		LogFile     *os.File
+		plugin      *nvimPlugin.Plugin
+		batch       *nvim.Batch
+		buffer      *nvim.Buffer
+		window      *nvim.Window
 	}
 	MainMenu struct {
 		Filters []Filter
-		Feeds []Feed
+		Feeds   []Feed
 	}
 	Filter struct {
 	}
@@ -36,6 +37,8 @@ type (
 	Article struct {
 	}
 	TagsPage struct {
+		Feeds        []map[string]any
+		TagFeedCount map[string]int
 	}
 	TagFeeds struct {
 	}
@@ -46,6 +49,7 @@ const (
 	nvimboatEnable      = nvimboatState + "enable()"
 	nvimboatDisable     = nvimboatState + "disable()"
 	nvimboatConfig      = nvimboatState + "config"
+	nvimboatFeeds       = nvimboatState + "feeds"
 	nvimboatPage        = nvimboatState + "page"
 	nvimboatSetPageType = nvimboatState + "page.set(...)"
 )
@@ -54,6 +58,7 @@ var Actions = []string{
 	"enable",
 	"disable",
 	"show-main",
+	"show-tags",
 	"select",
 	"back",
 }

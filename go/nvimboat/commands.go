@@ -14,6 +14,7 @@ func (nb *Nvimboat) Command(args []string) error {
 	if nb.LogFile == nil {
 		nb.setupLogging()
 	}
+	nb.Log(args)
 	action := args[0]
 	switch action {
 	case "enable":
@@ -22,6 +23,8 @@ func (nb *Nvimboat) Command(args []string) error {
 		err = nb.Disable()
 	case "show-main":
 		err = nb.ShowMain()
+	case "show-tags":
+		err = nb.ShowTags()
 	case "select":
 		if len(args) > 1 {
 			err = nb.Select(args[1])
@@ -111,20 +114,20 @@ func (nb *Nvimboat) Select(id string) error {
 			return err
 		}
 	case *TagsPage:
-		tags, err := nb.QueryTags()
-		if err != nil {
-			return err
-		}
-		nb.Push(&tags)
-		if err != nil {
-			return err
-		}
-	case *TagFeeds:
 		feeds, err := nb.QueryTagFeeds(id)
 		if err != nil {
 			return err
 		}
 		nb.Push(&feeds)
+		if err != nil {
+			return err
+		}
+	case *TagFeeds:
+		article, err := nb.QueryArticle(id)
+		if err != nil {
+			return err
+		}
+		nb.Push(&article)
 		if err != nil {
 			return err
 		}
@@ -164,6 +167,20 @@ func (nb *Nvimboat) ShowMain() error {
 			return err
 		}
 		nb.setPageType(nb.PageStack.top)
+	}
+
+	return nil
+}
+
+func (nb *Nvimboat) ShowTags() error {
+	nb.Log("Showing tags.")
+	tags, err := nb.QueryTags()
+	if err != nil {
+		return err
+	}
+	nb.Push(&tags)
+	if err != nil {
+		return err
 	}
 
 	return nil

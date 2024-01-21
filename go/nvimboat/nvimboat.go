@@ -20,6 +20,7 @@ func (nb *Nvimboat) Init(p *nvimPlugin.Plugin) error {
 	nb.batch.CurrentWindow(nb.window)
 	nb.Config = make(map[string]any)
 	nb.batch.ExecLua(nvimboatConfig, &nb.Config)
+	nb.batch.ExecLua(nvimboatFeeds, &nb.ConfigFeeds)
 	nb.batch.SetBufferOption(*nb.buffer, "filetype", "nvimboat")
 	nb.batch.SetBufferOption(*nb.buffer, "buftype", "nofile")
 	nb.batch.SetWindowOption(*nb.window, "wrap", false)

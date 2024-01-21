@@ -10,6 +10,12 @@ function M.seek_id(line, separator)
 	end
 end
 
+function M.seek_tag(line)
+	local tag_end, _, _ = line:find("%s%(%d+%)")
+	local tag = line:sub(2, tag_end - 1)
+	return tag
+end
+
 function M.seek_ids_visual(separator)
 	local start_row = vim.fn.getpos("v")[2]
 	local end_row = vim.fn.getcurpos()[2]
@@ -35,6 +41,14 @@ function M.line_id(separator)
 	local url = M.seek_id(line, separator)
 
 	return url or "no url detected"
+end
+
+function M.line_tag()
+	local row_num = api.nvim_win_get_cursor(0)[1]
+	local line = api.nvim_buf_get_lines(0, row_num - 1, row_num, true)[1]
+	local tag = M.seek_tag(line)
+
+	return tag or "no tag detected"
 end
 
 function M.play_videos(urls)

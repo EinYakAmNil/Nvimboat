@@ -24,11 +24,3 @@ func (f *Feed) Render() ([]string, error) {
 func (f *Article) Render() ([]string, error) {
 	return []string{"article."}, nil
 }
-
-func (f *TagsPage) Render() ([]string, error) {
-	return []string{"tags page."}, nil
-}
-
-func (f *TagFeeds) Render() ([]string, error) {
-	return []string{"tag feeds."}, nil
-}

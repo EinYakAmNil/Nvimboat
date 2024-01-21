@@ -12,7 +12,8 @@ function M.select()
 		return
 	end
 	if page.page_type == "TagsPage" then
-		vim.cmd.Nvimboat("select")
+		local tag = utils.line_tag()
+		vim.cmd.Nvimboat("select", tag)
 		return
 	end
 	local url_pages = { "MainMenu", "TagFeeds", "Feed", "Filter" }
@@ -34,6 +35,7 @@ function M.show_main_menu()
 end
 
 function M.show_tags()
+	vim.cmd.Nvimboat("show-tags")
 end
 
 function M.toggle_article_read()
