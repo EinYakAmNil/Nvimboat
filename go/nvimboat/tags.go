@@ -5,7 +5,7 @@ import (
 	"sort"
 )
 
-func (f *TagsPage) Render() ([]string, error) {
+func (f *TagsPage) Render() ([][]string, error) {
 	var (
 		lines []string
 		prefix string
@@ -16,9 +16,9 @@ func (f *TagsPage) Render() ([]string, error) {
 	sort.Slice(lines, func(i, j int) bool {
 		return lines[i] < lines[j]
 	})
-	return lines, nil
+	return [][]string{lines}, nil
 }
 
-func (f *TagFeeds) Render() ([]string, error) {
-	return []string{"tag feeds."}, nil
+func (f *TagFeeds) Render() ([][]string, error) {
+	return [][]string{{"tag feeds."}}, nil
 }

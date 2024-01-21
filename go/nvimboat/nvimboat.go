@@ -21,6 +21,7 @@ func (nb *Nvimboat) Init(p *nvimPlugin.Plugin) error {
 	nb.Config = make(map[string]any)
 	nb.batch.ExecLua(nvimboatConfig, &nb.Config)
 	nb.batch.ExecLua(nvimboatFeeds, &nb.ConfigFeeds)
+	nb.batch.ExecLua(nvimboatFilters, &nb.ConfigFilters)
 	nb.batch.SetBufferOption(*nb.buffer, "filetype", "nvimboat")
 	nb.batch.SetBufferOption(*nb.buffer, "buftype", "nofile")
 	nb.batch.SetWindowOption(*nb.window, "wrap", false)
@@ -31,14 +32,53 @@ func (nb *Nvimboat) Init(p *nvimPlugin.Plugin) error {
 	return nil
 }
 
+func (nb *Nvimboat) Show(p Page) error {
+	nb.SetLines([]string{})
+	defer nb.trimTrail()
+
+	switch p.(type) {
+	case *MainMenu:
+		cols, err := p.Render()
+		if err != nil {
+			return err
+		}
+		for _, c := range cols {
+			err = nb.addColumn(c, nb.Config["separator"].(string))
+			if err != nil {
+				return err
+			}
+		}
+	case *Feed:
+		cols, err := p.Render()
+		if err != nil {
+			return err
+		}
+		for _, c := range cols {
+			err = nb.addColumn(c, nb.Config["separator"].(string))
+			if err != nil {
+				return err
+			}
+		}
+	default:
+		lines, err := p.Render()
+		if err != nil {
+			return err
+		}
+		nb.SetLines(lines[0])
+	}
+	return nil
+}
+
 func (nb *Nvimboat) Log(val ...any) {
 	log.Println(val...)
 	nb.plugin.Nvim.Exec(fmt.Sprintf(`echo "%v"`, val), false)
 }
 
 func (nb *Nvimboat) Push(p Page) error {
-	lines, err := p.Render()
-	nb.SetLines(lines)
+	err := nb.Show(p)
+	if err != nil {
+		return err
+	}
 	nb.PageStack.Push(p)
 	err = nb.setPageType(p)
 	return err
@@ -46,8 +86,10 @@ func (nb *Nvimboat) Push(p Page) error {
 
 func (nb *Nvimboat) Pop() error {
 	nb.PageStack.Pop()
-	lines, err := nb.PageStack.top.Render()
-	nb.SetLines(lines)
+	err := nb.Show(nb.PageStack.top)
+	if err != nil {
+		return err
+	}
 	err = nb.setPageType(nb.PageStack.top)
 	return err
 }

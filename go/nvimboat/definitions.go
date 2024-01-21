@@ -10,7 +10,7 @@ import (
 
 type (
 	Page interface {
-		Render() ([]string, error)
+		Render() ([][]string, error)
 		// ElementIdx()
 	}
 	PageStack struct {
@@ -18,15 +18,16 @@ type (
 		top   Page
 	}
 	Nvimboat struct {
-		Config      map[string]any
-		PageStack   PageStack
-		ConfigFeeds []map[string]any
-		LogFile     *os.File
-		DB          *sql.DB
-		plugin      *nvimPlugin.Plugin
-		batch       *nvim.Batch
-		buffer      *nvim.Buffer
-		window      *nvim.Window
+		Config        map[string]any
+		PageStack     PageStack
+		ConfigFeeds   []map[string]any
+		ConfigFilters []map[string]any
+		LogFile       *os.File
+		DB            *sql.DB
+		plugin        *nvimPlugin.Plugin
+		batch         *nvim.Batch
+		buffer        *nvim.Buffer
+		window        *nvim.Window
 	}
 	MainMenu struct {
 		Filters []Filter
@@ -34,9 +35,11 @@ type (
 	}
 	Filter struct {
 		Name         string
+		FilterID     string
 		Query        string
-		IncludeTags  string
-		ExcludeTags  string
+		IncludeTags  []string
+		ExcludeTags  []string
+		UnreadCount  int
 		ArticleCount int
 		Articles     []Article
 	}
@@ -48,6 +51,14 @@ type (
 		Articles     []Article
 	}
 	Article struct {
+		Author  string
+		Content string
+		FeedUrl string
+		Guid    string
+		PubDate int
+		Title   string
+		Unread  int
+		Url     string
 	}
 	TagsPage struct {
 		Feeds        []map[string]any
@@ -63,6 +74,7 @@ const (
 	nvimboatDisable     = nvimboatState + "disable()"
 	nvimboatConfig      = nvimboatState + "config"
 	nvimboatFeeds       = nvimboatState + "feeds"
+	nvimboatFilters     = nvimboatState + "filters"
 	nvimboatPage        = nvimboatState + "page"
 	nvimboatSetPageType = nvimboatState + "page.set(...)"
 )

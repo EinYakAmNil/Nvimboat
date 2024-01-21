@@ -14,7 +14,15 @@ func (nb *Nvimboat) Command(args []string) error {
 	if nb.LogFile == nil {
 		nb.setupLogging()
 	}
-	nb.Log(args)
+	if nb.DB == nil {
+		dbpath := nb.Config["dbpath"].(string)
+		nb.DB, err = initDB(dbpath)
+		if err != nil {
+			nb.Log("Error opening the database:")
+			nb.Log(err)
+		}
+	}
+	// nb.Log(args)
 	action := args[0]
 	switch action {
 	case "enable":
@@ -38,23 +46,24 @@ func (nb *Nvimboat) Command(args []string) error {
 		nb.Log(err)
 		return err
 	}
-
-	// pt, err := nb.PageType()
-	// if err != nil {
-	// 	return err
-	// }
-	// nb.Log(pt)
 	return nil
 }
 
 func (nb *Nvimboat) Enable() error {
-	var err error
-	// nb.Feeds, err = nb.QueryFeeds()
-	err = nb.plugin.Nvim.ExecLua(nvimboatEnable, new(any))
+	var (
+		err      error
+		mainmenu MainMenu
+	)
+	mainmenu.Feeds, err = nb.QueryFeeds()
 	if err != nil {
 		return err
 	}
-	err = nb.Push(&MainMenu{})
+	// mainmenu.Filters, err = nb.QueryFilters()
+	err = nb.Push(&mainmenu)
+	if err != nil {
+		return err
+	}
+	err = nb.plugin.Nvim.ExecLua(nvimboatEnable, new(any))
 	if err != nil {
 		return err
 	}
@@ -87,6 +96,7 @@ func (nb *Nvimboat) Select(id string) error {
 		if id[:6] == "query:" {
 			query, inTags, exTags, err := parseFilterID(id)
 			filter, err := nb.QueryFilter(query, inTags, exTags)
+			filter.FilterID = id
 			if err != nil {
 				return err
 			}
@@ -154,21 +164,33 @@ func (nb *Nvimboat) Back() error {
 func (nb *Nvimboat) ShowMain() error {
 	switch nb.PageStack.top.(type) {
 	case *MainMenu:
+		var (
+			mainmenu MainMenu
+			err      error
+		)
+		mainmenu.Feeds, err = nb.QueryFeeds()
+		if err != nil {
+			return err
+		}
+		// mainmenu.Filters, err = nb.QueryFilters()
+		// if err != nil {
+		// 	return err
+		// }
+		nb.PageStack.Pages = nb.PageStack.Pages[:1]
+		nb.PageStack.top = nb.PageStack.Pages[0]
+		err = nb.Push(nb.PageStack.top)
+		if err != nil {
+			return err
+		}
 		return nil
 	default:
 		nb.PageStack.Pages = nb.PageStack.Pages[:1]
 		nb.PageStack.top = nb.PageStack.Pages[0]
-		lines, err := nb.PageStack.top.Render()
+		err := nb.Push(nb.PageStack.top)
 		if err != nil {
 			return err
 		}
-		err = nb.SetLines(lines)
-		if err != nil {
-			return err
-		}
-		nb.setPageType(nb.PageStack.top)
 	}
-
 	return nil
 }
 
@@ -182,6 +204,5 @@ func (nb *Nvimboat) ShowTags() error {
 	if err != nil {
 		return err
 	}
-
 	return nil
 }

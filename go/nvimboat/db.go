@@ -4,8 +4,6 @@ import (
 	"database/sql"
 	// "errors"
 	// "fmt"
-	"os"
-	"path"
 	// "time"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -14,11 +12,6 @@ import (
 func (nb *Nvimboat) QueryArticle(url string) (Article, error) {
 	var a Article
 	return a, nil
-}
-
-func (nb *Nvimboat) QueryFeed(url string) (Feed, error) {
-	var f Feed
-	return f, nil
 }
 
 func (nb *Nvimboat) QueryFeeds() ([]Feed, error) {
@@ -45,8 +38,45 @@ func (nb *Nvimboat) QueryFeeds() ([]Feed, error) {
 	return feeds, nil
 }
 
+func (nb *Nvimboat) QueryFeed(feedUrl string) (Feed, error) {
+	var (
+		f = Feed{RssUrl: feedUrl, UnreadCount: 0}
+		a Article
+	)
+	row := nb.singleRow(feedQuery, f.RssUrl)
+	err := row.Scan(&f.Title)
+	if err != nil {
+		return f, err
+	}
+	rows, err := nb.multiRow(feedArticlesQuery, f.RssUrl)
+	if err != nil {
+		return f, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		err = rows.Scan(&a.Guid, &a.Title, &a.Author, &a.Url, &a.FeedUrl, &a.PubDate, &a.Content, &a.Unread)
+		if err != nil {
+			return f, err
+		}
+
+		f.Articles = append(f.Articles, a)
+	}
+	for _, a := range f.Articles {
+		if a.Unread == 1 {
+			f.UnreadCount++
+		}
+	}
+	return f, nil
+}
+
 func (nb *Nvimboat) QueryFilter(query string, inTags, exTags []string) (Filter, error) {
 	var f Filter
+	f.Query = query
+	f.IncludeTags = inTags
+	f.ExcludeTags = exTags
+	urls := filterTags(nb.ConfigFeeds, inTags, exTags)
+	nb.multiRow(articlesFilterQuery(query, len(urls)), urls)
 	return f, nil
 }
 

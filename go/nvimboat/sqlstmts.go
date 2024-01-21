@@ -66,12 +66,13 @@ const (
 	ORDER BY rss_feed.title
 	`
 	feedArticlesQuery = `
-	SELECT url FROM rss_item WHERE feedurl = ? AND deleted = 0
+	SELECT guid, title, author, url, feedurl, pubDate, content, unread FROM rss_item
+	WHERE feedurl = ? AND deleted = 0
 	ORDER BY pubDate DESC
 	`
 	articleQuery = `
 	SELECT guid, title, author, feedurl, pubDate, content, unread
 	FROM rss_item WHERE url = ? AND deleted = 0
 	`
-	feedQuery       = `SELECT title FROM rss_feed WHERE rssurl = ?`
+	feedQuery = `SELECT title FROM rss_feed WHERE rssurl = ?`
 )
