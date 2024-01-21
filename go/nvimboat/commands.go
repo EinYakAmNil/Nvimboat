@@ -51,14 +51,27 @@ func (nb *Nvimboat) Command(args []string) error {
 
 func (nb *Nvimboat) Enable() error {
 	var (
-		err      error
-		mainmenu MainMenu
+		err        error
+		mainmenu   MainMenu
+		tmp_filter Filter
 	)
 	mainmenu.Feeds, err = nb.QueryFeeds()
 	if err != nil {
 		return err
 	}
-	// mainmenu.Filters, err = nb.QueryFilters()
+	mainmenu.Filters, err = nb.parseFilters()
+	if err != nil {
+		return err
+	}
+	for i, f := range mainmenu.Filters {
+		tmp_filter, err = nb.QueryFilter(f.Query, f.IncludeTags, f.ExcludeTags)
+		mainmenu.Filters[i].UnreadCount = tmp_filter.UnreadCount
+		mainmenu.Filters[i].ArticleCount = tmp_filter.ArticleCount
+		mainmenu.Filters[i].Articles = tmp_filter.Articles
+		if err != nil {
+			return err
+		}
+	}
 	err = nb.Push(&mainmenu)
 	if err != nil {
 		return err
@@ -96,6 +109,7 @@ func (nb *Nvimboat) Select(id string) error {
 		if id[:6] == "query:" {
 			query, inTags, exTags, err := parseFilterID(id)
 			filter, err := nb.QueryFilter(query, inTags, exTags)
+			nb.Log(filter.Articles[0].Url)
 			filter.FilterID = id
 			if err != nil {
 				return err

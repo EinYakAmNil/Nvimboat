@@ -9,7 +9,7 @@ import (
 func main() {
 	nb := new(nvimboat.Nvimboat)
 	defer nb.LogFile.Close()
-	// defer nb.DB.Close()
+	defer nb.DB.Close()
 
 	nvimPlugin.Main(func(p *nvimPlugin.Plugin) error {
 		if p.Nvim != nil {

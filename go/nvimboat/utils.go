@@ -6,8 +6,12 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"regexp"
 	"slices"
 	"strings"
+	"time"
+
+	md "github.com/JohannesKaufmann/html-to-markdown"
 )
 
 func initDB(dbpath string) (*sql.DB, error) {
@@ -45,6 +49,36 @@ func strings2bytes(stringSlice []string) [][]byte {
 	return byteSlices
 }
 
+func unixToDate(unixTime int) (string, error) {
+	tz, err := time.LoadLocation("Local")
+	if err != nil {
+		return "", err
+	}
+	ut := time.Unix(int64(unixTime), 0)
+	dateString := ut.In(tz).Format("02 Jan 06")
+
+	return dateString, nil
+}
+
+func subset(first, second []string) bool {
+	set := make(map[string]int)
+	for _, value := range second {
+		set[value] += 1
+	}
+
+	for _, value := range first {
+		if count, found := set[value]; !found {
+			return false
+		} else if count < 1 {
+			return false
+		} else {
+			set[value] = count - 1
+		}
+	}
+
+	return true
+}
+
 func parseFilterID(id string) (string, []string, []string, error) {
 	var (
 		query       string
@@ -65,6 +99,28 @@ func parseFilterID(id string) (string, []string, []string, error) {
 	return query, includeTags, excludeTags, nil
 }
 
+func extracUrls(content string) []string {
+	var links []string
+	re := regexp.MustCompile(`\b((?:https?|ftp|file):\/\/[-a-zA-Z0-9+&@#\/%?=~_|!:,.;]*[-a-zA-Z0-9+&@#\/%=~_|])`)
+	matches := re.FindAll([]byte(content), -1)
+	for _, l := range matches {
+		links = append(links, string(l))
+	}
+
+	return links
+}
+
+func renderHTML(content string) ([]string, error) {
+
+	converter := md.NewConverter("", true, nil)
+	markdown, err := converter.ConvertString(content)
+	if err != nil {
+		return nil, err
+	}
+
+	return strings.Split(markdown, "\n"), nil
+}
+
 func pageTypeString(p Page) string {
 	fullName := fmt.Sprintf("%T", p)
 	_, name, _ := strings.Cut(fullName, "nvimboat.")
@@ -76,24 +132,34 @@ func fileExists(f string) bool {
 	return !errors.Is(err, os.ErrNotExist)
 }
 
-func filterTags(config []map[string]any, inTags, exTags []string) []string {
+func anyToString(base []any) []string {
+	var conv []string
+	for _, a := range base {
+		conv = append(conv, a.(string))
+	}
+	return conv
+}
+
+func filterTags(config []map[string]any, inTags, exTags []string) []any {
 	feedurls := make(map[string]bool)
-	var urls []string
+	var (
+		urls []any
+	)
 	for _, feed := range config {
-		for _, tag := range feed["tag"].([]string) {
-			if slices.Contains(inTags, tag) {
-				feedurls[feed["rssurl"].(string)] = true
-				continue
-			}
+		if subset(inTags, anyToString(feed["tags"].([]any))) {
+			feedurls[feed["rssurl"].(string)] = true
 		}
 	}
 	for _, feed := range config {
-		for _, tag := range feed["tag"].([]string) {
+		for _, tag := range anyToString(feed["tags"].([]any)) {
 			if slices.Contains(exTags, tag) {
 				delete(feedurls, feed["rssurl"].(string))
 				continue
 			}
 		}
+	}
+	for url := range feedurls {
+		urls = append(urls, url)
 	}
 	return urls
 }
@@ -102,15 +168,20 @@ func articlesFilterQuery(query string, n int) string {
 	const (
 		prefix = `
 		SELECT guid, title, author, url, feedurl, pubDate, content, unread
-		FROM rss_item WHERE deleted = 0 AND url in (?`
-		suffix = `) ORDER BY pubDate DESC`
+		FROM rss_item WHERE deleted = 0 AND feedurl in (?`
+		suffix = ` ORDER BY pubDate DESC`
 	)
-	if n < 2 {
-		return prefix + suffix
+	var glue string
+	if query != "" {
+		glue = `) AND `
+	} else {
+		glue = `) `
 	}
-
+	if n < 2 {
+		return prefix + glue + query + suffix
+	}
 	articleCount := strings.Repeat(", ?", n-1)
-	return prefix + articleCount + suffix
+	return prefix + articleCount + glue + query + suffix
 }
 
 func (nb *Nvimboat) addColumn(col []string, separator string) error {
@@ -186,4 +257,45 @@ func (nb *Nvimboat) trimTrail() error {
 	}
 
 	return nil
+}
+
+func (nb *Nvimboat) parseFilters() ([]Filter, error) {
+	var (
+		filters []Filter
+		f       Filter
+	)
+	for _, filter := range nb.ConfigFilters {
+		if name, ok := filter["name"]; ok {
+			f.Name = name.(string)
+		} else {
+			errMsg := fmt.Sprintf("Failed to parse: %v", filter)
+			return filters, errors.New(errMsg)
+		}
+		if query, ok := filter["query"]; ok {
+			f.Query = query.(string)
+			f.FilterID = "query: " + query.(string) + ", tags: "
+		} else {
+			errMsg := fmt.Sprintf("Failed to parse: %v", filter)
+			return filters, errors.New(errMsg)
+		}
+		if tags, ok := filter["tags"]; ok {
+			for _, tag := range tags.([]any) {
+				if len(tag.(string)) == 0 {
+					continue
+				}
+				if tag.(string)[0] != '!' {
+					f.IncludeTags = append(f.IncludeTags, tag.(string))
+				} else {
+					f.ExcludeTags = append(f.ExcludeTags, tag.(string)[1:])
+				}
+				f.FilterID += tag.(string) + ", "
+			}
+		}
+		if f.FilterID[len(f.FilterID)-2:] == ", " {
+			f.FilterID = f.FilterID[:len(f.FilterID)-2]
+		}
+		filters = append(filters, f)
+		f = Filter{}
+	}
+	return filters, nil
 }

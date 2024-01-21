@@ -48,7 +48,29 @@ func (nb *Nvimboat) Show(p Page) error {
 				return err
 			}
 		}
+	case *TagFeeds:
+		cols, err := p.Render()
+		if err != nil {
+			return err
+		}
+		for _, c := range cols {
+			err = nb.addColumn(c, nb.Config["separator"].(string))
+			if err != nil {
+				return err
+			}
+		}
 	case *Feed:
+		cols, err := p.Render()
+		if err != nil {
+			return err
+		}
+		for _, c := range cols {
+			err = nb.addColumn(c, nb.Config["separator"].(string))
+			if err != nil {
+				return err
+			}
+		}
+	case *Filter:
 		cols, err := p.Render()
 		if err != nil {
 			return err
