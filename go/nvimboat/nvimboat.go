@@ -35,9 +35,19 @@ func (nb *Nvimboat) Log(val ...any) {
 	nb.plugin.Nvim.Exec(fmt.Sprintf(`echo "%v"`, val), false)
 }
 
-func (nb *Nvimboat) SyncState(p Page) error {
+func (nb *Nvimboat) Push(p Page) error {
+	lines, err := p.Render()
+	nb.SetLines(lines)
 	nb.PageStack.Push(p)
-	err := nb.setPageType(p)
+	err = nb.setPageType(p)
+	return err
+}
+
+func (nb *Nvimboat) Pop() error {
+	nb.PageStack.Pop()
+	lines, err := nb.PageStack.top.Render()
+	nb.SetLines(lines)
+	err = nb.setPageType(nb.PageStack.top)
 	return err
 }
 
@@ -70,4 +80,14 @@ func (nb *Nvimboat) PageType() (any, error) {
 		return "", errors.New(fmt.Sprintf("Can't get page type: %v", err))
 	}
 	return page_type, nil
+}
+
+func (nb *Nvimboat) SetLines(lines []string) error {
+	err := nb.plugin.Nvim.SetBufferLines(*nb.buffer, 0, -1, false, strings2bytes(lines))
+	if err != nil {
+		return err
+	}
+
+	return nil
+
 }

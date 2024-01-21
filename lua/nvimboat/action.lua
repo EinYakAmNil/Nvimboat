@@ -15,7 +15,7 @@ function M.select()
 		vim.cmd.Nvimboat("select")
 		return
 	end
-	local url_pages = { "Main", "TagFeeds", "Feed", "Filter" }
+	local url_pages = { "MainMenu", "TagFeeds", "Feed", "Filter" }
 	for _, p in ipairs(url_pages) do
 		if page.page_type == p then
 			local id = utils.line_id(M.separator)

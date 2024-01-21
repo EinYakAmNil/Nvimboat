@@ -14,7 +14,6 @@ func (nb *Nvimboat) Command(args []string) error {
 	if nb.LogFile == nil {
 		nb.setupLogging()
 	}
-	nb.Log(args)
 	action := args[0]
 	switch action {
 	case "enable":
@@ -22,6 +21,7 @@ func (nb *Nvimboat) Command(args []string) error {
 	case "disable":
 		err = nb.Disable()
 	case "show-main":
+		err = nb.ShowMain()
 	case "select":
 		if len(args) > 1 {
 			err = nb.Select(args[1])
@@ -51,7 +51,7 @@ func (nb *Nvimboat) Enable() error {
 	if err != nil {
 		return err
 	}
-	err = nb.SyncState(Main{})
+	err = nb.Push(&MainMenu{})
 	if err != nil {
 		return err
 	}
@@ -70,13 +70,13 @@ func (nb *Nvimboat) Disable() error {
 
 func (nb *Nvimboat) Select(id string) error {
 	switch nb.PageStack.top.(type) {
-	case Main:
+	case *MainMenu:
 		if id[:4] == "http" {
 			feed, err := nb.QueryFeed(id)
 			if err != nil {
 				return err
 			}
-			err = nb.SyncState(feed)
+			err = nb.Push(&feed)
 			if err != nil {
 				return err
 			}
@@ -87,60 +87,83 @@ func (nb *Nvimboat) Select(id string) error {
 			if err != nil {
 				return err
 			}
-			err = nb.SyncState(filter)
+			err = nb.Push(&filter)
 			if err != nil {
 				return err
 			}
 		}
-	case Filter:
+	case *Filter:
 		article, err := nb.QueryArticle(id)
 		if err != nil {
 			return err
 		}
-		nb.SyncState(article)
+		nb.Push(&article)
 		if err != nil {
 			return err
 		}
-	case Feed:
+	case *Feed:
 		article, err := nb.QueryArticle(id)
 		if err != nil {
 			return err
 		}
-		nb.SyncState(article)
+		nb.Push(&article)
 		if err != nil {
 			return err
 		}
-	case TagsPage:
+	case *TagsPage:
 		tags, err := nb.QueryTags()
 		if err != nil {
 			return err
 		}
-		nb.SyncState(tags)
+		nb.Push(&tags)
 		if err != nil {
 			return err
 		}
-	case TagFeeds:
+	case *TagFeeds:
 		feeds, err := nb.QueryTagFeeds(id)
 		if err != nil {
 			return err
 		}
-		nb.SyncState(feeds)
+		nb.Push(&feeds)
 		if err != nil {
 			return err
 		}
+	case *Article:
+		return nil
 	}
-	nb.Log(nb.PageStack.top)
 	return nil
 }
 
 func (nb *Nvimboat) Back() error {
 	switch nb.PageStack.top.(type) {
-	case Main:
+	case *MainMenu:
 		return nil
 	default:
-		nb.PageStack.Pop()
+		err := nb.Pop()
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (nb *Nvimboat) ShowMain() error {
+	switch nb.PageStack.top.(type) {
+	case *MainMenu:
+		return nil
+	default:
+		nb.PageStack.Pages = nb.PageStack.Pages[:1]
+		nb.PageStack.top = nb.PageStack.Pages[0]
+		lines, err := nb.PageStack.top.Render()
+		if err != nil {
+			return err
+		}
+		err = nb.SetLines(lines)
+		if err != nil {
+			return err
+		}
 		nb.setPageType(nb.PageStack.top)
-		nb.Log(nb.PageStack.top)
 	}
 
 	return nil

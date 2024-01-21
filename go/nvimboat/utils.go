@@ -5,6 +5,16 @@ import (
 	"strings"
 )
 
+func strings2bytes(stringSlice []string) [][]byte {
+	byteSlices := [][]byte{}
+
+	for _, s := range stringSlice {
+		byteSlices = append(byteSlices, []byte(s))
+	}
+
+	return byteSlices
+}
+
 func parseFilterID(id string) (string, []string, []string, error) {
 	var (
 		query       string

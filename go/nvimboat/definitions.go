@@ -9,7 +9,7 @@ import (
 
 type (
 	Page interface {
-		// Render()
+		Render() ([]string, error)
 		// ElementIdx()
 	}
 	PageStack struct {
@@ -25,7 +25,7 @@ type (
 		buffer    *nvim.Buffer
 		window    *nvim.Window
 	}
-	Main struct {
+	MainMenu struct {
 		Filters []Filter
 		Feeds []Feed
 	}
