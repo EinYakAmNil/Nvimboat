@@ -45,7 +45,6 @@ func strings2bytes(stringSlice []string) [][]byte {
 	for _, s := range stringSlice {
 		byteSlices = append(byteSlices, []byte(s))
 	}
-
 	return byteSlices
 }
 
@@ -65,7 +64,6 @@ func subset(first, second []string) bool {
 	for _, value := range second {
 		set[value] += 1
 	}
-
 	for _, value := range first {
 		if count, found := set[value]; !found {
 			return false
@@ -75,7 +73,6 @@ func subset(first, second []string) bool {
 			set[value] = count - 1
 		}
 	}
-
 	return true
 }
 
@@ -106,18 +103,15 @@ func extracUrls(content string) []string {
 	for _, l := range matches {
 		links = append(links, string(l))
 	}
-
 	return links
 }
 
 func renderHTML(content string) ([]string, error) {
-
 	converter := md.NewConverter("", true, nil)
 	markdown, err := converter.ConvertString(content)
 	if err != nil {
 		return nil, err
 	}
-
 	return strings.Split(markdown, "\n"), nil
 }
 
@@ -142,9 +136,7 @@ func anyToString(base []any) []string {
 
 func filterTags(config []map[string]any, inTags, exTags []string) []any {
 	feedurls := make(map[string]bool)
-	var (
-		urls []any
-	)
+	var urls []any
 	for _, feed := range config {
 		if subset(inTags, anyToString(feed["tags"].([]any))) {
 			feedurls[feed["rssurl"].(string)] = true
@@ -168,7 +160,8 @@ func articlesFilterQuery(query string, n int) string {
 	const (
 		prefix = `
 		SELECT guid, title, author, url, feedurl, pubDate, content, unread
-		FROM rss_item WHERE deleted = 0 AND feedurl in (?`
+		FROM rss_item WHERE deleted = 0 AND feedurl in (?
+		`
 		suffix = ` ORDER BY pubDate DESC`
 	)
 	var glue string
@@ -184,48 +177,74 @@ func articlesFilterQuery(query string, n int) string {
 	return prefix + articleCount + glue + query + suffix
 }
 
+func tagFeedsQuery(feedurls []any) string {
+	n := len(feedurls)
+	if n == 0 {
+		return ""
+	}
+	p1 := `
+	SELECT rss_feed.title, c.* FROM rss_feed
+	LEFT JOIN (
+	SELECT a.feedurl, b.unreadCount, a.articleCount
+	FROM (
+	SELECT feedurl, COUNT(*) AS articleCount
+	FROM rss_item WHERE feedurl in (?`
+	p2 := `)
+	GROUP BY feedurl
+	) a
+	LEFT JOIN (
+	SELECT feedurl, sum(unread) AS unreadCount
+	FROM rss_item WHERE feedurl in (?`
+	p3 := `)
+	GROUP BY feedurl
+	) b
+	ON a.feedurl = b.feedurl
+	) c
+	ON rss_feed.rssurl = c.feedurl
+	WHERE rssurl in (?`
+	p4 := `)
+	ORDER BY rss_feed.title`
+	if n < 2 {
+		return p1 + p2 + p3 + p4
+	}
+	reps := strings.Repeat(", ?", n-1)
+	return p1 + reps + p2 + reps + p3 + reps + p4
+}
+
 func (nb *Nvimboat) addColumn(col []string, separator string) error {
 	currentLines, err := nb.plugin.Nvim.BufferLines(*nb.buffer, 0, -1, false)
 	if err != nil {
 		return err
 	}
-
 	var (
 		diff  int
 		lines = []string{}
 	)
-
 	diff = (len(col) - len(currentLines))
 	for i := 0; i < diff; i++ {
 		currentLines = append(currentLines, []byte{})
 	}
-
 	for i, c := range col {
 		lines = append(lines, string(currentLines[i])+separator+c)
 	}
-
 	err = nb.SetLines(lines)
 	if err != nil {
 		return err
 	}
-
 	vcl, err := nb.virtColLens()
 	if err != nil {
 		return err
 	}
-
 	maxLineLen := slices.Max(vcl)
 
 	for i, l := range lines {
 		diff = maxLineLen - vcl[i]
 		lines[i] = l + strings.Repeat(" ", diff)
 	}
-
 	err = nb.SetLines(lines)
 	if err != nil {
 		return err
 	}
-
 	return nil
 }
 
@@ -236,7 +255,6 @@ func (nb *Nvimboat) virtColLens() ([]int, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	return evalResult, err
 }
 
@@ -245,17 +263,14 @@ func (nb *Nvimboat) trimTrail() error {
 	if err != nil {
 		return err
 	}
-
 	var lines = []string{}
 	for _, l := range currentLines {
 		lines = append(lines, strings.TrimRight(string(l), " "))
 	}
-
 	err = nb.SetLines(lines)
 	if err != nil {
 		return err
 	}
-
 	return nil
 }
 
@@ -298,4 +313,30 @@ func (nb *Nvimboat) parseFilters() ([]Filter, error) {
 		f = Filter{}
 	}
 	return filters, nil
+}
+
+func (nb *Nvimboat) showMain() (MainMenu, error) {
+	var (
+		err        error
+		mainmenu   MainMenu
+		tmp_filter Filter
+	)
+	mainmenu.Feeds, err = nb.QueryFeeds()
+	if err != nil {
+		return mainmenu, err
+	}
+	mainmenu.Filters, err = nb.parseFilters()
+	if err != nil {
+		return mainmenu, err
+	}
+	for i, f := range mainmenu.Filters {
+		tmp_filter, err = nb.QueryFilter(f.Query, f.IncludeTags, f.ExcludeTags)
+		mainmenu.Filters[i].UnreadCount = tmp_filter.UnreadCount
+		mainmenu.Filters[i].ArticleCount = tmp_filter.ArticleCount
+		mainmenu.Filters[i].Articles = tmp_filter.Articles
+		if err != nil {
+			return mainmenu, err
+		}
+	}
+	return mainmenu, err
 }

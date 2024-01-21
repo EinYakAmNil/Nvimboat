@@ -28,7 +28,6 @@ func (nb *Nvimboat) Init(p *nvimPlugin.Plugin) error {
 	if err != nil {
 		return err
 	}
-
 	return nil
 }
 
@@ -50,6 +49,7 @@ func (nb *Nvimboat) Show(p Page) error {
 		}
 	case *TagFeeds:
 		cols, err := p.Render()
+		// nb.Log(cols)
 		if err != nil {
 			return err
 		}
@@ -120,11 +120,9 @@ func (nb *Nvimboat) setupLogging() {
 	var err error
 
 	nb.LogFile, err = os.OpenFile(nb.Config["log"].(string), os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
-
 	if err != nil {
 		log.Println(err)
 	}
-
 	log.SetOutput(nb.LogFile)
 	log.SetFlags(0)
 }
@@ -152,7 +150,5 @@ func (nb *Nvimboat) SetLines(lines []string) error {
 	if err != nil {
 		return err
 	}
-
 	return nil
-
 }

@@ -22,7 +22,6 @@ func (nb *Nvimboat) Command(args []string) error {
 			nb.Log(err)
 		}
 	}
-	// nb.Log(args)
 	action := args[0]
 	switch action {
 	case "enable":
@@ -50,27 +49,9 @@ func (nb *Nvimboat) Command(args []string) error {
 }
 
 func (nb *Nvimboat) Enable() error {
-	var (
-		err        error
-		mainmenu   MainMenu
-		tmp_filter Filter
-	)
-	mainmenu.Feeds, err = nb.QueryFeeds()
+	mainmenu, err := nb.showMain()
 	if err != nil {
 		return err
-	}
-	mainmenu.Filters, err = nb.parseFilters()
-	if err != nil {
-		return err
-	}
-	for i, f := range mainmenu.Filters {
-		tmp_filter, err = nb.QueryFilter(f.Query, f.IncludeTags, f.ExcludeTags)
-		mainmenu.Filters[i].UnreadCount = tmp_filter.UnreadCount
-		mainmenu.Filters[i].ArticleCount = tmp_filter.ArticleCount
-		mainmenu.Filters[i].Articles = tmp_filter.Articles
-		if err != nil {
-			return err
-		}
 	}
 	err = nb.Push(&mainmenu)
 	if err != nil {
@@ -80,7 +61,6 @@ func (nb *Nvimboat) Enable() error {
 	if err != nil {
 		return err
 	}
-
 	return nil
 }
 
@@ -171,27 +151,15 @@ func (nb *Nvimboat) Back() error {
 			return err
 		}
 	}
-
 	return nil
 }
 
 func (nb *Nvimboat) ShowMain() error {
 	switch nb.PageStack.top.(type) {
 	case *MainMenu:
-		var (
-			mainmenu MainMenu
-			err      error
-		)
-		mainmenu.Feeds, err = nb.QueryFeeds()
-		if err != nil {
-			return err
-		}
-		// mainmenu.Filters, err = nb.QueryFilters()
-		// if err != nil {
-		// 	return err
-		// }
+		mainmenu, err := nb.showMain()
 		nb.PageStack.Pages = nb.PageStack.Pages[:1]
-		nb.PageStack.top = nb.PageStack.Pages[0]
+		nb.PageStack.top = &mainmenu
 		err = nb.Push(nb.PageStack.top)
 		if err != nil {
 			return err
@@ -209,7 +177,6 @@ func (nb *Nvimboat) ShowMain() error {
 }
 
 func (nb *Nvimboat) ShowTags() error {
-	nb.Log("Showing tags.")
 	tags, err := nb.QueryTags()
 	if err != nil {
 		return err

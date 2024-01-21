@@ -25,7 +25,6 @@ func (nb *Nvimboat) QueryFeeds() ([]Feed, error) {
 	if err != nil {
 		return feeds, err
 	}
-
 	defer rows.Close()
 
 	for rows.Next() {
@@ -33,10 +32,8 @@ func (nb *Nvimboat) QueryFeeds() ([]Feed, error) {
 		if err != nil {
 			return feeds, err
 		}
-
 		feeds = append(feeds, f)
 	}
-
 	return feeds, nil
 }
 
@@ -117,8 +114,31 @@ func (nb *Nvimboat) QueryTags() (TagsPage, error) {
 }
 
 func (nb *Nvimboat) QueryTagFeeds(tag string) (TagFeeds, error) {
-	var tf TagFeeds
-	return tf, nil
+	var (
+		tf       TagFeeds
+		f        Feed
+		feedurls []any
+	)
+	for _, feed := range nb.ConfigFeeds {
+		for _, t := range feed["tags"].([]any) {
+			if t.(string) == tag {
+				feedurls = append(feedurls, feed["rssurl"])
+			}
+		}
+	}
+	q := tagFeedsQuery(feedurls)
+	feedurls = append(feedurls, feedurls...)
+	feedurls = append(feedurls, feedurls...)
+	rows, err := nb.multiRow(q, feedurls...)
+	if err != nil {
+		return tf, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		rows.Scan(&f.Title, &f.RssUrl, &f.UnreadCount, &f.ArticleCount)
+		tf.Feeds = append(tf.Feeds, f)
+	}
+	return tf, err
 }
 
 func (nb *Nvimboat) singleRow(query string, args ...any) *sql.Row {

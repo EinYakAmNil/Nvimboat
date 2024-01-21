@@ -19,6 +19,16 @@ func (f *TagsPage) Render() ([][]string, error) {
 	return [][]string{lines}, nil
 }
 
-func (f *TagFeeds) Render() ([][]string, error) {
-	return [][]string{{"tag feeds."}}, nil
+func (tf *TagFeeds) Render() ([][]string, error) {
+	var (
+		prefixCol []string
+		titleCol  []string
+		urlCol    []string
+	)
+	for _, f := range tf.Feeds {
+		prefixCol = append(prefixCol, f.MainPrefix())
+		titleCol = append(titleCol, f.Title)
+		urlCol = append(urlCol, f.RssUrl)
+	}
+	return [][]string{prefixCol, titleCol, urlCol}, nil
 }
