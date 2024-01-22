@@ -40,9 +40,6 @@ function M.show_tags()
 	end
 end
 
-function M.toggle_article_read()
-end
-
 function M.next_unread()
 	if page.page_type == "TagsPage" then
 		return
@@ -93,7 +90,19 @@ function M.prev_unread()
 	end
 end
 
+function M.toggle_article_read()
+end
+
 function M.open_media()
+	local vim_mode = vim.fn.mode()
+
+	if vim_mode == 'n' then
+		local url = utils.line_id(M.separator)
+		utils.play_videos({ url })
+	elseif vim_mode == 'v' or vim_mode == 'V' then
+		local urls = utils.seek_ids_visual(M.separator)
+		utils.play_videos(urls)
+	end
 end
 
 function M.next_article()

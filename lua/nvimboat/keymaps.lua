@@ -70,7 +70,7 @@ M.keymaps = {
 			rhs = action.prev_unread,
 			opts = map_opts
 		},
-	}
+	},
 }
 
 function M.configure(opts)
