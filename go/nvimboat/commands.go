@@ -53,7 +53,7 @@ func (nb *Nvimboat) Enable() error {
 	if err != nil {
 		return err
 	}
-	err = nb.Push(&mainmenu)
+	err = nb.Push(mainmenu)
 	if err != nil {
 		return err
 	}
@@ -104,10 +104,13 @@ func (nb *Nvimboat) Select(id string) error {
 		if err != nil {
 			return err
 		}
+		pos, err := nb.PageStack.top.ElementIdx(&article)
+		nb.PageStack.top.(*Filter).Articles[pos].Unread = 0
 		nb.Push(&article)
 		if err != nil {
 			return err
 		}
+		nb.setArticleRead(id)
 	case *Feed:
 		article, err := nb.QueryArticle(id)
 		if err != nil {
@@ -117,6 +120,7 @@ func (nb *Nvimboat) Select(id string) error {
 		if err != nil {
 			return err
 		}
+		nb.setArticleRead(id)
 	case *TagsPage:
 		feeds, err := nb.QueryTagFeeds(id)
 		if err != nil {
@@ -155,24 +159,16 @@ func (nb *Nvimboat) Back() error {
 }
 
 func (nb *Nvimboat) ShowMain() error {
-	switch nb.PageStack.top.(type) {
-	case *MainMenu:
-		mainmenu, err := nb.showMain()
-		nb.PageStack.Pages = nb.PageStack.Pages[:1]
-		nb.PageStack.top = &mainmenu
-		err = nb.Push(nb.PageStack.top)
-		if err != nil {
-			return err
-		}
-		return nil
-	default:
-		nb.PageStack.Pages = nb.PageStack.Pages[:1]
-		nb.PageStack.top = nb.PageStack.Pages[0]
-		err := nb.Push(nb.PageStack.top)
-		if err != nil {
-			return err
-		}
+	mainmenu, err := nb.showMain()
+	if err != nil {
+		return err
 	}
+	err = nb.Push(mainmenu)
+	if err != nil {
+		return err
+	}
+	nb.PageStack.Pages = nb.PageStack.Pages[:1]
+	nb.PageStack.top = mainmenu
 	return nil
 }
 
@@ -186,4 +182,15 @@ func (nb *Nvimboat) ShowTags() error {
 		return err
 	}
 	return nil
+}
+
+func (nb *Nvimboat) ToggleArticleRead(urls ...string) error {
+	anyUnread, err := nb.anyArticleUnread(urls...)
+	nb.Log("Get unread state")
+	if anyUnread {
+		err = nb.setArticleRead(urls...)
+		return err
+	}
+	err = nb.setArticleUnread(urls...)
+	return err
 }

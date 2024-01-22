@@ -1,5 +1,7 @@
 package nvimboat
 
+import "errors"
+
 func (mm *MainMenu) Render() ([][]string, error) {
 	var (
 		prefixCol []string
@@ -22,10 +24,19 @@ func (mm *MainMenu) Render() ([][]string, error) {
 func (mm *MainMenu) ElementIdx(feed Page) (int, error) {
 	switch feed.(type) {
 	case *Filter:
-		return 10, nil
+		for i, f := range mm.Filters {
+			if feed.(*Filter).FilterID == f.FilterID {
+				return i, nil
+			}
+		}
 	case *Feed:
-		return 10, nil
+		for i, f := range mm.Feeds {
+			if feed.(*Feed).RssUrl == f.RssUrl {
+				return i + len(mm.Filters), nil
+			}
+		}
 	default:
 		return 0, nil
 	}
+	return 0, errors.New("Couldn't find feed/filter.")
 }

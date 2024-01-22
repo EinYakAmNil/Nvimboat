@@ -38,7 +38,6 @@ function M.setup(opts)
 		{ type = 'command',  name = 'Nvimboat',         sync = 1, opts = { complete = "customlist,CompleteNvimboat", nargs = "+" } },
 		{ type = 'function', name = 'CompleteNvimboat', sync = 1, opts = { _ = "" } },
 	})
-	M.path = require("nvimboat.path")
 	M.page = require("nvimboat.page")
 end
 

@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"log"
 	"os"
 	"path"
 	"regexp"
@@ -118,6 +119,7 @@ func renderHTML(content string) ([]string, error) {
 func pageTypeString(p Page) string {
 	fullName := fmt.Sprintf("%T", p)
 	_, name, _ := strings.Cut(fullName, "nvimboat.")
+
 	return name
 }
 
@@ -174,6 +176,7 @@ func articlesFilterQuery(query string, n int) string {
 		return prefix + glue + query + suffix
 	}
 	articleCount := strings.Repeat(", ?", n-1)
+
 	return prefix + articleCount + glue + query + suffix
 }
 
@@ -209,6 +212,38 @@ func tagFeedsQuery(feedurls []any) string {
 	}
 	reps := strings.Repeat(", ?", n-1)
 	return p1 + reps + p2 + reps + p3 + reps + p4
+}
+
+func articlesUneadQuery(n int) string {
+	if n == 0 {
+		return ""
+	}
+	const (
+		prefix = `SELECT COUNT(unread) FROM rss_item WHERE unread = 1 AND url IN (?`
+		suffix = `)`
+	)
+	if n < 2 {
+		return prefix + suffix
+	}
+	articleCount := strings.Repeat(", ?", n-1)
+
+	return prefix + articleCount + suffix
+}
+
+func articleReadUpdate(n int) string {
+	if n == 0 {
+		return ""
+	}
+	const (
+		prefix = `UPDATE rss_item SET unread = ? WHERE url IN (?`
+		suffix = `)`
+	)
+	if n < 2 {
+		return prefix + suffix
+	}
+	articleCount := strings.Repeat(", ?", n-1)
+
+	return prefix + articleCount + suffix
 }
 
 func (nb *Nvimboat) addColumn(col []string, separator string) error {
@@ -315,7 +350,7 @@ func (nb *Nvimboat) parseFilters() ([]Filter, error) {
 	return filters, nil
 }
 
-func (nb *Nvimboat) showMain() (MainMenu, error) {
+func (nb *Nvimboat) showMain() (*MainMenu, error) {
 	var (
 		err        error
 		mainmenu   MainMenu
@@ -323,11 +358,11 @@ func (nb *Nvimboat) showMain() (MainMenu, error) {
 	)
 	mainmenu.Feeds, err = nb.QueryFeeds()
 	if err != nil {
-		return mainmenu, err
+		return &mainmenu, err
 	}
 	mainmenu.Filters, err = nb.parseFilters()
 	if err != nil {
-		return mainmenu, err
+		return &mainmenu, err
 	}
 	for i, f := range mainmenu.Filters {
 		tmp_filter, err = nb.QueryFilter(f.Query, f.IncludeTags, f.ExcludeTags)
@@ -335,8 +370,86 @@ func (nb *Nvimboat) showMain() (MainMenu, error) {
 		mainmenu.Filters[i].ArticleCount = tmp_filter.ArticleCount
 		mainmenu.Filters[i].Articles = tmp_filter.Articles
 		if err != nil {
-			return mainmenu, err
+			return &mainmenu, err
 		}
 	}
-	return mainmenu, err
+	return &mainmenu, err
+}
+
+func (nb *Nvimboat) setupLogging() {
+	var err error
+
+	nb.LogFile, err = os.OpenFile(nb.Config["log"].(string), os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	if err != nil {
+		log.Println(err)
+	}
+	log.SetOutput(nb.LogFile)
+	log.SetFlags(0)
+}
+
+func (nb *Nvimboat) setPageType(p Page) error {
+	t := pageTypeString(p)
+	err := nb.plugin.Nvim.ExecLua(nvimboatSetPageType, new(any), t)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (nb *Nvimboat) pageType() (any, error) {
+	var page_type any
+	err := nb.plugin.Nvim.ExecLua(nvimboatPage, &page_type)
+	if err != nil {
+		return "", errors.New(fmt.Sprintf("Can't get page type: %v", err))
+	}
+	return page_type, nil
+}
+
+func (nb *Nvimboat) articleReadState(read int, url ...string) error {
+	sqlArgs := []any{read}
+	for _, u := range url {
+		sqlArgs = append(sqlArgs, u)
+	}
+	update := articleReadUpdate(len(url))
+	_, err := nb.DB.Exec(update, sqlArgs...)
+	if err != nil {
+		return errors.New("ArticleReadState -> db.open: " + fmt.Sprintln(err))
+	}
+	return nil
+}
+
+func (nb *Nvimboat) anyArticleUnread(url ...string) (bool, error) {
+	var (
+		count   int
+		sqlArgs []any
+	)
+	for _, u := range url {
+		sqlArgs = append(sqlArgs, u)
+	}
+	row := nb.DB.QueryRow(articlesUneadQuery(len(url)), sqlArgs...)
+	err := row.Scan(&count)
+	if err != nil {
+		return false, errors.New("AnyArticleUnread -> row.Scan: " + fmt.Sprintln(err))
+	}
+	if count > 0 {
+		return true, nil
+	}
+	return false, nil
+}
+
+func (nb *Nvimboat) setArticleRead(urls ...string) error {
+	err := nb.articleReadState(0, urls...)
+	if err != nil {
+		return err
+	}
+	return err
+}
+
+func (nb *Nvimboat) setArticleUnread(urls ...string) error {
+	var err error
+	err = nb.articleReadState(1, urls...)
+	if err != nil {
+		return err
+	}
+	return err
 }

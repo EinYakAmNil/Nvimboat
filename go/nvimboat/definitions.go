@@ -65,6 +65,7 @@ type (
 		TagFeedCount map[string]int
 	}
 	TagFeeds struct {
+		Tag   string
 		Feeds []Feed
 	}
 )

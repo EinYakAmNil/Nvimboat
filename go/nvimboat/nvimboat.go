@@ -1,10 +1,8 @@
 package nvimboat
 
 import (
-	"errors"
 	"fmt"
 	"log"
-	"os"
 
 	"github.com/neovim/go-client/nvim"
 	nvimPlugin "github.com/neovim/go-client/nvim/plugin"
@@ -106,8 +104,28 @@ func (nb *Nvimboat) Push(p Page) error {
 }
 
 func (nb *Nvimboat) Pop() error {
+	var err error
 	oldPage := nb.PageStack.top
 	nb.PageStack.Pop()
+	switch p := nb.PageStack.top.(type) {
+	case *MainMenu:
+		nb.PageStack.top, err = nb.showMain()
+		if err != nil {
+			return err
+		}
+	case *Feed:
+		newPage, err := nb.QueryFeed(p.RssUrl)
+		if err != nil {
+			return err
+		}
+		nb.PageStack.top = &newPage
+	case *TagFeeds:
+		newPage, err := nb.QueryTagFeeds(p.Tag)
+		if err != nil {
+			return err
+		}
+		nb.PageStack.top = &newPage
+	}
 	pos, err := nb.PageStack.top.ElementIdx(oldPage)
 	if err != nil {
 		return err
@@ -125,35 +143,6 @@ func (nb *Nvimboat) Pop() error {
 		return err
 	}
 	return nil
-}
-
-func (nb *Nvimboat) setupLogging() {
-	var err error
-
-	nb.LogFile, err = os.OpenFile(nb.Config["log"].(string), os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
-	if err != nil {
-		log.Println(err)
-	}
-	log.SetOutput(nb.LogFile)
-	log.SetFlags(0)
-}
-
-func (nb *Nvimboat) setPageType(p Page) error {
-	t := pageTypeString(p)
-	err := nb.plugin.Nvim.ExecLua(nvimboatSetPageType, new(any), t)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (nb *Nvimboat) PageType() (any, error) {
-	var page_type any
-	err := nb.plugin.Nvim.ExecLua(nvimboatPage, &page_type)
-	if err != nil {
-		return "", errors.New(fmt.Sprintf("Can't get page type: %v", err))
-	}
-	return page_type, nil
 }
 
 func (nb *Nvimboat) SetLines(lines []string) error {

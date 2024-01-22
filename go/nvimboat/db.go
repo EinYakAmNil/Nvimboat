@@ -119,6 +119,7 @@ func (nb *Nvimboat) QueryTagFeeds(tag string) (TagFeeds, error) {
 		f        Feed
 		feedurls []any
 	)
+	tf.Tag = tag
 	for _, feed := range nb.ConfigFeeds {
 		for _, t := range feed["tags"].([]any) {
 			if t.(string) == tag {
