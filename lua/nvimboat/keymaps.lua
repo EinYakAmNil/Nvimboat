@@ -58,6 +58,18 @@ M.keymaps = {
 			rhs = action.open_media,
 			opts = map_opts
 		},
+		n = {
+			rhs = action.next_unread,
+			opts = map_opts
+		},
+		p = {
+			rhs = action.prev_unread,
+			opts = map_opts
+		},
+		N = {
+			rhs = action.prev_unread,
+			opts = map_opts
+		},
 	}
 }
 

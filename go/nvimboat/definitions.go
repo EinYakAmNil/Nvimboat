@@ -88,4 +88,6 @@ var Actions = []string{
 	"show-tags",
 	"select",
 	"back",
+	"next-unread",
+	"prev-unread",
 }

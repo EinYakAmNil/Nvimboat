@@ -40,6 +40,10 @@ func (nb *Nvimboat) Command(args []string) error {
 		return errors.New("No arguments for select command.")
 	case "back":
 		err = nb.Back()
+	case "next-unread":
+		nb.NextUnread()
+	case "prev-unread":
+		nb.PrevUnread()
 	}
 	if err != nil {
 		nb.Log(err)
@@ -193,4 +197,78 @@ func (nb *Nvimboat) ToggleArticleRead(urls ...string) error {
 	}
 	err = nb.setArticleUnread(urls...)
 	return err
+}
+
+func (nb *Nvimboat) NextUnread() error {
+	switch p := nb.PageStack.Pages[len(nb.PageStack.Pages)-2].(type) {
+	case *Filter:
+		start, err := p.ElementIdx(nb.PageStack.top)
+		if err != nil {
+			return errors.New("Couldn't find article in filter.")
+		}
+		for i := start + 1; i < len(p.Articles); i++ {
+			if p.Articles[i].Unread == 1 {
+				nb.Show(&p.Articles[i])
+				nb.PageStack.top = &p.Articles[i]
+			}
+		}
+	case *Feed:
+		start, err := p.ElementIdx(nb.PageStack.top)
+		if err != nil {
+			return errors.New("Couldn't find article in filter.")
+		}
+		for i := start + 1; i < len(p.Articles); i++ {
+			if p.Articles[i].Unread == 1 {
+				nb.Show(&p.Articles[i])
+				err = nb.setArticleRead(p.Articles[i].Url)
+				if err != nil {
+					return err
+				}
+				nb.PageStack.top = &p.Articles[i]
+				p.Articles[i].Unread = 0
+				nb.PageStack.Pages[len(nb.PageStack.Pages)-2] = p
+				return nil
+			}
+		}
+	default:
+		return nil
+	}
+	return nil
+}
+
+func (nb *Nvimboat) PrevUnread() error {
+	switch p := nb.PageStack.Pages[len(nb.PageStack.Pages)-2].(type) {
+	case *Filter:
+		start, err := p.ElementIdx(nb.PageStack.top)
+		if err != nil {
+			return errors.New("Couldn't find article in filter.")
+		}
+		for i := start + 1; i < len(p.Articles); i++ {
+			if p.Articles[i].Unread == 1 {
+				nb.Show(&p.Articles[i])
+				nb.PageStack.top = &p.Articles[i]
+			}
+		}
+	case *Feed:
+		start, err := p.ElementIdx(nb.PageStack.top)
+		if err != nil {
+			return errors.New("Couldn't find article in filter.")
+		}
+		for i := start - 1; i >= 0; i-- {
+			if p.Articles[i].Unread == 1 {
+				nb.Show(&p.Articles[i])
+				err = nb.setArticleRead(p.Articles[i].Url)
+				if err != nil {
+					return err
+				}
+				nb.PageStack.top = &p.Articles[i]
+				p.Articles[i].Unread = 0
+				nb.PageStack.Pages[len(nb.PageStack.Pages)-2] = p
+				return nil
+			}
+		}
+	default:
+		return nil
+	}
+	return nil
 }

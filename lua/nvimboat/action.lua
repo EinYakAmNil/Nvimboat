@@ -44,9 +44,53 @@ function M.toggle_article_read()
 end
 
 function M.next_unread()
+	if page.page_type == "TagsPage" then
+		return
+	end
+	if page.page_type == "Article" then
+		vim.cmd.Nvimboat("next-unread")
+		return
+	end
+
+	local row = api.nvim_win_get_cursor(0)[1]
+	local max_lines = #api.nvim_buf_get_lines(0, 0, -1, false)
+	local set = {
+		unread_feed = true,
+		unread_filter = true,
+		unread_article = true,
+	}
+
+	for i = row + 1, max_lines, 1 do
+		local node_type = vim.treesitter.get_node({ pos = { i - 1, 0 } }):type()
+		if set[node_type] ~= nil then
+			api.nvim_win_set_cursor(0, { i, 0 })
+			return
+		end
+	end
 end
 
 function M.prev_unread()
+	if page.page_type == "TagsPage" then
+		return
+	end
+	if page.page_type == "Article" then
+		vim.cmd.Nvimboat("prev-unread")
+		return
+	end
+
+	local set = {
+		unread_feed = true,
+		unread_filter = true,
+		unread_article = true,
+	}
+	local row = api.nvim_win_get_cursor(0)[1]
+	for i = row - 1, 1, -1 do
+		local node_type = vim.treesitter.get_node({ pos = { i - 1, 0 } }):type()
+		if set[node_type] ~= nil then
+			api.nvim_win_set_cursor(0, { i, 0 })
+			return
+		end
+	end
 end
 
 function M.open_media()
