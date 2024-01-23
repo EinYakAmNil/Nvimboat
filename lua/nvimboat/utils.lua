@@ -66,4 +66,21 @@ function M.play_videos(urls)
 		{ detach = true })
 end
 
+function M.relolad_feed(url, reloader)
+	vim.fn.jobstart(reloader .. " " .. url, {
+		stdout_buffered = true,
+		stderr_buffered = true,
+		on_stderr = function(_, data)
+			if data ~= "" then
+				print(vim.inspect(data))
+			end
+		end,
+		on_stdout = function(_, data)
+			if data ~= "" then
+				print(vim.inspect(data))
+			end
+		end
+	})
+end
+
 return M

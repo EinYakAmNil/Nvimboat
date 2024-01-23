@@ -48,6 +48,10 @@ M.keymaps = {
 			rhs = action.open_media,
 			opts = map_opts
 		},
+		R = {
+			rhs = action.reload_all,
+			opts = map_opts
+		}
 	},
 	v = {
 		a = {

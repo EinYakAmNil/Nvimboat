@@ -1,6 +1,7 @@
 local M = {}
 local default = require("nvimboat.default")
 local action = require("nvimboat.action")
+local feeds = require("nvimboat.feeds")
 
 local function init_nvimboat()
 	return vim.fn.jobstart({ M.config.godir .. "go-nvimboat" }, {
@@ -29,6 +30,7 @@ function M.setup(opts)
 	opts = opts or {}
 	M.config = load_config(opts)
 	M.feeds = opts.feeds or {}
+	feeds.setup(opts)
 	M.filters = opts.filters or {}
 	M.keymaps = require("nvimboat.keymaps").configure(opts)
 	M.enable = require("nvimboat.mode").enable
