@@ -90,4 +90,6 @@ var Actions = []string{
 	"back",
 	"next-unread",
 	"prev-unread",
+	"next-article",
+	"prev-article",
 }

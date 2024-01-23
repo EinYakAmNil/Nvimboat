@@ -98,8 +98,8 @@ func (nb *Nvimboat) Push(p Page) error {
 	if err != nil {
 		return err
 	}
-	nb.PageStack.Push(p)
 	err = nb.setPageType(p)
+	nb.PageStack.Push(p)
 	return err
 }
 

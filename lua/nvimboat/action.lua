@@ -106,9 +106,17 @@ function M.open_media()
 end
 
 function M.next_article()
+	if page.page_type ~= "Article" then
+		return
+	end
+	vim.cmd.Nvimboat("next-article")
 end
 
 function M.prev_article()
+	if page.page_type ~= "Article" then
+		return
+	end
+	vim.cmd.Nvimboat("prev-article")
 end
 
 function M.reload()

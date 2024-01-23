@@ -11,7 +11,6 @@ func (f *Feed) MainPrefix() string {
 
 		return "N (" + ratio
 	}
-
 	return "  (" + ratio
 }
 
@@ -21,7 +20,6 @@ func (f *Feed) PrefixCol() []string {
 	for _, a := range f.Articles {
 		col = append(col, a.Prefix())
 	}
-
 	return col
 }
 
@@ -31,7 +29,6 @@ func (f *Feed) PubDateCol() ([]string, error) {
 		err  error
 		date string
 	)
-
 	for _, a := range f.Articles {
 		date, err = unixToDate(a.PubDate)
 		if err != nil {
@@ -39,7 +36,6 @@ func (f *Feed) PubDateCol() ([]string, error) {
 		}
 		col = append(col, date)
 	}
-
 	return col, nil
 }
 
@@ -49,7 +45,6 @@ func (f *Feed) AuthorCol() []string {
 	for _, a := range f.Articles {
 		col = append(col, a.Author)
 	}
-
 	return col
 }
 
@@ -59,7 +54,6 @@ func (f *Feed) TitleCol() []string {
 	for _, a := range f.Articles {
 		col = append(col, a.Title)
 	}
-
 	return col
 }
 
@@ -69,7 +63,6 @@ func (f *Feed) UrlCol() []string {
 	for _, a := range f.Articles {
 		col = append(col, a.Url)
 	}
-
 	return col
 }
 

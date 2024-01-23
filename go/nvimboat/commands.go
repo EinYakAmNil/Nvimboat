@@ -44,6 +44,10 @@ func (nb *Nvimboat) Command(args []string) error {
 		nb.NextUnread()
 	case "prev-unread":
 		nb.PrevUnread()
+	case "next-article":
+		nb.NextArticle()
+	case "prev-article":
+		nb.PrevArticle()
 	}
 	if err != nil {
 		nb.Log(err)
@@ -114,7 +118,10 @@ func (nb *Nvimboat) Select(id string) error {
 		if err != nil {
 			return err
 		}
-		nb.setArticleRead(id)
+		err = nb.setArticleRead(id)
+		if err != nil {
+			return err
+		}
 	case *Feed:
 		article, err := nb.QueryArticle(id)
 		if err != nil {
@@ -124,7 +131,10 @@ func (nb *Nvimboat) Select(id string) error {
 		if err != nil {
 			return err
 		}
-		nb.setArticleRead(id)
+		err = nb.setArticleRead(id)
+		if err != nil {
+			return err
+		}
 	case *TagsPage:
 		feeds, err := nb.QueryTagFeeds(id)
 		if err != nil {
@@ -219,12 +229,14 @@ func (nb *Nvimboat) NextUnread() error {
 		}
 		for i := start + 1; i < len(p.Articles); i++ {
 			if p.Articles[i].Unread == 1 {
-				nb.Show(&p.Articles[i])
+				err = nb.Show(&p.Articles[i])
+				if err != nil {
+					return err
+				}
 				err = nb.setArticleRead(p.Articles[i].Url)
 				if err != nil {
 					return err
 				}
-				nb.PageStack.top = &p.Articles[i]
 				p.Articles[i].Unread = 0
 				nb.PageStack.Pages[len(nb.PageStack.Pages)-2] = p
 				return nil
@@ -256,7 +268,10 @@ func (nb *Nvimboat) PrevUnread() error {
 		}
 		for i := start - 1; i >= 0; i-- {
 			if p.Articles[i].Unread == 1 {
-				nb.Show(&p.Articles[i])
+				err = nb.Show(&p.Articles[i])
+				if err != nil {
+					return err
+				}
 				err = nb.setArticleRead(p.Articles[i].Url)
 				if err != nil {
 					return err
@@ -271,4 +286,107 @@ func (nb *Nvimboat) PrevUnread() error {
 		return nil
 	}
 	return nil
+}
+
+func (nb *Nvimboat) NextArticle() error {
+	var a Article
+	switch p := nb.PageStack.top.(type) {
+	case *Article:
+		stack := nb.PageStack.Pages
+		n := len(stack) - 2
+		i, err := stack[n].ElementIdx(p)
+		if err != nil {
+			return err
+		}
+		i++
+		switch f := stack[n].(type) {
+		case *Filter:
+			if i >= len(f.Articles) {
+				return errors.New("Already the last article of the feed.")
+			}
+			a = f.Articles[i]
+			err = nb.Show(&f.Articles[i])
+			if err != nil {
+				return err
+			}
+			f.Articles[i].Unread = 0
+			stack[n] = f
+			err = nb.setArticleRead(f.Articles[i].Url)
+			if err != nil {
+				return err
+			}
+		case *Feed:
+			if i >= len(f.Articles) {
+				return errors.New("Already the last article of the feed.")
+			}
+			a = f.Articles[i]
+			err = nb.Show(&f.Articles[i])
+			if err != nil {
+				return err
+			}
+			f.Articles[i].Unread = 0
+			stack[n] = f
+			err = nb.setArticleRead(f.Articles[i].Url)
+			if err != nil {
+				return err
+			}
+		default:
+			return errors.New("Previous page is not a feed/filter.")
+		}
+		nb.PageStack.Pages[len(nb.PageStack.Pages)-2] = stack[n]
+		nb.PageStack.top = &a
+		return nil
+	default:
+		return errors.New("Not inside an article")
+	}
+}
+
+func (nb *Nvimboat) PrevArticle() error {
+	var a Article
+	switch p := nb.PageStack.top.(type) {
+	case *Article:
+		stack := nb.PageStack.Pages
+		n := len(stack) - 2
+		i, err := stack[n].ElementIdx(p)
+		if err != nil {
+			return err
+		}
+		if i == 0 {
+			return errors.New("Already the first article of the feed.")
+		}
+		i--
+		switch f := stack[n].(type) {
+		case *Filter:
+			a = f.Articles[i]
+			err = nb.Show(&f.Articles[i])
+			if err != nil {
+				return err
+			}
+			f.Articles[i].Unread = 0
+			stack[n] = f
+			err = nb.setArticleRead(f.Articles[i].Url)
+			if err != nil {
+				return err
+			}
+		case *Feed:
+			a = f.Articles[i]
+			err = nb.Show(&f.Articles[i])
+			if err != nil {
+				return err
+			}
+			f.Articles[i].Unread = 0
+			stack[n] = f
+			err = nb.setArticleRead(f.Articles[i].Url)
+			if err != nil {
+				return err
+			}
+		default:
+			return errors.New("Previous page is not a feed/filter.")
+		}
+		nb.PageStack.Pages[len(nb.PageStack.Pages)-2] = stack[n]
+		nb.PageStack.top = &a
+		return nil
+	default:
+		return errors.New("Not inside an article")
+	}
 }
