@@ -48,6 +48,10 @@ func (nb *Nvimboat) Command(args []string) error {
 		nb.NextArticle()
 	case "prev-article":
 		nb.PrevArticle()
+	case "toggle-article-read":
+		nb.ToggleArticleRead(args[1:]...)
+	default:
+		nb.Log("Not yet mapped: ", args)
 	}
 	if err != nil {
 		nb.Log(err)
@@ -199,13 +203,33 @@ func (nb *Nvimboat) ShowTags() error {
 }
 
 func (nb *Nvimboat) ToggleArticleRead(urls ...string) error {
+	var err error
+	if urls[0] == "Article" {
+		err = nb.setArticleUnread(nb.PageStack.top.(*Article).Url)
+		return err
+	}
 	anyUnread, err := nb.anyArticleUnread(urls...)
-	nb.Log("Get unread state")
 	if anyUnread {
 		err = nb.setArticleRead(urls...)
+		if err != nil {
+			return err
+		}
+		newPage, err := nb.RequeryPage(nb.PageStack.top)
+		if err != nil {
+			return err
+		}
+		err = nb.Show(newPage)
 		return err
 	}
 	err = nb.setArticleUnread(urls...)
+	if err != nil {
+		return err
+	}
+	newPage, err := nb.RequeryPage(nb.PageStack.top)
+	if err != nil {
+		return err
+	}
+	err = nb.Show(newPage)
 	return err
 }
 

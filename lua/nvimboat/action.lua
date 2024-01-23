@@ -91,6 +91,24 @@ function M.prev_unread()
 end
 
 function M.toggle_article_read()
+	local vim_mode = vim.fn.mode()
+	local curpos = api.nvim_win_get_cursor(0)
+
+	if vim_mode == 'n' then
+		if page.page_type == "Article" then
+			vim.cmd.Nvimboat("toggle-article-read", "Article")
+			vim.cmd.Nvimboat("back")
+			return
+		end
+		local id = utils.line_id(M.separator)
+		vim.cmd.Nvimboat("toggle-article-read", id)
+	elseif vim_mode == 'v' or vim_mode == 'V' then
+		local ids = utils.seek_ids_visual(M.separator)
+		local escape = api.nvim_replace_termcodes("<Esc>", true, false, true)
+		api.nvim_feedkeys(escape, "v", false)
+		vim.cmd.Nvimboat("toggle-article-read", table.unpack(ids))
+	end
+	api.nvim_win_set_cursor(0, curpos)
 end
 
 function M.open_media()

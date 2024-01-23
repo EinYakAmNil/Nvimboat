@@ -6,6 +6,55 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
+func (nb *Nvimboat) RequeryPage(oldPage Page) (Page, error) {
+	var (
+		p   Page
+		err error
+	)
+	switch oldPage.(type) {
+	case *MainMenu:
+		p, err = nb.showMain()
+		if err != nil {
+			return p, err
+		}
+	case *Filter:
+		oF := oldPage.(*Filter)
+		pagePointer, err := nb.QueryFilter(oF.Query, oF.IncludeTags, oF.ExcludeTags)
+		if err != nil {
+			return p, err
+		}
+		p = &pagePointer
+	case *Feed:
+		oF := oldPage.(*Feed)
+		pagePointer, err := nb.QueryFeed(oF.RssUrl)
+		if err != nil {
+			return p, err
+		}
+		p = &pagePointer
+	case *Article:
+		oF := oldPage.(*Article)
+		pagePointer, err := nb.QueryArticle(oF.Url)
+		if err != nil {
+			return p, err
+		}
+		p = &pagePointer
+	case *TagsPage:
+		pagePointer, err := nb.QueryTags()
+		if err != nil {
+			return p, err
+		}
+		p = &pagePointer
+	case *TagFeeds:
+		oF := oldPage.(*TagFeeds)
+		pagePointer, err := nb.QueryTagFeeds(oF.Tag)
+		if err != nil {
+			return p, err
+		}
+		p = &pagePointer
+	}
+	return p, nil
+}
+
 func (nb *Nvimboat) QueryArticle(url string) (Article, error) {
 	var a = Article{Url: url}
 	row := nb.singleRow(articleQuery, a.Url)
