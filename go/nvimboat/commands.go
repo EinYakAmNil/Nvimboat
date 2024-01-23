@@ -218,8 +218,18 @@ func (nb *Nvimboat) NextUnread() error {
 		}
 		for i := start + 1; i < len(p.Articles); i++ {
 			if p.Articles[i].Unread == 1 {
-				nb.Show(&p.Articles[i])
+				err = nb.Show(&p.Articles[i])
+				if err != nil {
+					return err
+				}
+				err = nb.setArticleRead(p.Articles[i].Url)
+				if err != nil {
+					return err
+				}
+				p.Articles[i].Unread = 0
+				nb.PageStack.Pages[len(nb.PageStack.Pages)-2] = p
 				nb.PageStack.top = &p.Articles[i]
+				return nil
 			}
 		}
 	case *Feed:
@@ -239,6 +249,7 @@ func (nb *Nvimboat) NextUnread() error {
 				}
 				p.Articles[i].Unread = 0
 				nb.PageStack.Pages[len(nb.PageStack.Pages)-2] = p
+				nb.PageStack.top = &p.Articles[i]
 				return nil
 			}
 		}
@@ -255,10 +266,20 @@ func (nb *Nvimboat) PrevUnread() error {
 		if err != nil {
 			return errors.New("Couldn't find article in filter.")
 		}
-		for i := start + 1; i < len(p.Articles); i++ {
+		for i := start - 1; i >= 0; i-- {
 			if p.Articles[i].Unread == 1 {
-				nb.Show(&p.Articles[i])
+				err = nb.Show(&p.Articles[i])
+				if err != nil {
+					return err
+				}
+				err = nb.setArticleRead(p.Articles[i].Url)
+				if err != nil {
+					return err
+				}
+				p.Articles[i].Unread = 0
+				nb.PageStack.Pages[len(nb.PageStack.Pages)-2] = p
 				nb.PageStack.top = &p.Articles[i]
+				return nil
 			}
 		}
 	case *Feed:
@@ -276,9 +297,9 @@ func (nb *Nvimboat) PrevUnread() error {
 				if err != nil {
 					return err
 				}
-				nb.PageStack.top = &p.Articles[i]
 				p.Articles[i].Unread = 0
 				nb.PageStack.Pages[len(nb.PageStack.Pages)-2] = p
+				nb.PageStack.top = &p.Articles[i]
 				return nil
 			}
 		}
