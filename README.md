@@ -19,13 +19,13 @@ It aims to be fully compatible with the database schema of [newsboat](https://ne
 - Offers a more versatile UI than newsboat.
 - Special mode for viewing and managing feeds and articles.
 
-## Go
+## [Go](https://go.dev/)
 
 - Backend of the plugin
 - Handles formatting and display logic
 - Interacts with the database to fetch/update the required information
 
-## SQLite
+## [SQLite](https://www.sqlite.org/index.html)
 
 - Store the feed data in the same format as [newsboat](https://newsboat.org/)
 - Can be used interchangeably between these two programs
@@ -44,11 +44,6 @@ It aims to be fully compatible with the database schema of [newsboat](https://ne
     - Twitter-scraper (relies on nitter instances)
     - Mangapill tracker
 
-# Requirements not declareable in Neovim
-
-- [Go](https://go.dev/)
-- [SQLite](https://www.sqlite.org/index.html)
-
 # Installation
 
 ## Lazy.nvim
@@ -57,7 +52,16 @@ require("lazy").setup({
     { "EinYakAmNil/Nvimboat" }
 })
 ```
-
+## Default values
+```lua
+nvimboat.godir = runtime_path .. "go/"
+nvimboat.cachedir = runtime_path .. "cache/"
+nvimboat.cachetime = 600
+nvimboat.dbpath = M.cachedir .. "cache.db"
+nvimboat.log = runtime_path .. "nvimboat.log"
+nvimboat.separator = " | "
+nvimboat.reloader = runtime_path .. "python/reloader.py"
+```
 # Configuration
 
 - Feeds can be tagged to put them into categories and mark them for filters
@@ -93,6 +97,7 @@ nvimboat.setup({
     cache_time = 600 -- time for which cache is valid
 })
 ```
+- If you change the default separator, then treesitter will be broken and some functionalities won't work.
 
 # Usage
 
