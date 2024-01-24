@@ -1,14 +1,29 @@
-# Vimboat
+# Nvimboat
 
-A RSS/Atom/Twitter/Manga feed reader in Neovim
+A RSS/Atom/Twitter/Manga feed reader in Neovim.
+It aims to be fully compatible with the database schema of [newsboat](https://newsboat.org/), so migration can be done seamlessly.
+
+# But why would I want to read my RSS-Feeds in my text-editor?
+
+1. Extending newsboat is a pain. Everything has to be set to 'browser' before it can be executed.
+2. Keymaps cannot be bound to custom functions. Only Macros can call user defined scripts and I don't want to press an extra key just to invoke that.
+3. There is no visual mode in newsboat.
+4. Vim movements are more comfortable.
+5. Because you can.
 
 # Components 
 
+## Neovim
+
+- I'm using the latest stable version (whatever that may be at the time of you reading this). So development will always be done on that.
+- Offers a more versatile UI than newsboat.
+- Special mode for viewing and managing feeds and articles.
+
 ## Go
 
+- Backend of the plugin
 - Handles formatting and display logic
-- Makes GET-Requests to fetch the feeds
-- Parses feed information for the database
+- Interacts with the database to fetch/update the required information
 
 ## SQLite
 
@@ -21,10 +36,13 @@ A RSS/Atom/Twitter/Manga feed reader in Neovim
 - Creates a special mode with slightly different keymaps
 - Colorscheme is based on [treesitter](https://tree-sitter.github.io/tree-sitter/) nodes
 
-## Neovim
+## Python
 
-- Offers a more versatile UI than newsboat
-- Special mode for viewing and managing feeds and articles
+- Reload scripts for different kinds of feeds.
+- Default installation comes:
+    - with a normal RSS/Atom feed parser
+    - Twitter-scraper (relies on nitter instances)
+    - Mangapill tracker
 
 # Requirements not declareable in Neovim
 
@@ -42,7 +60,9 @@ require("lazy").setup({
 
 # Configuration
 
-+ Tags are currently unused, but the plan is to use them like in Newsboat
+- Feeds can be tagged to put them into categories and mark them for filters
+- A feed needs to have all the tags defined in a filter to be shown
+- Putting an exclamation mark in front of a tag can be used to exclude any feed that has been tagged by that
 
 ```lua
 local nvimboat = require("nvimboat")
@@ -50,12 +70,23 @@ local nvimboat = require("nvimboat")
 nvimboat.setup({
     urls = {
         {
-            rssurl = ""https://www.youtube.com/feeds/videos.xml?user=Harry101UK,
+            rssurl = "https://www.youtube.com/feeds/videos.xml?user=Harry101UK",
             tags = { "YouTube", "Animation" },
         },
         { rssurl = "https://www.archlinux.org/feeds/news/", tags = { "Tech" } },
         { rssurl = "https://suckless.org/atom.xml", tags = { "Tech" } },
     },
+    filters = {
+        {
+           name = "New YouTube tech videos, but not music",
+           query = "unread = 1",
+           tags = { "YouTube", "Tech", "!Music" },
+        },
+        {
+           name = "New Music",
+           query = "unread = 1",
+           tags = { "Music" },
+        },
     db = 'path/to/database'
     separator = " | " -- separator for UI
     cache_dir = "path/to/xml/cache"
@@ -63,14 +94,14 @@ nvimboat.setup({
 })
 ```
 
-# TODO
-
-- Tags for feeds
-- Speed up reload
-- Make filters based on tags
-- single feed reload
-
 # Usage
 
-- To start use the command: **Nvimboat enable**
-- When in Nvimboat mode use **h, j, k, l** to select items
+- To start use the command: **Nvimboat enable** or use the included *nvimboat.desktop* file.
+- When in Nvimboat mode remaps are done for the local buffer. Disabling Nvimboat mode should restore any custom configuration.
+- **l** selects an item, while **h** goes back to the last page. The pages are stored in the Go plugin as a sort of stack.
+- **n** shows or puts the cursor on the next unread feed/article. **N**/**p** does it for the previous one. **TODO**: implement periodic behaviour, maybe with a ring buffer?
+- **t** shows all the tags similar to newsboat and let's you select them to view all feeds of a specific tag.
+- While inside an article **J** and **K** can be used to show the next/previous article in the feed/filter. **TODO**: Show first article of next feed when reaching the end of one feed. 
+- **o** in normal and visual mode: will attempt to play selected articles when mpv is installed. **TODO**: Make it more general, but maybe a link handler shouldn't be part of this project. 
+- **q** goes back to the main menu.
+- **R** updates all the feeds. **TODO**: rework state tracking in neovim so individual feed reload can be done.
