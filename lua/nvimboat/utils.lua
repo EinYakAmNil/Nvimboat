@@ -83,4 +83,21 @@ function M.relolad_feed(url, reloader)
 	})
 end
 
+function M.sort_by_reloader(feeds)
+	local default_reload = {}
+	local reloaders = {}
+	for _, feed in ipairs(feeds) do
+		if feed.reloader then
+			if reloaders[feed.reloader] then
+				table.insert(reloaders[feed.reloader], feed.rssurl)
+			else
+				reloaders[feed.reloader] = { feed.rssurl }
+			end
+		else
+			table.insert(default_reload, feed.rssurl)
+		end
+	end
+	return default_reload, reloaders
+end
+
 return M

@@ -1,11 +1,11 @@
 local page = require("nvimboat.page")
 local utils = require("nvimboat.utils")
-local feeds = require("nvimboat.feeds")
 local api = vim.api
 local M = {}
 
 function M.setup(opts)
 	M.separator = opts.separator
+	M.reloader = opts.reloader
 end
 
 function M.select()
@@ -136,16 +136,6 @@ function M.prev_article()
 		return
 	end
 	vim.cmd.Nvimboat("prev-article")
-end
-
-function M.reload_all()
-	for _, feed in ipairs(feeds.feeds) do
-		if not feed.reloader then
-			utils.relolad_feed(feed.rssurl, feeds.reloader)
-		else
-			utils.relolad_feed(feed.rssurl, feed.reloader)
-		end
-	end
 end
 
 return M

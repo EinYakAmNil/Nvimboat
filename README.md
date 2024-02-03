@@ -1,6 +1,6 @@
 # Nvimboat
 
-A RSS/Atom/Twitter/Manga feed reader in Neovim.
+A RSS/Atom feed reader in Neovim.
 It aims to be fully compatible with the database schema of [newsboat](https://newsboat.org/), so migration can be done seamlessly.
 
 # But why would I want to read my RSS-Feeds in my text-editor?
@@ -19,7 +19,7 @@ It aims to be fully compatible with the database schema of [newsboat](https://ne
 - Offers a more versatile UI than newsboat.
 - Special mode for viewing and managing feeds and articles.
 
-## [Go](https://go.dev/)
+## [Go](https://pkg.go.dev/github.com/neovim/go-client/nvim)
 
 - Backend of the plugin
 - Handles formatting and display logic
@@ -39,10 +39,6 @@ It aims to be fully compatible with the database schema of [newsboat](https://ne
 ## Python
 
 - Reload scripts for different kinds of feeds.
-- Default installation comes:
-    - with a normal RSS/Atom feed parser
-    - Twitter-scraper (relies on nitter instances)
-    - Mangapill tracker
 
 # Installation
 
@@ -57,7 +53,7 @@ require("lazy").setup({
 nvimboat.godir = runtime_path .. "go/"
 nvimboat.cachedir = runtime_path .. "cache/"
 nvimboat.cachetime = 600
-nvimboat.dbpath = M.cachedir .. "cache.db"
+nvimboat.dbpath = nvimboat.cachedir .. "cache.db"
 nvimboat.log = runtime_path .. "nvimboat.log"
 nvimboat.separator = " | "
 nvimboat.reloader = runtime_path .. "python/reloader.py"
