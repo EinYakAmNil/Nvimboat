@@ -14,7 +14,7 @@ GUID_QUERY = "SELECT guid FROM rss_item"
 INSERT_RSS_FEED = (
     "INSERT INTO rss_feed(rssurl, url, title, etag) VALUES(:rssurl, :url, :title, '')"
 )
-INSERT_RSS_ITEM = "INSERT INTO rss_item(guid, title, author, url, feedurl, pubDate, content, unread, content_mime_type) VALUES(:guid, :title, :author, :url, :feedurl, :pubDate, :content, 0, 'text/html')"
+INSERT_RSS_ITEM = "INSERT INTO rss_item(guid, title, author, url, feedurl, pubDate, content, unread, content_mime_type) VALUES(:guid, :title, :author, :url, :feedurl, :pubDate, :content, 1, 'text/html')"
 
 
 def date2unix(timestamp):
@@ -126,18 +126,24 @@ def feed_generator(feedurl: str, cache_dir: str, cache_time: int):
 
 def update_db(database: str, feeds: str, articles: str):
     db_conn = apsw.Connection(database, flags=apsw.SQLITE_OPEN_READWRITE)
-    x = db_conn.execute(GUID_QUERY)
     known_feeds = {rssurl[0] for rssurl in db_conn.execute(FEEDURL_QUERY)}
     known_articles = {guid[0] for guid in db_conn.execute(GUID_QUERY)}
     new_feeds = (known_feeds ^ set(feeds)) - known_feeds
     new_articles = (known_articles ^ set(articles)) - known_articles
+    for f in new_feeds:
+        logging.info(f"New feed: {f}")
+    for a in new_articles:
+        logging.info(f"New article: {a}")
     db_conn.executemany(
         INSERT_RSS_FEED, [f for k, f in feeds.items() if k in new_feeds]
     )
+    logging.info("Inserted new feeds.")
     db_conn.executemany(
         INSERT_RSS_ITEM, [a for k, a in articles.items() if k in new_articles]
     )
+    logging.info("Inserted new articles.")
     db_conn.close()
+    logging.info("Closed database.")
 
 
 if __name__ == "__main__":
@@ -159,8 +165,7 @@ if __name__ == "__main__":
     cmdline.add_argument(
         "-v",
         "--verbose",
-        type=bool,
-        default=False,
+        action="store_true",
         help="",
     )
     cmdline.add_argument("urls", nargs="+", help="URLs to request.")
@@ -177,7 +182,7 @@ if __name__ == "__main__":
     logging.basicConfig(
         level=loglevel,
         format="%(asctime)s [%(levelname)s] %(message)s",
-        handlers=[logging.FileHandler("pyboat.log"), logging.StreamHandler(sys.stdout)],
+        handlers=[logging.FileHandler(f"{cache_dir}/pyboat.log"), logging.StreamHandler(sys.stdout)],
     )
 
     parsed_feeds = [feed_generator(f, cache_dir, cache_time) for f in feedurls]
