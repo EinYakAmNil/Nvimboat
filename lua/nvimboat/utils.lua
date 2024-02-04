@@ -74,7 +74,6 @@ function M.reload_feed(reloader, feeds)
 	end
 	local urls = table.concat(feeds, " ")
 	vim.fn.jobstart(reloader .. " " .. urls, {
-		stdout_buffered = true,
 		stderr_buffered = true,
 		on_stderr = function(_, data)
 			if data ~= "" then
