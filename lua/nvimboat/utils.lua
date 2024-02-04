@@ -77,7 +77,11 @@ function M.reload_feed(reloader, feeds)
 		stderr_buffered = true,
 		on_stderr = function(_, data)
 			if data ~= "" then
-				print(vim.inspect(data))
+				for _, msg in ipairs(data) do
+					if msg ~= "" then
+						print(msg)
+					end
+				end
 			end
 		end,
 		on_stdout = function(_, data)
