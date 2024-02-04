@@ -46,9 +46,14 @@ It aims to be fully compatible with the database schema of [newsboat](https://ne
 
 ## Lazy.nvim
 ```lua
-require("lazy").setup({
-    { "EinYakAmNil/Nvimboat" }
-})
+{
+    "EinYakAmNil/Nvimboat",
+    branch = "filter",
+    build = function()
+        local nvimboat_go_path = vim.fn.stdpath("data") .. "/lazy/Nvimboat/go"
+        vim.fn.jobstart("go build -C " .. nvimboat_go_path)
+    end
+},
 ```
 ## Default values
 ```lua
@@ -60,8 +65,7 @@ nvimboat.log = runtime_path .. "nvimboat.log"
 nvimboat.separator = " | "
 nvimboat.reloader = runtime_path .. "python/reloader.py"
 ```
-# Configuration
-
+## Configuration
 - Feeds can be tagged to put them into categories and mark them for filters
 - A feed needs to have all the tags defined in a filter to be shown
 - Putting an exclamation mark in front of a tag can be used to exclude any feed that has been tagged by that
@@ -93,14 +97,13 @@ nvimboat.setup({
            query = "unread = 1",
            tags = { "Music" },
         },
+    -- These values don't have to be configured, but they can be.
     db = 'path/to/database'
     separator = " | " -- separator for UI, changing it will break treesitter
     cache_dir = "path/to/xml/cache"
     cache_time = 1200 -- time for which cache is valid
 })
 ```
-- If you change the default separator, then treesitter will be broken and some functionalities won't work.
-
 # Usage
 
 To start use the command: **Nvimboat enable** or use the included *nvimboat.desktop* file.
@@ -119,6 +122,11 @@ Keymaps:
 
 When reloading, the plugin first sorts the feeds by their reloader an then passes all the URLs of each reloader as a long line of arguments.
 This should be taken into account when making custom scripts.
+
+# Migration from newsboat
+
+You can just copy your old newsboat database into the cache directory of the installation path.
+If you use lazy.nvim it should look something like _$HOME/.local/share/nvim/lazy/Nvimboat/cache_.
 
 # Notice
 Please feel free to give me any feedback you have about this plugin.
