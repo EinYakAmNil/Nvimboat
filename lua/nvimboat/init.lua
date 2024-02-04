@@ -24,6 +24,7 @@ local function load_config(opts)
 	C.log = opts.log or default.log
 	C.separator = opts.separator or default.separator
 	C.reloader = opts.reloader or default.reloader
+	C.feeds = opts.feeds or {}
 	action.setup(C)
 
 	return C
@@ -31,9 +32,9 @@ end
 
 function M.setup(opts)
 	opts = opts or {}
-	M.config = load_config(opts)
 	M.feeds = opts.feeds or {}
 	M.filters = opts.filters or {}
+	M.config = load_config(opts)
 	M.keymaps = require("nvimboat.keymaps").configure(opts)
 	M.enable = require("nvimboat.mode").enable
 	M.disable = require("nvimboat.mode").disable

@@ -62,12 +62,18 @@ function M.play_videos(urls)
 	if playlist then
 		playlist:close()
 	end
-	vim.fn.jobstart({ "mpv", "--no-terminal", "--profile=builtin-pseudo-gui", "--playlist=" .. playlist_file },
-		{ detach = true })
+	vim.fn.jobstart(
+		"mpv --no-terminal --profile=builtin-pseudo-gui --playlist=" .. playlist_file,
+		{ detach = true }
+	)
 end
 
-function M.relolad_feed(url, reloader)
-	vim.fn.jobstart(reloader .. " " .. url, {
+function M.reload_feed(reloader, feeds)
+	for i, url in ipairs(feeds) do
+		feeds[i] = '"' .. url .. '"'
+	end
+	local urls = table.concat(feeds, " ")
+	vim.fn.jobstart(reloader .. " " .. urls, {
 		stdout_buffered = true,
 		stderr_buffered = true,
 		on_stderr = function(_, data)
@@ -77,7 +83,11 @@ function M.relolad_feed(url, reloader)
 		end,
 		on_stdout = function(_, data)
 			if data ~= "" then
-				print(vim.inspect(data))
+				for _, msg in ipairs(data) do
+					if msg ~= "" then
+						print(msg)
+					end
+				end
 			end
 		end
 	})

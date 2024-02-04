@@ -6,6 +6,7 @@ local M = {}
 function M.setup(opts)
 	M.separator = opts.separator
 	M.reloader = opts.reloader
+	M.feeds = opts.feeds
 end
 
 function M.select()
@@ -136,6 +137,14 @@ function M.prev_article()
 		return
 	end
 	vim.cmd.Nvimboat("prev-article")
+end
+
+function M.reload_all()
+	local default_reload, special_reload = utils.sort_by_reloader(M.feeds)
+	utils.reload_feed(M.reloader, default_reload)
+	for reloader, feeds in pairs(special_reload) do
+		utils.reload_feed(reloader, feeds)
+	end
 end
 
 return M

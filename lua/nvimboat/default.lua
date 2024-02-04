@@ -17,6 +17,6 @@ M.cachetime = 600
 M.dbpath = M.cachedir .. "cache.db"
 M.log = runtime_path .. "nvimboat.log"
 M.separator = " | "
-M.reloader = runtime_path .. "python/reloader.py"
+M.reloader = runtime_path .. "python/reloader.py --cache-dir " .. M.cachedir
 
 return M
