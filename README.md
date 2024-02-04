@@ -48,7 +48,6 @@ It aims to be fully compatible with the database schema of [newsboat](https://ne
 ```lua
 {
     "EinYakAmNil/Nvimboat",
-    branch = "filter",
     build = function()
         local nvimboat_go_path = vim.fn.stdpath("data") .. "/lazy/Nvimboat/go"
         vim.fn.jobstart("go build -C " .. nvimboat_go_path)
