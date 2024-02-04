@@ -1,3 +1,4 @@
+#!/bin/env python3
 import apsw
 import argparse
 import feedparser
