@@ -181,7 +181,7 @@ if __name__ == "__main__":
 
     logging.basicConfig(
         level=loglevel,
-        format="%(asctime)s [%(levelname)s] %(message)s",
+        format="%(levelname)s: %(message)s",
         handlers=[logging.FileHandler(f"{cache_dir}/pyboat.log"), logging.StreamHandler(sys.stdout)],
     )
 
