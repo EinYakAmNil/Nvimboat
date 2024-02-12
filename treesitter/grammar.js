@@ -11,9 +11,6 @@ module.exports = grammar({
 			$.header,
 			$.body,
 		),
-		// _tags_page: $ => choice(
-		// 	$.tag,
-		// ),
 		_filter: $ => choice(
 			$.unread_filter,
 			$.read_filter

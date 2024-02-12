@@ -24,6 +24,7 @@ local function load_config(opts)
 	C.log = opts.log or default.log
 	C.separator = opts.separator or default.separator
 	C.reloader = opts.reloader or default.reloader
+	C.linkhandler = opts.linkhandler or default.linkhandler
 	C.feeds = opts.feeds or {}
 	action.setup(C)
 
