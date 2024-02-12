@@ -41,7 +41,7 @@ type (
 		ExcludeTags  []string
 		UnreadCount  int
 		ArticleCount int
-		Articles     []Article
+		Articles     []*Article
 	}
 	Feed struct {
 		Title        string

@@ -112,19 +112,19 @@ func (nb *Nvimboat) Select(id string) error {
 			}
 		}
 	case *Filter:
-		article, err := nb.QueryArticle(id)
-		if err != nil {
-			return err
-		}
-		pos, err := nb.PageStack.top.ElementIdx(&article)
-		nb.PageStack.top.(*Filter).Articles[pos].Unread = 0
-		nb.Push(&article)
-		if err != nil {
-			return err
-		}
-		err = nb.setArticleRead(id)
-		if err != nil {
-			return err
+		articles := nb.PageStack.top.(*Filter).Articles
+		for _, a := range articles {
+			if a.Url == id {
+				a.Unread = 0
+				err := nb.Push(a)
+				if err != nil {
+					return err
+				}
+				err = nb.setArticleRead(id)
+				if err != nil {
+					return err
+				}
+			}
 		}
 	case *Feed:
 		article, err := nb.QueryArticle(id)
@@ -168,10 +168,7 @@ func (nb *Nvimboat) Back() error {
 	case *MainMenu:
 		return nil
 	default:
-		err := nb.Pop()
-		if err != nil {
-			return err
-		}
+		nb.Pop()
 	}
 	return nil
 }
@@ -206,6 +203,24 @@ func (nb *Nvimboat) ToggleArticleRead(urls ...string) error {
 	var err error
 	if urls[0] == "Article" {
 		err = nb.setArticleUnread(nb.PageStack.top.(*Article).Url)
+		if err != nil {
+			return err
+		}
+		switch f := nb.PageStack.Pages[len(nb.PageStack.Pages)-2].(type) {
+		case *Filter:
+			pos, err := f.ElementIdx(nb.PageStack.top)
+			if err != nil {
+				return err
+			}
+			f.Articles[pos].Unread = 1
+		case *Feed:
+			pos, err := f.ElementIdx(nb.PageStack.top)
+			if err != nil {
+				return err
+			}
+			f.Articles[pos].Unread = 1
+		}
+		nb.Pop()
 		return err
 	}
 	anyUnread, err := nb.anyArticleUnread(urls...)
@@ -214,22 +229,36 @@ func (nb *Nvimboat) ToggleArticleRead(urls ...string) error {
 		if err != nil {
 			return err
 		}
-		newPage, err := nb.RequeryPage(nb.PageStack.top)
+	} else {
+		err = nb.setArticleUnread(urls...)
+		if err != nil {
+			return err
+		}
+	}
+	switch p := nb.PageStack.top.(type) {
+	case *Filter:
+		var r int
+		if anyUnread {
+			r = 0
+		} else {
+			r = 1
+		}
+		for _, a := range p.Articles {
+			for _, u := range urls {
+				if a.Url == u {
+					a.Unread = r
+				}
+			}
+		}
+		err = nb.Show(p)
+		return err
+	default:
+		newPage, err := nb.RequeryPage(p)
 		if err != nil {
 			return err
 		}
 		err = nb.Show(newPage)
-		return err
 	}
-	err = nb.setArticleUnread(urls...)
-	if err != nil {
-		return err
-	}
-	newPage, err := nb.RequeryPage(nb.PageStack.top)
-	if err != nil {
-		return err
-	}
-	err = nb.Show(newPage)
 	return err
 }
 
@@ -242,7 +271,7 @@ func (nb *Nvimboat) NextUnread() error {
 		}
 		for i := start + 1; i < len(p.Articles); i++ {
 			if p.Articles[i].Unread == 1 {
-				err = nb.Show(&p.Articles[i])
+				err = nb.Show(p.Articles[i])
 				if err != nil {
 					return err
 				}
@@ -252,7 +281,7 @@ func (nb *Nvimboat) NextUnread() error {
 				}
 				p.Articles[i].Unread = 0
 				nb.PageStack.Pages[len(nb.PageStack.Pages)-2] = p
-				nb.PageStack.top = &p.Articles[i]
+				nb.PageStack.top = p.Articles[i]
 				return nil
 			}
 		}
@@ -292,7 +321,7 @@ func (nb *Nvimboat) PrevUnread() error {
 		}
 		for i := start - 1; i >= 0; i-- {
 			if p.Articles[i].Unread == 1 {
-				err = nb.Show(&p.Articles[i])
+				err = nb.Show(p.Articles[i])
 				if err != nil {
 					return err
 				}
@@ -302,7 +331,7 @@ func (nb *Nvimboat) PrevUnread() error {
 				}
 				p.Articles[i].Unread = 0
 				nb.PageStack.Pages[len(nb.PageStack.Pages)-2] = p
-				nb.PageStack.top = &p.Articles[i]
+				nb.PageStack.top = p.Articles[i]
 				return nil
 			}
 		}
@@ -349,8 +378,8 @@ func (nb *Nvimboat) NextArticle() error {
 			if i >= len(f.Articles) {
 				return errors.New("Already the last article of the feed.")
 			}
-			a = f.Articles[i]
-			err = nb.Show(&f.Articles[i])
+			a = *f.Articles[i]
+			err = nb.Show(f.Articles[i])
 			if err != nil {
 				return err
 			}
@@ -402,8 +431,8 @@ func (nb *Nvimboat) PrevArticle() error {
 		i--
 		switch f := stack[n].(type) {
 		case *Filter:
-			a = f.Articles[i]
-			err = nb.Show(&f.Articles[i])
+			a = *f.Articles[i]
+			err = nb.Show(f.Articles[i])
 			if err != nil {
 				return err
 			}

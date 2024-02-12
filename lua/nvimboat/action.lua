@@ -99,7 +99,6 @@ function M.toggle_article_read()
 	if vim_mode == 'n' then
 		if page.page_type == "Article" then
 			vim.cmd.Nvimboat("toggle-article-read", "Article")
-			vim.cmd.Nvimboat("back")
 			return
 		end
 		local id = utils.line_id(M.separator)
@@ -108,7 +107,7 @@ function M.toggle_article_read()
 		local ids = utils.seek_ids_visual(M.separator)
 		local escape = api.nvim_replace_termcodes("<Esc>", true, false, true)
 		api.nvim_feedkeys(escape, "v", false)
-		vim.cmd.Nvimboat("toggle-article-read", table.unpack(ids))
+		vim.cmd.Nvimboat("toggle-article-read", unpack(ids))
 	end
 	api.nvim_win_set_cursor(0, curpos)
 end

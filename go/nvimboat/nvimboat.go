@@ -34,56 +34,29 @@ func (nb *Nvimboat) Show(p Page) error {
 	defer nb.trimTrail()
 
 	switch p.(type) {
-	case *MainMenu:
-		cols, err := p.Render()
-		if err != nil {
-			return err
-		}
-		for _, c := range cols {
-			err = nb.addColumn(c, nb.Config["separator"].(string))
-			if err != nil {
-				return err
-			}
-		}
-	case *TagFeeds:
-		cols, err := p.Render()
-		if err != nil {
-			return err
-		}
-		for _, c := range cols {
-			err = nb.addColumn(c, nb.Config["separator"].(string))
-			if err != nil {
-				return err
-			}
-		}
-	case *Feed:
-		cols, err := p.Render()
-		if err != nil {
-			return err
-		}
-		for _, c := range cols {
-			err = nb.addColumn(c, nb.Config["separator"].(string))
-			if err != nil {
-				return err
-			}
-		}
-	case *Filter:
-		cols, err := p.Render()
-		if err != nil {
-			return err
-		}
-		for _, c := range cols {
-			err = nb.addColumn(c, nb.Config["separator"].(string))
-			if err != nil {
-				return err
-			}
-		}
-	default:
+	case *Article:
 		lines, err := p.Render()
 		if err != nil {
 			return err
 		}
 		nb.SetLines(lines[0])
+	case *TagsPage:
+		lines, err := p.Render()
+		if err != nil {
+			return err
+		}
+		nb.SetLines(lines[0])
+	default:
+		cols, err := p.Render()
+		if err != nil {
+			return err
+		}
+		for _, c := range cols {
+			err = nb.addColumn(c, nb.Config["separator"].(string))
+			if err != nil {
+				return err
+			}
+		}
 	}
 	return nil
 }

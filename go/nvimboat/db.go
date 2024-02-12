@@ -121,7 +121,6 @@ func (nb *Nvimboat) QueryFeed(feedUrl string) (Feed, error) {
 func (nb *Nvimboat) QueryFilter(query string, inTags, exTags []string) (Filter, error) {
 	var (
 		f Filter
-		a Article
 	)
 	f.Query = query
 	f.IncludeTags = inTags
@@ -137,6 +136,7 @@ func (nb *Nvimboat) QueryFilter(query string, inTags, exTags []string) (Filter, 
 	}
 	defer rows.Close()
 	for rows.Next() {
+		a := new(Article)
 		err = rows.Scan(&a.Guid, &a.Title, &a.Author, &a.Url, &a.FeedUrl, &a.PubDate, &a.Content, &a.Unread)
 		if err != nil {
 			return f, nil
