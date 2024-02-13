@@ -6,7 +6,7 @@ M.config = default
 M.utils = require("nvimboat.utils")
 
 local function init_nvimboat()
-	return vim.fn.jobstart({ M.config.godir .. "go-nvimboat" }, {
+	return vim.fn.jobstart({ M.config.godir .. "gonboat" }, {
 		rpc = true,
 		on_stderr = function(_, data)
 			local msg = ""

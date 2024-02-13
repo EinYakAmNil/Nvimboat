@@ -1,8 +1,19 @@
 local api = vim.api
 local eq = assert.are.same
 
+local function dump_buffer()
+	local lines = api.nvim_buf_get_lines(0, 0, -1, false)
+	for _, l in ipairs(lines) do
+		print(l)
+	end
+end
+
 describe("nvimboat", function()
 	local nvimboat = require("nvimboat")
+	local filter_config = {
+		{ name = "New YouTube", query = "unread = 1", tags = { "YouTube" } },
+		{ name = "New Music",   query = "unread = 1", tags = { "Music" } },
+	}
 	local feeds_config = {
 		{ rssurl = "https://lukesmith.xyz/rss.xml",                                                tags = { "Tech", "Linux", "Politics" }, },
 		{ rssurl = "https://notrelated.xyz/rss",                                                   tags = { "Science" } },
@@ -39,6 +50,7 @@ describe("nvimboat", function()
 	it("setup feeds.", function()
 		nvimboat.setup({
 			feeds = feeds_config,
+			filters = filter_config
 		})
 		eq(nvimboat.feeds, feeds_config)
 	end)
@@ -55,4 +67,19 @@ describe("nvimboat", function()
 		eq(pixiv_feeds, special_feeds["pixivboat --cache-dir " .. nvimboat.config.cachedir])
 	end
 	)
+	it("can call the Nvimboat command", function()
+		-- dump_buffer()
+		vim.cmd.Nvimboat("enable")
+		-- dump_buffer()
+		eq(nvimboat.page.page_type, "MainMenu")
+	end)
+	it("can select a feed then a article and go back", function()
+		vim.cmd.Nvimboat("select", "https://lukesmith.xyz/rss.xml")
+		eq(nvimboat.page.page_type, "Feed")
+		vim.cmd.Nvimboat("select", "https://lukesmith.xyz/updates/lindypress-bug-fix/")
+		eq(nvimboat.page.page_type, "Article")
+		dump_buffer()
+		vim.cmd.Nvimboat("show-main")
+		eq(nvimboat.page.page_type, "MainMenu")
+	end)
 end)

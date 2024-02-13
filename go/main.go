@@ -23,11 +23,10 @@ func nvimboatLoop(cnb chan *nvimboat.Nvimboat) {
 		defer nb.DB.Close()
 	}
 	cnb <- nb
-	nb.ExecDB = make(chan nvimboat.DBsync)
+	nb.ChanExecDB = make(chan nvimboat.DBsync)
 	nvimPlugin.Main(func(p *nvimPlugin.Plugin) error {
-		if p.Nvim != nil {
-
-		}
+		nb.Prepare(p)
+		p.HandleCommand(&nvimPlugin.CommandOptions{Name: "Nvimboat", NArgs: "+", Complete: "customlist,CompleteNvimboat"}, nb.Command)
 		p.HandleFunction(&nvimPlugin.FunctionOptions{Name: "CompleteNvimboat"}, func(c *nvim.CommandCompletionArgs) ([]string, error) {
 			var suggestions []string
 
@@ -44,8 +43,6 @@ func nvimboatLoop(cnb chan *nvimboat.Nvimboat) {
 		})
 		return nil
 	})
-
-	fmt.Println("event loop has finished")
 }
 
 func unreadUpdate(nb *nvimboat.Nvimboat) {
@@ -59,7 +56,7 @@ func unreadUpdate(nb *nvimboat.Nvimboat) {
 
 func handleExec(nb *nvimboat.Nvimboat) error {
 	select {
-	case exec, ok := <-nb.ExecDB:
+	case exec, ok := <-nb.ChanExecDB:
 		if ok {
 			fmt.Println(exec)
 		}
