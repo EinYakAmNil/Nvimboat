@@ -2,6 +2,7 @@ package nvimboat
 
 import (
 	"database/sql"
+	"fmt"
 	"os"
 	"path"
 
@@ -142,6 +143,25 @@ func (nb *Nvimboat) QueryArticle(url string) (Article, error) {
 		return a, err
 	}
 	return a, nil
+}
+
+func (nb *Nvimboat) anyArticleUnread(url ...string) (bool, error) {
+	var (
+		count   int
+		sqlArgs []any
+	)
+	for _, u := range url {
+		sqlArgs = append(sqlArgs, u)
+	}
+	row := nb.DB.QueryRow(articlesUneadQuery(len(url)), sqlArgs...)
+	err := row.Scan(&count)
+	if err != nil {
+		return false, fmt.Errorf("AnyArticleUnread -> row.Scan: " + fmt.Sprintln(err))
+	}
+	if count > 0 {
+		return true, nil
+	}
+	return false, nil
 }
 
 func (nb *Nvimboat) singleRow(query string, args ...any) *sql.Row {

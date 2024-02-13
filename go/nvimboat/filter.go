@@ -2,7 +2,6 @@ package nvimboat
 
 import (
 	"errors"
-	"slices"
 	"strconv"
 )
 
@@ -75,9 +74,10 @@ func (f *Filter) Render(unreadOnly bool) ([][]string, error) {
 }
 
 func (f *Filter) SubPageIdx(article Page) (int, error) {
-	index := slices.Index(f.Articles, article.(*Article))
-	if index >= 0 {
-		return index, nil
+	for i, a := range f.Articles {
+		if a.Url == article.(*Article).Url {
+			return i, nil
+		}
 	}
 	return 0, errors.New("Couldn't find article in filter.")
 }

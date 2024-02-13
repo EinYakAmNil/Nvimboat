@@ -15,15 +15,15 @@ func (nb *Nvimboat) Command(args []string) error {
 	case "show-tags":
 		err = nb.ShowTags()
 	case "next-unread":
-		nb.NextUnread()
+		err = nb.NextUnread()
 	case "prev-unread":
-		nb.PrevUnread()
+		err = nb.PrevUnread()
 	case "next-article":
-		nb.NextArticle()
+		err = nb.NextArticle()
 	case "prev-article":
-		nb.PrevArticle()
-	case "toggle-article-read":
-		nb.ToggleArticleRead(args[1:]...)
+		err = nb.PrevArticle()
+	case "toggle-read":
+		err = nb.ToggleArticleRead(args[1:]...)
 	case "back":
 		err = nb.Back()
 	case "select":
@@ -47,9 +47,12 @@ func (nb *Nvimboat) Push(p Page) error {
 	if err != nil {
 		return err
 	}
-	err = nb.setPageType(p)
 	nb.Pages.Push(p)
 	return err
+}
+
+func (nb *Nvimboat) Pop() error {
+	return nil
 }
 
 func (nb *Nvimboat) Show(p Page) error {
@@ -81,6 +84,7 @@ func (nb *Nvimboat) Show(p Page) error {
 			}
 		}
 	}
+	nb.setPageType(p)
 	return nil
 }
 

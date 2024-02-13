@@ -11,7 +11,7 @@ local function init_nvimboat()
 		on_stderr = function(_, data)
 			local msg = ""
 			for _, d in ipairs(data) do
-				msg = msg .. d
+				msg = msg .. "\n" .. d
 			end
 			print(msg)
 		end

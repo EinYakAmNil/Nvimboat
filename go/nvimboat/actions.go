@@ -118,7 +118,44 @@ func (nb *Nvimboat) PrevArticle() error {
 	return nil
 }
 func (nb *Nvimboat) ToggleArticleRead(urls ...string) error {
-	return nil
+	var (
+		err    error
+		sync   DBsync
+	)
+	if urls[0] == "Article" {
+		article := nb.Pages.Top().(*Article)
+		nb.Pages.Pop()
+		nb.Log(nb.Pages.Top())
+		nb.ToggleArticleRead(article.Url)
+		idx, err := nb.Pages.Top().SubPageIdx(article)
+		if err != nil {
+			return err
+		}
+		switch page := nb.Pages.Top().(type) {
+		case *Filter:
+			page.Articles[idx].Unread = 1
+		case *Feed:
+			page.Articles[idx].Unread = 1
+		}
+		nb.Show(nb.Pages.Top())
+	}
+	anyUnread, err := nb.anyArticleUnread(urls...)
+	if err != nil {
+		return err
+	}
+	if anyUnread {
+		sync.Unread = 0
+	} else {
+		sync.Unread = 1
+	}
+	switch nb.Pages.Top().(type) {
+	case *Filter:
+	sync.ArticleUrls = urls
+	case *Feed:
+	sync.ArticleUrls = urls
+	}
+	nb.ChanExecDB <- sync
+	return err
 }
 
 var Actions = []string{
@@ -132,4 +169,5 @@ var Actions = []string{
 	"prev-unread",
 	"next-article",
 	"prev-article",
+	"toggle-read",
 }

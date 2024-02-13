@@ -1,12 +1,16 @@
 package main
 
 import (
+	"database/sql"
+	"errors"
 	"fmt"
+	"strings"
 	"time"
+
+	"nvimboat"
 
 	"github.com/neovim/go-client/nvim"
 	nvimPlugin "github.com/neovim/go-client/nvim/plugin"
-	"nvimboat"
 )
 
 func main() {
@@ -58,10 +62,44 @@ func handleExec(nb *nvimboat.Nvimboat) error {
 	select {
 	case exec, ok := <-nb.ChanExecDB:
 		if ok {
-			fmt.Println(exec)
+			if len(exec.ArticleUrls) > 0 {
+				articleReadState(nb.DB, exec.Unread, exec.ArticleUrls...)
+			}
+			if len(exec.FeedUrls) > 0 {
+				articleReadState(nb.DB, exec.Unread, exec.FeedUrls...)
+			}
 		}
 	default:
 		return fmt.Errorf("channel closed")
+	}
+	return nil
+}
+
+func articleReadUpdate(n int) string {
+	if n == 0 {
+		return ""
+	}
+	const (
+		prefix = `UPDATE rss_item SET unread = ? WHERE url IN (?`
+		suffix = `)`
+	)
+	if n < 2 {
+		return prefix + suffix
+	}
+	articleCount := strings.Repeat(", ?", n-1)
+
+	return prefix + articleCount + suffix
+}
+
+func articleReadState(db *sql.DB, read int, url ...string) error {
+	sqlArgs := []any{read}
+	for _, u := range url {
+		sqlArgs = append(sqlArgs, u)
+	}
+	update := articleReadUpdate(len(url))
+	_, err := db.Exec(update, sqlArgs...)
+	if err != nil {
+		return errors.New("ArticleReadState -> db.open: " + fmt.Sprintln(err))
 	}
 	return nil
 }

@@ -12,6 +12,22 @@ import (
 	md "github.com/JohannesKaufmann/html-to-markdown"
 )
 
+func articlesUneadQuery(n int) string {
+	if n == 0 {
+		return ""
+	}
+	const (
+		prefix = `SELECT COUNT(unread) FROM rss_item WHERE unread = 1 AND url IN (?`
+		suffix = `)`
+	)
+	if n < 2 {
+		return prefix + suffix
+	}
+	articleCount := strings.Repeat(", ?", n-1)
+
+	return prefix + articleCount + suffix
+}
+
 func (nb *Nvimboat) setPageType(p Page) error {
 	t := pageTypeString(p)
 	err := nb.Nvim.Plugin.Nvim.ExecLua(nvimboatSetPageType, new(any), t)
