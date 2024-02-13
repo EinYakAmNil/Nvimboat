@@ -48,7 +48,6 @@ describe("nvimboat", function()
 			"https://www.pixiv.net/en/users/26040235",
 		}
 		local reload_sort = nvimboat.utils.sort_by_reloader
-		print(vim.inspect(nvimboat.feeds))
 		local default_feeds, special_feeds = reload_sort(nvimboat.feeds)
 		table.sort(pixiv_feeds)
 		table.sort(special_feeds["pixivboat --cache-dir " .. nvimboat.config.cachedir])
