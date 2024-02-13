@@ -18,8 +18,7 @@ func (nb *Nvimboat) setupLogging() {
 }
 
 func (nb *Nvimboat) Log(val ...any) {
-	fmt.Println(val...)
 	log.Println(val...)
-	// msg := fmt.Sprintf(`echo "%v"`, val)
-	// nb.Nvim.Plugin.Nvim.Exec(msg, false)
+	msg := fmt.Sprintf(`echo "%v"`, val)
+	nb.Nvim.Plugin.Nvim.Exec(msg, false)
 }

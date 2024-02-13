@@ -145,6 +145,47 @@ func (nb *Nvimboat) QueryArticle(url string) (Article, error) {
 	return a, nil
 }
 
+func (nb *Nvimboat) QueryTagFeeds(tag string) (TagFeeds, error) {
+	var (
+		tf       TagFeeds
+		feedurls []any
+	)
+	tf.Tag = tag
+	for _, feed := range nb.ConfigFeeds {
+		for _, t := range feed["tags"].([]any) {
+			if t.(string) == tag {
+				feedurls = append(feedurls, feed["rssurl"])
+			}
+		}
+	}
+	q := tagFeedsQuery(feedurls)
+	feedurls = append(feedurls, feedurls...)
+	feedurls = append(feedurls, feedurls...)
+	rows, err := nb.multiRow(q, feedurls...)
+	if err != nil {
+		return tf, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		f := new(Feed)
+		rows.Scan(&f.Title, &f.RssUrl, &f.UnreadCount, &f.ArticleCount)
+		tf.Feeds = append(tf.Feeds, f)
+	}
+	return tf, err
+}
+
+func (nb *Nvimboat) QueryTags() (TagsPage, error) {
+	var tp TagsPage
+	tp.TagFeedCount = make(map[string]int)
+	tp.Feeds = nb.ConfigFeeds
+	for _, feed := range tp.Feeds {
+		for _, tag := range feed["tags"].([]any) {
+			tp.TagFeedCount[tag.(string)]++
+		}
+	}
+	return tp, nil
+}
+
 func (nb *Nvimboat) anyArticleUnread(url ...string) (bool, error) {
 	var (
 		count   int

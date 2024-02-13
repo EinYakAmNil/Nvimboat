@@ -100,6 +100,42 @@ func (nb *Nvimboat) trimTrail() error {
 	return nil
 }
 
+func (nb *Nvimboat) parseFilters() ([]*Filter, error) {
+	var filters []*Filter
+	for _, filter := range nb.ConfigFilters {
+		f := new(Filter)
+		if name, ok := filter["name"]; ok {
+			f.Name = name.(string)
+		} else {
+			return filters, fmt.Errorf("Failed to parse: %v", filter)
+		}
+		if query, ok := filter["query"]; ok {
+			f.Query = query.(string)
+			f.FilterID = "query: " + query.(string) + ", tags: "
+		} else {
+			return filters, fmt.Errorf("Failed to parse: %v", filter)
+		}
+		if tags, ok := filter["tags"]; ok {
+			for _, tag := range tags.([]any) {
+				if len(tag.(string)) == 0 {
+					continue
+				}
+				if tag.(string)[0] != '!' {
+					f.IncludeTags = append(f.IncludeTags, tag.(string))
+				} else {
+					f.ExcludeTags = append(f.ExcludeTags, tag.(string)[1:])
+				}
+				f.FilterID += tag.(string) + ", "
+			}
+		}
+		if f.FilterID[len(f.FilterID)-2:] == ", " {
+			f.FilterID = f.FilterID[:len(f.FilterID)-2]
+		}
+		filters = append(filters, f)
+	}
+	return filters, nil
+}
+
 func parseFilterID(id string) (string, []string, []string, error) {
 	var (
 		query       string
@@ -188,42 +224,6 @@ func articlesFilterQuery(query string, n int) string {
 	return prefix + articleCount + glue + query + suffix
 }
 
-func (nb *Nvimboat) parseFilters() ([]*Filter, error) {
-	var filters []*Filter
-	for _, filter := range nb.ConfigFilters {
-		f := new(Filter)
-		if name, ok := filter["name"]; ok {
-			f.Name = name.(string)
-		} else {
-			return filters, fmt.Errorf("Failed to parse: %v", filter)
-		}
-		if query, ok := filter["query"]; ok {
-			f.Query = query.(string)
-			f.FilterID = "query: " + query.(string) + ", tags: "
-		} else {
-			return filters, fmt.Errorf("Failed to parse: %v", filter)
-		}
-		if tags, ok := filter["tags"]; ok {
-			for _, tag := range tags.([]any) {
-				if len(tag.(string)) == 0 {
-					continue
-				}
-				if tag.(string)[0] != '!' {
-					f.IncludeTags = append(f.IncludeTags, tag.(string))
-				} else {
-					f.ExcludeTags = append(f.ExcludeTags, tag.(string)[1:])
-				}
-				f.FilterID += tag.(string) + ", "
-			}
-		}
-		if f.FilterID[len(f.FilterID)-2:] == ", " {
-			f.FilterID = f.FilterID[:len(f.FilterID)-2]
-		}
-		filters = append(filters, f)
-	}
-	return filters, nil
-}
-
 func filterTags(config []map[string]any, inTags, exTags []string) []any {
 	feedurls := make(map[string]bool)
 	var urls []any
@@ -244,6 +244,40 @@ func filterTags(config []map[string]any, inTags, exTags []string) []any {
 		urls = append(urls, url)
 	}
 	return urls
+}
+
+func tagFeedsQuery(feedurls []any) string {
+	n := len(feedurls)
+	if n == 0 {
+		return ""
+	}
+	p1 := `
+	SELECT rss_feed.title, c.* FROM rss_feed
+	LEFT JOIN (
+	SELECT a.feedurl, b.unreadCount, a.articleCount
+	FROM (
+	SELECT feedurl, COUNT(*) AS articleCount
+	FROM rss_item WHERE feedurl in (?`
+	p2 := `)
+	GROUP BY feedurl
+	) a
+	LEFT JOIN (
+	SELECT feedurl, sum(unread) AS unreadCount
+	FROM rss_item WHERE feedurl in (?`
+	p3 := `)
+	GROUP BY feedurl
+	) b
+	ON a.feedurl = b.feedurl
+	) c
+	ON rss_feed.rssurl = c.feedurl
+	WHERE rssurl in (?`
+	p4 := `)
+	ORDER BY rss_feed.title`
+	if n < 2 {
+		return p1 + p2 + p3 + p4
+	}
+	reps := strings.Repeat(", ?", n-1)
+	return p1 + reps + p2 + reps + p3 + reps + p4
 }
 
 func subset(first, second []string) bool {

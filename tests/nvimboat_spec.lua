@@ -17,7 +17,7 @@ describe("nvimboat", function()
 	local feeds_config = {
 		{ rssurl = "https://lukesmith.xyz/rss.xml",                                                tags = { "Tech", "Linux", "Politics" }, },
 		{ rssurl = "https://notrelated.xyz/rss",                                                   tags = { "Science" } },
-		{ rssurl = "https://www.pathofexile.com/news/rss",                                         tags = { "Gaming", "Path, of, Exile" } },
+		{ rssurl = "https://www.pathofexile.com/news/rss",                                         tags = { "Gaming", "Path of Exile" } },
 		{ rssurl = "https://fractalsoftworks.com/feed/",                                           tags = { "Gaming", "Starsector" } },
 		{ rssurl = "https://www.youtube.com/feeds/videos.xml?channel_id=UCXe00APH0fgg8XvN3sPh3nQ", tags = { "YouTube", "Media" } },
 		{ rssurl = "https://www.youtube.com/feeds/videos.xml?channel_id=UCBzYAtjNpudOSCP5_8W1iAw", tags = { "YouTube", "Animation" } },
@@ -76,6 +76,9 @@ describe("nvimboat", function()
 		eq(nvimboat.page.page_type, "Article")
 		vim.cmd.Nvimboat("show-main")
 		eq(nvimboat.page.page_type, "MainMenu")
+		vim.cmd.Nvimboat("select", "https://lukesmith.xyz/rss.xml")
+		eq(nvimboat.page.page_type, "Feed")
+		dump_buffer()
 	end)
 	it("can toggle the unread state of articles", function()
 		vim.cmd.Nvimboat("select", "https://lukesmith.xyz/rss.xml")

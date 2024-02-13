@@ -12,6 +12,7 @@ func (nb *Nvimboat) ShowMain() error {
 	nb.Pages.Pages = nb.Pages.Pages[:1]
 	return nil
 }
+
 func (nb *Nvimboat) Enable() error {
 	mainmenu, err := nb.QueryMain()
 	if err != nil {
@@ -27,15 +28,26 @@ func (nb *Nvimboat) Enable() error {
 	}
 	return nil
 }
+
 func (nb *Nvimboat) Disable() error {
 	return nil
 }
+
 func (nb *Nvimboat) ShowTags() error {
+	tags, err := nb.QueryTags()
+	if err != nil {
+		return err
+	}
+	nb.Push(&tags)
+	if err != nil {
+		return err
+	}
 	return nil
 }
+
 func (nb *Nvimboat) Select(id string) error {
 	defer nb.Nvim.Plugin.Nvim.SetWindowCursor(*nb.Nvim.Window, [2]int{0, 1})
-	switch nb.Pages.Top().(type) {
+	switch page := nb.Pages.Top().(type) {
 	case *MainMenu:
 		if id[:4] == "http" {
 			feed, err := nb.QueryFeed(id)
@@ -60,7 +72,7 @@ func (nb *Nvimboat) Select(id string) error {
 			}
 		}
 	case *Filter:
-		articles := nb.Pages.Top().(*Filter).Articles
+		articles := page.Articles
 		for _, a := range articles {
 			if a.Url == id {
 				a.Unread = 0
@@ -70,57 +82,78 @@ func (nb *Nvimboat) Select(id string) error {
 			}
 		}
 	case *Feed:
-		article, err := nb.QueryArticle(id)
+		articles := page.Articles
+		for _, a := range articles {
+			if a.Url == id {
+				a.Unread = 0
+				nb.ChanExecDB <- DBsync{Unread: 0, ArticleUrls: []string{a.Url}}
+				err := nb.Push(a)
+				return err
+			}
+		}
+		// article, err := nb.QueryArticle(id)
+		// if err != nil {
+		// 	return err
+		// }
+		// nb.Push(&article)
+		// if err != nil {
+		// 	return err
+		// }
+		// nb.ChanExecDB <- DBsync{Unread: 0, ArticleUrls: []string{article.Url}}
+	case *TagsPage:
+		feeds, err := nb.QueryTagFeeds(id)
 		if err != nil {
 			return err
 		}
-		nb.Push(&article)
+		err = nb.Push(&feeds)
 		if err != nil {
 			return err
 		}
-		nb.ChanExecDB <- DBsync{Unread: 0, ArticleUrls: []string{article.Url}}
-	// case *TagsPage:
-	// 	feeds, err := nb.QueryTagFeeds(id)
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// 	nb.Push(&feeds)
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// case *TagFeeds:
-	// 	feed, err := nb.QueryFeed(id)
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// 	err = nb.Push(&feed)
-	// 	if err != nil {
-	// 		return err
-	// 	}
+	case *TagFeeds:
+		feed, err := nb.QueryFeed(id)
+		if err != nil {
+			return err
+		}
+		err = nb.Push(&feed)
+		if err != nil {
+			return err
+		}
 	case *Article:
 		return nil
 	}
 	return nil
 }
+
 func (nb *Nvimboat) Back() error {
+	switch nb.Pages.Top().(type) {
+	case *MainMenu:
+		return nil
+	default:
+		nb.Pop()
+	}
 	return nil
 }
+
 func (nb *Nvimboat) NextUnread() error {
 	return nil
 }
+
 func (nb *Nvimboat) PrevUnread() error {
 	return nil
 }
+
 func (nb *Nvimboat) NextArticle() error {
 	return nil
 }
+
 func (nb *Nvimboat) PrevArticle() error {
 	return nil
 }
+
 func (nb *Nvimboat) ToggleArticleRead(urls ...string) error {
 	var (
-		err    error
-		sync   DBsync
+		err  error
+		sync DBsync
 	)
 	if urls[0] == "Article" {
 		article := nb.Pages.Top().(*Article)
@@ -150,9 +183,9 @@ func (nb *Nvimboat) ToggleArticleRead(urls ...string) error {
 	}
 	switch nb.Pages.Top().(type) {
 	case *Filter:
-	sync.ArticleUrls = urls
+		sync.ArticleUrls = urls
 	case *Feed:
-	sync.ArticleUrls = urls
+		sync.ArticleUrls = urls
 	}
 	nb.ChanExecDB <- sync
 	return err

@@ -52,6 +52,14 @@ func (nb *Nvimboat) Push(p Page) error {
 }
 
 func (nb *Nvimboat) Pop() error {
+	currentPage := nb.Pages.Top()
+	nb.Pages.Pop()
+	pos, err := nb.Pages.Top().SubPageIdx(currentPage)
+	if err != nil {
+		return err
+	}
+	nb.Show(nb.Pages.Top())
+	err = nb.Nvim.Plugin.Nvim.SetWindowCursor(*nb.Nvim.Window, [2]int{pos + 1, 0})
 	return nil
 }
 
