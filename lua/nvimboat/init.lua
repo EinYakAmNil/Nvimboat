@@ -9,7 +9,11 @@ local function init_nvimboat()
 	return vim.fn.jobstart({ M.config.godir .. "go-nvimboat" }, {
 		rpc = true,
 		on_stderr = function(_, data)
-			print(vim.inspect(data))
+			local msg = ""
+			for _, d in ipairs(data) do
+				msg = msg .. d
+			end
+			print(msg)
 		end
 	})
 end
