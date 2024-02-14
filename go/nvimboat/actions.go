@@ -50,14 +50,27 @@ func (nb *Nvimboat) Select(id string) error {
 	switch page := nb.Pages.Top().(type) {
 	case *MainMenu:
 		if id[:4] == "http" {
-			feed, err := nb.QueryFeed(id)
-			if err != nil {
-				return err
+			for _, feed := range page.Feeds {
+				if feed.RssUrl == id {
+					f, err := nb.QueryFeed(id)
+					if err != nil {
+						return err
+					}
+					feed = &f
+					err = nb.Push(feed)
+					if err != nil {
+						return err
+					}
+				}
 			}
-			err = nb.Push(&feed)
-			if err != nil {
-				return err
-			}
+			// feed, err := nb.QueryFeed(id)
+			// if err != nil {
+			// 	return err
+			// }
+			// err = nb.Push(&feed)
+			// if err != nil {
+			// 	return err
+			// }
 		}
 		if id[:6] == "query:" {
 			query, inTags, exTags, err := parseFilterID(id)
