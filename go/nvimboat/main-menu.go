@@ -1,7 +1,8 @@
 package nvimboat
 
 import (
-	"errors"
+	"database/sql"
+	"fmt"
 	"strconv"
 )
 
@@ -41,7 +42,25 @@ func (mm *MainMenu) SubPageIdx(feed Page) (int, error) {
 	default:
 		return 0, nil
 	}
-	return 0, errors.New("Couldn't find feed/filter.")
+	return 0, fmt.Errorf("Couldn't find feed/filter.")
+}
+
+func (mm *MainMenu) QuerySelf(db *sql.DB) (Page, error) {
+	mainmenu, err := QueryMain(db, mm.ConfigFeeds, mm.ConfigFilters)
+	return mainmenu, err
+}
+
+func (mm *MainMenu) QuerySelect(db *sql.DB, id string) (Page, error) {
+	switch {
+	case id[:4] == "http":
+		feed, err := QueryFeed(db, id)
+		return &feed, err
+	case id[:6] == "query:":
+		query, inTags, exTags, err := parseFilterID(id)
+		filter, err := QueryFilter(db, mm.ConfigFeeds, query, inTags, exTags)
+		return &filter, err
+	}
+	return nil, fmt.Errorf("Couldn't match ID: %s to anything in the main menu", id)
 }
 
 func mainPrefix(p Page) string {

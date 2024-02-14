@@ -1,5 +1,7 @@
 package nvimboat
 
+import "database/sql"
+
 func (a *Article) Prefix() string {
 	if a.Unread == 1 {
 		return "N"
@@ -33,4 +35,12 @@ func (a Article) Render(bool) ([][]string, error) {
 
 func (a *Article) SubPageIdx(Page) (int, error) {
 	return 0, nil
+}
+
+func (a *Article) QuerySelf(*sql.DB) (Page, error) {
+	return nil, nil
+}
+
+func (a *Article) QuerySelect(*sql.DB, string) (Page, error) {
+	return nil, nil
 }

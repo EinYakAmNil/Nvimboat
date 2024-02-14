@@ -1,14 +1,20 @@
 package nvimboat
 
+import "database/sql"
+
 type (
 	Page interface {
 		Render(bool) ([][]string, error)
 		SubPageIdx(Page) (int, error)
+		QuerySelf(*sql.DB) (Page, error)
+		QuerySelect(*sql.DB, string) (Page, error)
 	}
 	PageStack struct {
 		Pages []Page
 	}
 	MainMenu struct {
+		ConfigFeeds   []map[string]any
+		ConfigFilters []map[string]any
 		Filters []*Filter
 		Feeds   []*Feed
 	}

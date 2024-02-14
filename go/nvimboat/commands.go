@@ -58,7 +58,11 @@ func (nb *Nvimboat) Pop() error {
 	if err != nil {
 		return err
 	}
-	err = nb.Show(nb.Pages.Top())
+	page, err := nb.Pages.Top().QuerySelf(nb.DB)
+	if err != nil {
+		return err
+	}
+	err = nb.Show(page)
 	if err != nil {
 		return err
 	}
@@ -95,8 +99,8 @@ func (nb *Nvimboat) Show(p Page) error {
 			}
 		}
 	}
-	nb.setPageType(p)
-	return nil
+	err := nb.setPageType(p)
+	return err
 }
 
 func (nb *Nvimboat) SetLines(lines []string) error {

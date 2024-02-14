@@ -1,9 +1,37 @@
 package nvimboat
 
 import (
+	"database/sql"
 	"errors"
 	"strconv"
 )
+
+func (f *Feed) Render(unreadOnly bool) ([][]string, error) {
+	dates, err := f.PubDateCol()
+	if err != nil {
+		return nil, err
+	}
+	return [][]string{f.PrefixCol(), dates, f.AuthorCol(), f.TitleCol(), f.UrlCol()}, nil
+}
+
+func (f *Feed) SubPageIdx(article Page) (int, error) {
+	for i, a := range f.Articles {
+		if a.Url == article.(*Article).Url {
+			return i, nil
+		}
+	}
+	return 0, errors.New("Couldn't find article in feed.")
+}
+
+func (f *Feed) QuerySelect(db *sql.DB, articleUrl string) (Page, error) {
+	article, err := QueryArticle(db, articleUrl)
+	return &article, err
+}
+
+func (f *Feed) QuerySelf(db *sql.DB) (Page, error) {
+	newFeed, err := QueryFeed(db, f.RssUrl)
+	return &newFeed, err
+}
 
 func (f *Feed) MainPrefix() string {
 	ratio := strconv.Itoa(f.UnreadCount) + "/" + strconv.Itoa(f.ArticleCount) + ")"
@@ -64,23 +92,6 @@ func (f *Feed) UrlCol() []string {
 		col = append(col, a.Url)
 	}
 	return col
-}
-
-func (f *Feed) Render(unreadOnly bool) ([][]string, error) {
-	dates, err := f.PubDateCol()
-	if err != nil {
-		return nil, err
-	}
-	return [][]string{f.PrefixCol(), dates, f.AuthorCol(), f.TitleCol(), f.UrlCol()}, nil
-}
-
-func (f *Feed) SubPageIdx(article Page) (int, error) {
-	for i, a := range f.Articles {
-		if a.Url == article.(*Article).Url {
-			return i, nil
-		}
-	}
-	return 0, errors.New("Couldn't find article in feed.")
 }
 
 func (f *Feed) updateUnreadCount() {

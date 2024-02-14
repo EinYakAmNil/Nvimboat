@@ -100,9 +100,9 @@ func (nb *Nvimboat) trimTrail() error {
 	return nil
 }
 
-func (nb *Nvimboat) parseFilters() ([]*Filter, error) {
+func parseFilters(configFilters []map[string]any) ([]*Filter, error) {
 	var filters []*Filter
-	for _, filter := range nb.ConfigFilters {
+	for _, filter := range configFilters {
 		f := new(Filter)
 		if name, ok := filter["name"]; ok {
 			f.Name = name.(string)
@@ -224,15 +224,15 @@ func articlesFilterQuery(query string, n int) string {
 	return prefix + articleCount + glue + query + suffix
 }
 
-func filterTags(config []map[string]any, inTags, exTags []string) []any {
+func filterTags(configFeeds []map[string]any, inTags, exTags []string) []any {
 	feedurls := make(map[string]bool)
 	var urls []any
-	for _, feed := range config {
+	for _, feed := range configFeeds {
 		if subset(inTags, anyToString(feed["tags"].([]any))) {
 			feedurls[feed["rssurl"].(string)] = true
 		}
 	}
-	for _, feed := range config {
+	for _, feed := range configFeeds {
 		for _, tag := range anyToString(feed["tags"].([]any)) {
 			if slices.Contains(exTags, tag) {
 				delete(feedurls, feed["rssurl"].(string))

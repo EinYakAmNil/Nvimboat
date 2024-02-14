@@ -28,40 +28,40 @@ func initDB(dbpath string) (*sql.DB, error) {
 	return d, err
 }
 
-func (nb *Nvimboat) QueryMain() (*MainMenu, error) {
+func QueryMain(db *sql.DB, configFeeds []map[string]any, configFilters []map[string]any) (*MainMenu, error) {
 	var (
 		err        error
 		tmp_filter Filter
+		mainmenu = &MainMenu{ConfigFeeds: configFeeds, ConfigFilters: configFilters}
 	)
-	mainmenu := new(MainMenu)
-	mainmenu.Feeds, err = nb.QueryFeeds()
+	mainmenu.Feeds, err = QueryFeeds(db)
 	if err != nil {
 		return mainmenu, err
 	}
-	mainmenu.Filters, err = nb.parseFilters()
+	mainmenu.Filters, err = parseFilters(configFilters)
 	if err != nil {
 		return mainmenu, err
 	}
 	for i, f := range mainmenu.Filters {
-		tmp_filter, err = nb.QueryFilter(f.Query, f.IncludeTags, f.ExcludeTags)
-		mainmenu.Filters[i].UnreadCount = tmp_filter.UnreadCount
-		mainmenu.Filters[i].ArticleCount = tmp_filter.ArticleCount
-		mainmenu.Filters[i].Articles = tmp_filter.Articles
+		tmp_filter, err = QueryFilter(db, configFeeds, f.Query, f.IncludeTags, f.ExcludeTags)
 		if err != nil {
 			return mainmenu, err
 		}
+		mainmenu.Filters[i].UnreadCount = tmp_filter.UnreadCount
+		mainmenu.Filters[i].ArticleCount = tmp_filter.ArticleCount
+		mainmenu.Filters[i].Articles = tmp_filter.Articles
 	}
 	return mainmenu, err
 }
 
-func (nb *Nvimboat) QueryFeed(feedUrl string) (Feed, error) {
+func QueryFeed(db *sql.DB, feedUrl string) (Feed, error) {
 	var f = Feed{RssUrl: feedUrl, UnreadCount: 0}
-	row := nb.singleRow(feedQuery, f.RssUrl)
+	row := singleRow(db, feedQuery, f.RssUrl)
 	err := row.Scan(&f.Title)
 	if err != nil {
 		return f, err
 	}
-	rows, err := nb.multiRow(feedArticlesQuery, f.RssUrl)
+	rows, err := multiRow(db, feedArticlesQuery, f.RssUrl)
 	if err != nil {
 		return f, err
 	}
@@ -85,9 +85,9 @@ func (nb *Nvimboat) QueryFeed(feedUrl string) (Feed, error) {
 	return f, nil
 }
 
-func (nb *Nvimboat) QueryFeeds() ([]*Feed, error) {
+func QueryFeeds(db *sql.DB) ([]*Feed, error) {
 	var feeds []*Feed
-	rows, err := nb.multiRow(feedsMinimalQuery)
+	rows, err := multiRow(db, feedsMinimalQuery)
 	if err != nil {
 		return feeds, err
 	}
@@ -104,19 +104,19 @@ func (nb *Nvimboat) QueryFeeds() ([]*Feed, error) {
 	return feeds, nil
 }
 
-func (nb *Nvimboat) QueryFilter(query string, inTags, exTags []string) (Filter, error) {
+func QueryFilter(db *sql.DB, configFeeds []map[string]any, query string, inTags, exTags []string) (Filter, error) {
 	var (
 		f Filter
 	)
 	f.Query = query
 	f.IncludeTags = inTags
 	f.ExcludeTags = exTags
-	urls := filterTags(nb.ConfigFeeds, inTags, exTags)
+	urls := filterTags(configFeeds, inTags, exTags)
 	if len(urls) == 0 {
 		return f, nil
 	}
 	q := articlesFilterQuery(query, len(urls))
-	rows, err := nb.multiRow(q, urls...)
+	rows, err := multiRow(db, q, urls...)
 	if err != nil {
 		return f, err
 	}
@@ -136,9 +136,9 @@ func (nb *Nvimboat) QueryFilter(query string, inTags, exTags []string) (Filter, 
 	return f, nil
 }
 
-func (nb *Nvimboat) QueryArticle(url string) (Article, error) {
+func QueryArticle(db *sql.DB, url string) (Article, error) {
 	var a = Article{Url: url}
-	row := nb.singleRow(articleQuery, a.Url)
+	row := singleRow(db, articleQuery, a.Url)
 	err := row.Scan(&a.Guid, &a.Title, &a.Author, &a.FeedUrl, &a.PubDate, &a.Content, &a.Unread)
 	if err != nil {
 		return a, err
@@ -146,13 +146,13 @@ func (nb *Nvimboat) QueryArticle(url string) (Article, error) {
 	return a, nil
 }
 
-func (nb *Nvimboat) QueryTagFeeds(tag string) (TagFeeds, error) {
+func QueryTagFeeds(db *sql.DB, tag string, configFeeds []map[string]any) (TagFeeds, error) {
 	var (
 		tf       TagFeeds
 		feedurls []any
 	)
 	tf.Tag = tag
-	for _, feed := range nb.ConfigFeeds {
+	for _, feed := range configFeeds {
 		for _, t := range feed["tags"].([]any) {
 			if t.(string) == tag {
 				feedurls = append(feedurls, feed["rssurl"])
@@ -162,7 +162,7 @@ func (nb *Nvimboat) QueryTagFeeds(tag string) (TagFeeds, error) {
 	q := tagFeedsQuery(feedurls)
 	feedurls = append(feedurls, feedurls...)
 	feedurls = append(feedurls, feedurls...)
-	rows, err := nb.multiRow(q, feedurls...)
+	rows, err := multiRow(db, q, feedurls...)
 	if err != nil {
 		return tf, err
 	}
@@ -175,10 +175,10 @@ func (nb *Nvimboat) QueryTagFeeds(tag string) (TagFeeds, error) {
 	return tf, err
 }
 
-func (nb *Nvimboat) QueryTags() (TagsPage, error) {
-	var tp TagsPage
+func QueryTags(configFeeds []map[string]any) (*TagsPage, error) {
+	tp := new(TagsPage)
 	tp.TagFeedCount = make(map[string]int)
-	tp.Feeds = nb.ConfigFeeds
+	tp.Feeds = configFeeds
 	for _, feed := range tp.Feeds {
 		for _, tag := range feed["tags"].([]any) {
 			tp.TagFeedCount[tag.(string)]++
@@ -206,13 +206,13 @@ func (nb *Nvimboat) anyArticleUnread(url ...string) (bool, error) {
 	return false, nil
 }
 
-func (nb *Nvimboat) singleRow(query string, args ...any) *sql.Row {
-	row := nb.DB.QueryRow(query, args...)
+func singleRow(db *sql.DB, query string, args ...any) *sql.Row {
+	row := db.QueryRow(query, args...)
 	return row
 }
 
-func (nb *Nvimboat) multiRow(query string, args ...any) (*sql.Rows, error) {
-	rows, err := nb.DB.Query(query, args...)
+func multiRow(db *sql.DB, query string, args ...any) (*sql.Rows, error) {
+	rows, err := db.Query(query, args...)
 	if err != nil {
 		return nil, err
 	}
