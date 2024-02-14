@@ -76,6 +76,7 @@ func (nb *Nvimboat) QueryFeed(feedUrl string) (Feed, error) {
 
 		f.Articles = append(f.Articles, a)
 	}
+	f.ArticleCount = len(f.Articles)
 	for _, a := range f.Articles {
 		if a.Unread == 1 {
 			f.UnreadCount++

@@ -51,52 +51,6 @@ type (
 		ChanExecDB    chan DBsync
 		Nvim          nvimConn
 	}
-	Page interface {
-		Render(unreadOnly bool) ([][]string, error)
-		SubPageIdx(Page) (int, error)
-	}
-	PageStack struct {
-		Pages []*Page
-	}
-	MainMenu struct {
-		Filters []*Filter
-		Feeds   []*Feed
-	}
-	Filter struct {
-		Name         string
-		FilterID     string
-		Query        string
-		IncludeTags  []string
-		ExcludeTags  []string
-		UnreadCount  int
-		ArticleCount int
-		Articles     []*Article
-	}
-	Feed struct {
-		Title        string
-		RssUrl       string
-		UnreadCount  int
-		ArticleCount int
-		Articles     []*Article
-	}
-	Article struct {
-		Author  string
-		Content string
-		FeedUrl string
-		Guid    string
-		PubDate int
-		Title   string
-		Unread  int
-		Url     string
-	}
-	TagsPage struct {
-		Feeds        []map[string]any
-		TagFeedCount map[string]int
-	}
-	TagFeeds struct {
-		Tag   string
-		Feeds []*Feed
-	}
 	DBsync struct {
 		Unread      int
 		FeedUrls    []string
@@ -108,15 +62,4 @@ type (
 		Buffer *nvim.Buffer
 		Window *nvim.Window
 	}
-)
-
-const (
-	nvimboatState       = "return package.loaded.nvimboat."
-	nvimboatEnable      = nvimboatState + "enable()"
-	nvimboatDisable     = nvimboatState + "disable()"
-	nvimboatConfig      = nvimboatState + "config"
-	nvimboatFeeds       = nvimboatState + "feeds"
-	nvimboatFilters     = nvimboatState + "filters"
-	nvimboatPage        = nvimboatState + "page"
-	nvimboatSetPageType = nvimboatState + "page.set(...)"
 )

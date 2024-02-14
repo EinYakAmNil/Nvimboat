@@ -49,30 +49,21 @@ func (nb *Nvimboat) Select(id string) error {
 	defer nb.Nvim.Plugin.Nvim.SetWindowCursor(*nb.Nvim.Window, [2]int{0, 1})
 	switch page := nb.Pages.Top().(type) {
 	case *MainMenu:
-		if id[:4] == "http" {
-			for _, feed := range page.Feeds {
+		switch {
+		case id[:4] == "http":
+			for feedIdx, feed := range page.Feeds {
 				if feed.RssUrl == id {
 					f, err := nb.QueryFeed(id)
 					if err != nil {
 						return err
 					}
-					feed = &f
-					err = nb.Push(feed)
-					if err != nil {
-						return err
-					}
+					page.Feeds[feedIdx] = &f
+					err = nb.Push(&f)
+					return err
 				}
 			}
-			// feed, err := nb.QueryFeed(id)
-			// if err != nil {
-			// 	return err
-			// }
-			// err = nb.Push(&feed)
-			// if err != nil {
-			// 	return err
-			// }
-		}
-		if id[:6] == "query:" {
+
+		case id[:6] == "query:":
 			query, inTags, exTags, err := parseFilterID(id)
 			filter, err := nb.QueryFilter(query, inTags, exTags)
 			filter.FilterID = id
@@ -104,15 +95,7 @@ func (nb *Nvimboat) Select(id string) error {
 				return err
 			}
 		}
-		// article, err := nb.QueryArticle(id)
-		// if err != nil {
-		// 	return err
-		// }
-		// nb.Push(&article)
-		// if err != nil {
-		// 	return err
-		// }
-		// nb.ChanExecDB <- DBsync{Unread: 0, ArticleUrls: []string{article.Url}}
+		nb.Log(nb.Pages.Pages)
 	case *TagsPage:
 		feeds, err := nb.QueryTagFeeds(id)
 		if err != nil {
@@ -142,7 +125,10 @@ func (nb *Nvimboat) Back() error {
 	case *MainMenu:
 		return nil
 	default:
-		nb.Pop()
+		err := nb.Pop()
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -171,7 +157,6 @@ func (nb *Nvimboat) ToggleArticleRead(urls ...string) error {
 	if urls[0] == "Article" {
 		article := nb.Pages.Top().(*Article)
 		nb.Pages.Pop()
-		nb.Log(nb.Pages.Top())
 		nb.ToggleArticleRead(article.Url)
 		idx, err := nb.Pages.Top().SubPageIdx(article)
 		if err != nil {
@@ -183,7 +168,8 @@ func (nb *Nvimboat) ToggleArticleRead(urls ...string) error {
 		case *Feed:
 			page.Articles[idx].Unread = 1
 		}
-		nb.Show(nb.Pages.Top())
+		err = nb.Show(nb.Pages.Top())
+		return err
 	}
 	anyUnread, err := nb.anyArticleUnread(urls...)
 	if err != nil {

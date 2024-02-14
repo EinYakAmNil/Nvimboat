@@ -1,6 +1,17 @@
 package nvimboat
 
 const (
+	nvimboatState       = "return package.loaded.nvimboat."
+	nvimboatEnable      = nvimboatState + "enable()"
+	nvimboatDisable     = nvimboatState + "disable()"
+	nvimboatConfig      = nvimboatState + "config"
+	nvimboatFeeds       = nvimboatState + "feeds"
+	nvimboatFilters     = nvimboatState + "filters"
+	nvimboatPage        = nvimboatState + "page"
+	nvimboatSetPageType = nvimboatState + "page.set(...)"
+)
+
+const (
 	createDB = `
 	CREATE TABLE google_replay (
 	id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,

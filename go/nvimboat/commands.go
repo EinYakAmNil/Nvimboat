@@ -29,7 +29,7 @@ func (nb *Nvimboat) Command(args []string) error {
 	case "select":
 		if len(args) > 1 {
 			err = nb.Select(args[1])
-			return nil
+			break
 		}
 		return fmt.Errorf("No arguments for select command.")
 	default:
@@ -58,9 +58,12 @@ func (nb *Nvimboat) Pop() error {
 	if err != nil {
 		return err
 	}
-	nb.Show(nb.Pages.Top())
+	err = nb.Show(nb.Pages.Top())
+	if err != nil {
+		return err
+	}
 	err = nb.Nvim.Plugin.Nvim.SetWindowCursor(*nb.Nvim.Window, [2]int{pos + 1, 0})
-	return nil
+	return err
 }
 
 func (nb *Nvimboat) Show(p Page) error {
