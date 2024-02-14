@@ -62,7 +62,6 @@ func (nb *Nvimboat) Select(id string) error {
 					return err
 				}
 			}
-
 		case id[:6] == "query:":
 			query, inTags, exTags, err := parseFilterID(id)
 			filter, err := nb.QueryFilter(query, inTags, exTags)
@@ -80,6 +79,7 @@ func (nb *Nvimboat) Select(id string) error {
 		for _, a := range articles {
 			if a.Url == id {
 				a.Unread = 0
+				page.updateUnreadCount()
 				nb.ChanExecDB <- DBsync{Unread: 0, ArticleUrls: []string{a.Url}}
 				err := nb.Push(a)
 				return err
@@ -90,12 +90,12 @@ func (nb *Nvimboat) Select(id string) error {
 		for _, a := range articles {
 			if a.Url == id {
 				a.Unread = 0
+				page.updateUnreadCount()
 				nb.ChanExecDB <- DBsync{Unread: 0, ArticleUrls: []string{a.Url}}
 				err := nb.Push(a)
 				return err
 			}
 		}
-		nb.Log(nb.Pages.Pages)
 	case *TagsPage:
 		feeds, err := nb.QueryTagFeeds(id)
 		if err != nil {
@@ -165,8 +165,10 @@ func (nb *Nvimboat) ToggleArticleRead(urls ...string) error {
 		switch page := nb.Pages.Top().(type) {
 		case *Filter:
 			page.Articles[idx].Unread = 1
+			page.updateUnreadCount()
 		case *Feed:
 			page.Articles[idx].Unread = 1
+			page.updateUnreadCount()
 		}
 		err = nb.Show(nb.Pages.Top())
 		return err

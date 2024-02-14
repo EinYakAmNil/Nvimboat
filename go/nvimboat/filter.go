@@ -81,3 +81,12 @@ func (f *Filter) SubPageIdx(article Page) (int, error) {
 	}
 	return 0, errors.New("Couldn't find article in filter.")
 }
+
+func (f *Filter) updateUnreadCount() {
+	f.UnreadCount = 0
+	for _, a := range f.Articles {
+		if a.Unread == 1 {
+			f.UnreadCount++
+		}
+	}
+}
