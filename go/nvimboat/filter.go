@@ -2,7 +2,7 @@ package nvimboat
 
 import (
 	"database/sql"
-	"errors"
+	"fmt"
 	"strconv"
 
 	"github.com/neovim/go-client/nvim"
@@ -36,7 +36,7 @@ func (f *Filter) ChildIdx(article Page) (int, error) {
 			return i, nil
 		}
 	}
-	return 0, errors.New("Couldn't find article in filter.")
+	return 0, fmt.Errorf("Couldn't find article in filter.")
 }
 
 func (f *Filter) QuerySelf(*sql.DB) (Page, error) {
@@ -71,6 +71,42 @@ func (f *Filter) ToggleUnread(nb *Nvimboat, urls ...string) (err error) {
 		return
 	}
 	err = f.Render(nb.Nvim, *nb.Buffer, nb.UnreadOnly, nb.Config["separator"].(string))
+	return
+}
+
+func (f *Filter) FindUnread(direction string, a Article) (article Article, err error) {
+	idx, err := f.ChildIdx(&a)
+	if err != nil {
+		return
+	}
+	switch direction {
+	case "next":
+		for i := idx + 1; i < len(f.Articles); i++ {
+			if f.Articles[i].Unread == 1 {
+				article = *f.Articles[i]
+				return
+			}
+		}
+		return a, nil
+	case "prev":
+		for i := idx - 1; i >= 0; i-- {
+			if f.Articles[i].Unread == 1 {
+				article = *f.Articles[i]
+				return
+			}
+		}
+		return a, nil
+	default:
+		return a, fmt.Errorf("unknown direction: %s\n", direction)
+	}
+}
+
+func (f *Filter) SetArticleRead(article Article) (err error) {
+	idx, err := f.ChildIdx(&article)
+	if err != nil {
+		return
+	}
+	f.Articles[idx].Unread = 0
 	return
 }
 

@@ -14,6 +14,10 @@ type (
 		QueryChild(*sql.DB, string) (Page, error)
 		ToggleUnread(nb *Nvimboat, urls ...string) (err error)
 	}
+	ArticlesPage interface {
+		FindUnread(direction string, a Article) (Article, error)
+		SetArticleRead(article Article) error
+	}
 	PageStack struct {
 		Pages []Page
 	}

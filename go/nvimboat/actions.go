@@ -67,19 +67,99 @@ func (nb *Nvimboat) Back(nv *nvim.Nvim, args ...string) (err error) {
 }
 
 func (nb *Nvimboat) NextUnread(nv *nvim.Nvim, args ...string) error {
-	return nil
+	if article, isArticle := nb.Pages.Top().(*Article); isArticle {
+		nb.Pages.Pop()
+		if top, isCollection := nb.Pages.Top().(ArticlesPage); isCollection {
+			newArticle, err := top.FindUnread("next", *article)
+			if err != nil {
+				return err
+			}
+			err = nb.Push(&newArticle)
+			if err != nil {
+				return err
+			}
+			err = top.SetArticleRead(newArticle)
+			return err
+		} else {
+			nb.Pages.Push(article)
+			return fmt.Errorf("next unread not implemented for: %v", top)
+		}
+	}
+	return fmt.Errorf("not inside an article")
 }
 
 func (nb *Nvimboat) PrevUnread(nv *nvim.Nvim, args ...string) error {
-	return nil
+	if article, isArticle := nb.Pages.Top().(*Article); isArticle {
+		nb.Pages.Pop()
+		if top, isCollection := nb.Pages.Top().(ArticlesPage); isCollection {
+			newArticle, err := top.FindUnread("prev", *article)
+			if err != nil {
+				return err
+			}
+			err = nb.Push(&newArticle)
+			if err != nil {
+				return err
+			}
+			err = top.SetArticleRead(newArticle)
+			return err
+		} else {
+			nb.Pages.Push(article)
+			return fmt.Errorf("next unread not implemented for: %v", top)
+		}
+	}
+	return fmt.Errorf("not inside an article")
 }
 
 func (nb *Nvimboat) NextArticle(nv *nvim.Nvim, args ...string) error {
-	return nil
+	if article, isArticle := nb.Pages.Top().(*Article); isArticle {
+		nb.Pages.Pop()
+		top := nb.Pages.Top()
+		idx, err := top.ChildIdx(article)
+		switch feed := top.(type) {
+		case *Feed:
+			if idx+1 < len(feed.Articles) {
+				err = nb.Push(feed.Articles[idx+1])
+			} else {
+				nb.Pages.Push(article)
+				return nil
+			}
+		case *Filter:
+			if idx+1 < len(feed.Articles) {
+				err = nb.Push(feed.Articles[idx+1])
+			} else {
+				nb.Pages.Push(article)
+				return nil
+			}
+		}
+		return err
+	}
+	return fmt.Errorf("not inside an article")
 }
 
 func (nb *Nvimboat) PrevArticle(nv *nvim.Nvim, args ...string) error {
-	return nil
+	if article, isArticle := nb.Pages.Top().(*Article); isArticle {
+		nb.Pages.Pop()
+		top := nb.Pages.Top()
+		idx, err := top.ChildIdx(article)
+		switch feed := top.(type) {
+		case *Feed:
+			if idx-1 >= 0 {
+				err = nb.Push(feed.Articles[idx-1])
+			} else {
+				nb.Pages.Push(article)
+				return nil
+			}
+		case *Filter:
+			if idx-1 >= 0 {
+				err = nb.Push(feed.Articles[idx-1])
+			} else {
+				nb.Pages.Push(article)
+				return nil
+			}
+		}
+		return err
+	}
+	return fmt.Errorf("not inside an article")
 }
 
 func (nb *Nvimboat) ToggleArticleRead(nv *nvim.Nvim, args ...string) (err error) {
