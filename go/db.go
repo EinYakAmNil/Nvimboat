@@ -20,6 +20,7 @@ func unreadUpdate(nb *nvimboat.Nvimboat) {
 func handleExec(nb *nvimboat.Nvimboat) error {
 	select {
 	case exec, ok := <-nb.SyncDBchan:
+		fmt.Println(exec)
 		if ok {
 			if len(exec.ArticleUrls) > 0 {
 				articleReadState(nb.DBHandler, exec.Unread, exec.ArticleUrls...)

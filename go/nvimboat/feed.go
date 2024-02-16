@@ -44,6 +44,12 @@ func (f *Feed) QueryChild(db *sql.DB, articleUrl string) (Page, error) {
 
 func (f *Feed) ToggleUnread(nb Nvimboat, urls ...string) (err error) {
 	var unreadState int
+	hasUnread, err := anyArticleUnread(nb.DBHandler, urls...)
+	if hasUnread {
+		unreadState = 0
+	} else {
+		unreadState = 1
+	}
 	nb.SyncDBchan <- SyncDB{Unread: unreadState, ArticleUrls: urls}
 	urlMap := make(map[string]bool)
 	for _, url := range urls {
@@ -54,8 +60,8 @@ func (f *Feed) ToggleUnread(nb Nvimboat, urls ...string) (err error) {
 			f.Articles[idx].Unread = unreadState
 		}
 	}
-	f.Render(nb.Nvim, *nb.Buffer, nb.UnreadOnly, nb.Config["separator"].(string))
-	return nil
+	err = f.Render(nb.Nvim, *nb.Buffer, nb.UnreadOnly, nb.Config["separator"].(string))
+	return
 }
 
 func (f *Feed) MainPrefix() string {

@@ -85,6 +85,7 @@ function M.toggle_article_read()
 	if vim_mode == 'n' then
 		if page.page_type == "Article" then
 			local url = utils.article_url()
+			-- It doesn't actually matter what we pass as the second argument
 			vim.cmd.Nvimboat("toggle-read", url)
 			return
 		end
