@@ -15,34 +15,6 @@ import (
 	"github.com/neovim/go-client/nvim"
 )
 
-func (nb *Nvimboat) init(nv *nvim.Nvim) (err error) {
-	nb.Nvim = nv
-	nb.SyncDBchan = make(chan SyncDB)
-	nb.Config = make(map[string]any)
-	nb.Window = new(nvim.Window)
-	nb.Buffer = new(nvim.Buffer)
-	nb.UnreadOnly = false
-	execBatch := nv.NewBatch()
-	execBatch.CurrentWindow(nb.Window)
-	execBatch.CurrentBuffer(nb.Buffer)
-	execBatch.ExecLua(nvimboatConfig, &nb.Config)
-	execBatch.ExecLua(nvimboatFeeds, &nb.Feeds)
-	execBatch.ExecLua(nvimboatFilters, &nb.Filters)
-	execBatch.SetBufferOption(*nb.Buffer, "filetype", "nvimboat")
-	execBatch.SetBufferOption(*nb.Buffer, "buftype", "nofile")
-	execBatch.SetWindowOption(*nb.Window, "wrap", false)
-	err = execBatch.Execute()
-	if err != nil {
-		return
-	}
-	nb.DBHandler, err = initDB(nb.Config["dbpath"].(string))
-	if err != nil {
-		return
-	}
-	err = SetupLogging(nb.Config["log"].(string))
-	return
-}
-
 func articlesUneadQuery(n int) string {
 	if n == 0 {
 		return ""
@@ -57,12 +29,6 @@ func articlesUneadQuery(n int) string {
 	articleCount := strings.Repeat(", ?", n-1)
 
 	return prefix + articleCount + suffix
-}
-
-func (nb *Nvimboat) setPageType(p Page) (err error) {
-	t := pageTypeString(p)
-	err = nb.Nvim.ExecLua(nvimboatSetPageType, new(any), t)
-	return
 }
 
 func addColumn(nv *nvim.Nvim, buffer nvim.Buffer, col []string, separator string) (err error) {

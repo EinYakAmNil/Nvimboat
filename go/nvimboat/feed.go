@@ -32,14 +32,30 @@ func (f *Feed) ChildIdx(article Page) (int, error) {
 	return 0, errors.New("Couldn't find article in feed.")
 }
 
+func (f *Feed) QuerySelf(db *sql.DB) (Page, error) {
+	newFeed, err := QueryFeed(db, f.RssUrl)
+	return &newFeed, err
+}
+
 func (f *Feed) QueryChild(db *sql.DB, articleUrl string) (Page, error) {
 	article, err := QueryArticle(db, articleUrl)
 	return &article, err
 }
 
-func (f *Feed) QuerySelf(db *sql.DB) (Page, error) {
-	newFeed, err := QueryFeed(db, f.RssUrl)
-	return &newFeed, err
+func (f *Feed) ToggleUnread(nb Nvimboat, urls ...string) (err error) {
+	var unreadState int
+	nb.SyncDBchan <- SyncDB{Unread: unreadState, ArticleUrls: urls}
+	urlMap := make(map[string]bool)
+	for _, url := range urls {
+		urlMap[url] = true
+	}
+	for idx, article := range f.Articles {
+		if urlMap[article.Url] {
+			f.Articles[idx].Unread = unreadState
+		}
+	}
+	f.Render(nb.Nvim, *nb.Buffer, nb.UnreadOnly, nb.Config["separator"].(string))
+	return nil
 }
 
 func (f *Feed) MainPrefix() string {

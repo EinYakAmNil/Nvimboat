@@ -75,6 +75,10 @@ func (mm *MainMenu) QueryChild(db *sql.DB, id string) (Page, error) {
 	return nil, fmt.Errorf("Couldn't match ID: %s to anything in the main menu", id)
 }
 
+func (mm *MainMenu) ToggleUnread(nb Nvimboat, urls ...string) (err error) {
+	return nil
+}
+
 func mainPrefix(p Page) string {
 	switch f := p.(type) {
 	case *Filter:

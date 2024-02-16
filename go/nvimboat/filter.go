@@ -8,14 +8,6 @@ import (
 	"github.com/neovim/go-client/nvim"
 )
 
-func (f *Filter) QuerySelf(*sql.DB) (Page, error) {
-	return nil, nil
-}
-
-func (f *Filter) QueryChild(*sql.DB, string) (Page, error) {
-	return nil, nil
-}
-
 func (f *Filter) Render(nv *nvim.Nvim, buffer nvim.Buffer, unreadOnly bool, separator string) (err error) {
 	cols, err := f.columns(unreadOnly)
 	if err != nil {
@@ -45,6 +37,19 @@ func (f *Filter) ChildIdx(article Page) (int, error) {
 		}
 	}
 	return 0, errors.New("Couldn't find article in filter.")
+}
+
+func (f *Filter) QuerySelf(*sql.DB) (Page, error) {
+	return f, nil
+}
+
+func (f *Filter) QueryChild(db *sql.DB, articleUrl string) (Page, error) {
+	article, err := QueryArticle(db, articleUrl)
+	return &article, err
+}
+
+func (f *Filter) ToggleUnread(nb Nvimboat, urls ...string) (err error) {
+	return nil
 }
 
 func (f *Filter) MainPrefix() string {

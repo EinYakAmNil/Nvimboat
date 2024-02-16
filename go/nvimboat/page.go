@@ -12,6 +12,7 @@ type (
 		ChildIdx(Page) (int, error)
 		QuerySelf(*sql.DB) (Page, error)
 		QueryChild(*sql.DB, string) (Page, error)
+		ToggleUnread(nb Nvimboat, urls ...string) (err error)
 	}
 	PageStack struct {
 		Pages []Page
@@ -59,8 +60,8 @@ type (
 	}
 )
 
-func (ps *PageStack) Push(p Page) {
-	ps.Pages = append(ps.Pages, p)
+func (ps *PageStack) Push(newPage Page) {
+	ps.Pages = append(ps.Pages, newPage)
 }
 
 func (ps *PageStack) Pop() {
@@ -68,5 +69,8 @@ func (ps *PageStack) Pop() {
 }
 
 func (ps *PageStack) Top() Page {
-	return ps.Pages[len(ps.Pages)-1]
+	if pageCount := len(ps.Pages); pageCount > 0 {
+		return ps.Pages[pageCount-1]
+	}
+	return nil
 }

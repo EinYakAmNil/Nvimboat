@@ -43,6 +43,16 @@ func (a *Article) QueryChild(*sql.DB, string) (Page, error) {
 	return nil, nil
 }
 
+func (a *Article) ToggleUnread(nb Nvimboat, urls ...string) (err error) {
+	nb.Pages.Pop()
+	err = nb.Pages.Top().ToggleUnread(nb, urls...)
+	if err != nil {
+		return
+	}
+	err = nb.Show(nb.Pages.Top())
+	return
+}
+
 func (a *Article) header() (lines []string, err error) {
 	date, err := unixToDate(a.PubDate)
 	lines = []string{

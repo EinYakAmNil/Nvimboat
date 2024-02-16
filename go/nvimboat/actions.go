@@ -82,45 +82,10 @@ func (nb *Nvimboat) PrevArticle(nv *nvim.Nvim, args ...string) error {
 	return nil
 }
 
-func (nb *Nvimboat) ToggleArticleRead(nv *nvim.Nvim, args ...string) error {
-	var (
-		err  error
-		sync SyncDB
-	)
-	if args[0] == "Article" {
-		article := nb.Pages.Top().(*Article)
-		nb.Pages.Pop()
-		nb.ToggleArticleRead(nv, article.Url)
-		idx, err := nb.Pages.Top().ChildIdx(article)
-		if err != nil {
-			return err
-		}
-		switch page := nb.Pages.Top().(type) {
-		case *Filter:
-			page.Articles[idx].Unread = 1
-			page.updateUnreadCount()
-		case *Feed:
-			page.Articles[idx].Unread = 1
-			page.updateUnreadCount()
-		}
-		err = nb.Show(nb.Pages.Top())
-		return err
+func (nb *Nvimboat) ToggleArticleRead(nv *nvim.Nvim, args ...string) (err error) {
+	if len(args) < 2 {
+		return fmt.Errorf("not enough arguments to call 'toggle-unread'")
 	}
-	anyUnread, err := anyArticleUnread(nb.DBHandler, args...)
-	if err != nil {
-		return err
-	}
-	if anyUnread {
-		sync.Unread = 0
-	} else {
-		sync.Unread = 1
-	}
-	switch nb.Pages.Top().(type) {
-	case *Filter:
-		sync.ArticleUrls = args
-	case *Feed:
-		sync.ArticleUrls = args
-	}
-	nb.SyncDBchan <- sync
-	return err
+	err = nb.Pages.Top().ToggleUnread(*nb, args[1:]...)
+	return
 }

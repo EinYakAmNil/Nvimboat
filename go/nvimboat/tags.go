@@ -38,6 +38,10 @@ func (tp *TagsPage) QueryChild(db *sql.DB, tag string) (Page, error) {
 	return &feeds, err
 }
 
+func (tp *TagsPage) ToggleUnread(nb Nvimboat, urls ...string) (err error) {
+	return nil
+}
+
 func (tf *TagFeeds) Render(nv *nvim.Nvim, buffer nvim.Buffer, unreadOnly bool, separator string) (err error) {
 	for _, col := range tf.columns(unreadOnly) {
 		err = addColumn(nv, buffer, col, separator)
@@ -45,21 +49,6 @@ func (tf *TagFeeds) Render(nv *nvim.Nvim, buffer nvim.Buffer, unreadOnly bool, s
 			return
 		}
 	}
-	return
-}
-
-func (tf *TagFeeds) columns(unreadOnly bool) (columns [][]string) {
-	var (
-		prefixCol []string
-		titleCol  []string
-		urlCol    []string
-	)
-	for _, f := range tf.Feeds {
-		prefixCol = append(prefixCol, f.MainPrefix())
-		titleCol = append(titleCol, f.Title)
-		urlCol = append(urlCol, f.RssUrl)
-	}
-	columns = [][]string{prefixCol, titleCol, urlCol}
 	return
 }
 
@@ -89,6 +78,10 @@ func (tf *TagFeeds) QueryChild(*sql.DB, string) (Page, error) {
 	return nil, nil
 }
 
+func (tf *TagFeeds) ToggleUnread(nb Nvimboat, urls ...string) (err error) {
+	return nil
+}
+
 func (tp *TagsPage) lines() (lines []string) {
 	for tag, count := range tp.TagFeedCount {
 		lines = append(lines, fmt.Sprintf("%s (%d)", tag, count))
@@ -96,5 +89,20 @@ func (tp *TagsPage) lines() (lines []string) {
 	sort.Slice(lines, func(i, j int) bool {
 		return lines[i] < lines[j]
 	})
+	return
+}
+
+func (tf *TagFeeds) columns(unreadOnly bool) (columns [][]string) {
+	var (
+		prefixCol []string
+		titleCol  []string
+		urlCol    []string
+	)
+	for _, f := range tf.Feeds {
+		prefixCol = append(prefixCol, f.MainPrefix())
+		titleCol = append(titleCol, f.Title)
+		urlCol = append(urlCol, f.RssUrl)
+	}
+	columns = [][]string{prefixCol, titleCol, urlCol}
 	return
 }

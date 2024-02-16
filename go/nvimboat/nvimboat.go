@@ -35,21 +35,63 @@ func (nb *Nvimboat) Pop() error {
 	return err
 }
 
-func (nb *Nvimboat) Show(page Page) (err error) {
+func (nb *Nvimboat) Show(newPage Page) (err error) {
 	defer trimTrail(nb.Nvim, *nb.Buffer)
 	err = setLines(nb.Nvim, *nb.Buffer, []string{""})
 	if err != nil {
 		return
 	}
-	err = page.Render(nb.Nvim, *nb.Buffer, nb.UnreadOnly, nb.Config["separator"].(string))
+	err = newPage.Render(nb.Nvim, *nb.Buffer, nb.UnreadOnly, nb.Config["separator"].(string))
 	if err != nil {
 		return
 	}
-	switch p := page.(type) {
+	switch page := newPage.(type) {
 	case *Article:
-		nb.SyncDBchan <- SyncDB{Unread: 0, ArticleUrls: []string{p.Url}}
+		nb.SyncDBchan <- SyncDB{Unread: 0, ArticleUrls: []string{page.Url}}
 	}
-	err = nb.setPageType(page)
+	switch page := nb.Pages.Top().(type) {
+	case *Filter:
+		idx, err := page.ChildIdx(newPage)
+		if err != nil {
+			return err
+		}
+		nb.Pages.Pages[idx].(*Article).Unread = 0
+	}
+	err = nb.setPageType(newPage)
+	return
+}
+
+func (nb *Nvimboat) init(nv *nvim.Nvim) (err error) {
+	nb.Nvim = nv
+	nb.SyncDBchan = make(chan SyncDB)
+	nb.Config = make(map[string]any)
+	nb.Window = new(nvim.Window)
+	nb.Buffer = new(nvim.Buffer)
+	nb.UnreadOnly = false
+	execBatch := nv.NewBatch()
+	execBatch.CurrentWindow(nb.Window)
+	execBatch.CurrentBuffer(nb.Buffer)
+	execBatch.ExecLua(nvimboatConfig, &nb.Config)
+	execBatch.ExecLua(nvimboatFeeds, &nb.Feeds)
+	execBatch.ExecLua(nvimboatFilters, &nb.Filters)
+	execBatch.SetBufferOption(*nb.Buffer, "filetype", "nvimboat")
+	execBatch.SetBufferOption(*nb.Buffer, "buftype", "nofile")
+	execBatch.SetWindowOption(*nb.Window, "wrap", false)
+	err = execBatch.Execute()
+	if err != nil {
+		return
+	}
+	nb.DBHandler, err = initDB(nb.Config["dbpath"].(string))
+	if err != nil {
+		return
+	}
+	err = SetupLogging(nb.Config["log"].(string))
+	return
+}
+
+func (nb *Nvimboat) setPageType(p Page) (err error) {
+	t := pageTypeString(p)
+	err = nb.Nvim.ExecLua(nvimboatSetPageType, new(any), t)
 	return
 }
 

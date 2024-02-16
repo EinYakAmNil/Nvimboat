@@ -84,7 +84,8 @@ function M.toggle_article_read()
 
 	if vim_mode == 'n' then
 		if page.page_type == "Article" then
-			vim.cmd.Nvimboat("toggle-read", "Article")
+			local url = utils.article_url()
+			vim.cmd.Nvimboat("toggle-read", url)
 			return
 		end
 		local id = utils.line_id(M.separator)
@@ -100,17 +101,8 @@ end
 
 function M.open_media()
 	if page.page_type == "Article" then
-		local max_lines = #api.nvim_buf_get_lines(0, 0, -1, false)
-		for i = 0, max_lines, 1 do
-			local node_type = vim.treesitter.get_node({ pos = { i, 0 } }):type()
-			local line = api.nvim_buf_get_lines(0, i, i + 1, false)[1]
-			if node_type == "header" and line:sub(1, 6) == "Link: " then
-				local url = line:gsub("Link: ", "")
-				print(M.linkhandler, url)
-				vim.fn.jobstart({ M.linkhandler, url }, { detach = true })
-				return
-			end
-		end
+		local url = utils.article_url()
+		vim.fn.jobstart({ M.linkhandler, url }, { detach = true })
 		return
 	end
 

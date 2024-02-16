@@ -113,4 +113,15 @@ function M.sort_by_reloader(feeds)
 	return default_reload, reloaders
 end
 
+function M.article_url()
+	local lines = #api.nvim_buf_get_lines(0, 0, -1, false)
+	for i = 0, lines, 1 do
+		local node_type = vim.treesitter.get_node({ pos = { i, 0 } }):type()
+		local line = api.nvim_buf_get_lines(0, i, i + 1, false)[1]
+		if node_type == "header" and line:sub(1, 6) == "Link: " then
+			return line:gsub("Link: ", "")
+		end
+	end
+end
+
 return M
