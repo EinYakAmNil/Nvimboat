@@ -46,7 +46,7 @@ local feeds_config = {
 describe("nvimboat", function()
 	after_each(function()
 		vim.cmd.Nvimboat("show-main")
-		os.execute("cp cache/cache.db.orig cache/cache.db")
+		os.execute("cp " .. nvimboat.config.dbpath .. ".orig " .. nvimboat.config.dbpath)
 	end)
 	it("setup feeds.", function()
 		nvimboat.setup({
