@@ -70,6 +70,7 @@ func (mm *MainMenu) QueryChild(db *sql.DB, id string) (Page, error) {
 	case id[:6] == "query:":
 		query, inTags, exTags := parseFilterID(id)
 		filter, err := QueryFilter(db, mm.ConfigFeeds, query, inTags, exTags)
+		filter.FilterID = id
 		return &filter, err
 	}
 	return nil, fmt.Errorf("Couldn't match ID: %s to anything in the main menu", id)
