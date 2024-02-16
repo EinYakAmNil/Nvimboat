@@ -1,10 +1,10 @@
 module github.com/EinYakAmNil/Nvimboat/go/nvimboat
 
-go 1.21.5
+go 1.22.0
 
 require (
 	github.com/JohannesKaufmann/html-to-markdown v1.5.0
-	github.com/mattn/go-sqlite3 v1.14.19
+	github.com/mattn/go-sqlite3 v1.14.22
 	github.com/neovim/go-client v1.2.1
 )
 

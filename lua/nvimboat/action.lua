@@ -11,22 +11,13 @@ function M.setup(opts)
 end
 
 function M.select()
-	if page.page_type == "Article" then
-		return
-	end
 	if page.page_type == "TagsPage" then
-		local tag = utils.line_tag()
+		local tag = utils.seek_tag()
 		vim.cmd.Nvimboat("select", tag)
 		return
 	end
-	local url_pages = { "MainMenu", "TagFeeds", "Feed", "Filter" }
-	for _, p in ipairs(url_pages) do
-		if page.page_type == p then
-			local id = utils.line_id(M.separator)
-			vim.cmd.Nvimboat("select", id)
-			return
-		end
-	end
+	local id = utils.line_id(M.separator)
+	vim.cmd.Nvimboat("select", id)
 end
 
 function M.back()
@@ -99,33 +90,26 @@ function M.toggle_article_read()
 
 	if vim_mode == 'n' then
 		if page.page_type == "Article" then
-			vim.cmd.Nvimboat("toggle-article-read", "Article")
+			local url = utils.article_url()
+			-- It doesn't actually matter what we pass as the second argument
+			vim.cmd.Nvimboat("toggle-read", url)
 			return
 		end
 		local id = utils.line_id(M.separator)
-		vim.cmd.Nvimboat("toggle-article-read", id)
+		vim.cmd.Nvimboat("toggle-read", id)
 	elseif vim_mode == 'v' or vim_mode == 'V' then
 		local ids = utils.seek_ids_visual(M.separator)
 		local escape = api.nvim_replace_termcodes("<Esc>", true, false, true)
 		api.nvim_feedkeys(escape, "v", false)
-		vim.cmd.Nvimboat("toggle-article-read", unpack(ids))
+		vim.cmd.Nvimboat("toggle-read", unpack(ids))
 	end
 	api.nvim_win_set_cursor(0, curpos)
 end
 
 function M.open_media()
 	if page.page_type == "Article" then
-		local max_lines = #api.nvim_buf_get_lines(0, 0, -1, false)
-		for i = 0, max_lines, 1 do
-			local node_type = vim.treesitter.get_node({ pos = { i, 0 } }):type()
-			local line = api.nvim_buf_get_lines(0, i, i + 1, false)[1]
-			if node_type == "header" and line:sub(1, 6) == "Link: " then
-				local url = line:gsub("Link: ", "")
-				print(M.linkhandler, url)
-				vim.fn.jobstart({ M.linkhandler, url }, { detach = true })
-				return
-			end
-		end
+		local url = utils.article_url()
+		vim.fn.jobstart({ M.linkhandler, url }, { detach = true })
 		return
 	end
 

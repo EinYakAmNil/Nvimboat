@@ -1,9 +1,108 @@
 package nvimboat
 
 import (
-	"errors"
+	"database/sql"
+	"fmt"
 	"strconv"
+
+	"github.com/neovim/go-client/nvim"
 )
+
+func (f *Feed) Render(nv *nvim.Nvim, buffer nvim.Buffer, unreadOnly bool, separator string) (err error) {
+	dates, err := f.PubDateCol()
+	if err != nil {
+		return
+	}
+	cols := [][]string{f.PrefixCol(), dates, f.AuthorCol(), f.TitleCol(), f.UrlCol()}
+	for _, col := range cols {
+		err = addColumn(nv, buffer, col, separator)
+		if err != nil {
+			return
+		}
+	}
+	return
+}
+
+func (f *Feed) ChildIdx(article Page) (int, error) {
+	for i, a := range f.Articles {
+		if a.Url == article.(*Article).Url {
+			return i, nil
+		}
+	}
+	return 0, fmt.Errorf("Couldn't find article in feed.")
+}
+
+func (f *Feed) QuerySelf(db *sql.DB) (Page, error) {
+	newFeed, err := QueryFeed(db, f.RssUrl)
+	return &newFeed, err
+}
+
+func (f *Feed) QueryChild(db *sql.DB, articleUrl string) (Page, error) {
+	article, err := QueryArticle(db, articleUrl)
+	return &article, err
+}
+
+func (f *Feed) ToggleUnread(nb *Nvimboat, urls ...string) (err error) {
+	var unreadState int
+	hasUnread, err := anyArticleUnread(nb.DBHandler, urls...)
+	if hasUnread {
+		unreadState = 0
+	} else {
+		unreadState = 1
+	}
+	nb.SyncDBchan <- SyncDB{Unread: unreadState, ArticleUrls: urls}
+	urlMap := make(map[string]bool)
+	for _, url := range urls {
+		urlMap[url] = true
+	}
+	for idx, article := range f.Articles {
+		if urlMap[article.Url] {
+			f.Articles[idx].Unread = unreadState
+		}
+	}
+	err = setLines(nb.Nvim, *nb.Buffer, []string{""})
+	if err != nil {
+		return
+	}
+	err = f.Render(nb.Nvim, *nb.Buffer, nb.UnreadOnly, nb.Config["separator"].(string))
+	return
+}
+
+func (f *Feed) FindUnread(direction string, a Article) (article Article, err error) {
+	idx, err := f.ChildIdx(&a)
+	if err != nil {
+		return
+	}
+	switch direction {
+	case "next":
+		for i := idx + 1; i < len(f.Articles); i++ {
+			if f.Articles[i].Unread == 1 {
+				article = *f.Articles[i]
+				return
+			}
+		}
+		return a, nil
+	case "prev":
+		for i := idx - 1; i >= 0; i-- {
+			if f.Articles[i].Unread == 1 {
+				article = *f.Articles[i]
+				return
+			}
+		}
+		return a, nil
+	default:
+		return a, fmt.Errorf("unknown direction: %s\n", direction)
+	}
+}
+
+func (f *Feed) SetArticleRead(article Article) (err error) {
+	idx, err := f.ChildIdx(&article)
+	if err != nil {
+		return
+	}
+	f.Articles[idx].Unread = 0
+	return
+}
 
 func (f *Feed) MainPrefix() string {
 	ratio := strconv.Itoa(f.UnreadCount) + "/" + strconv.Itoa(f.ArticleCount) + ")"
@@ -66,19 +165,11 @@ func (f *Feed) UrlCol() []string {
 	return col
 }
 
-func (f *Feed) Render() ([][]string, error) {
-	dates, err := f.PubDateCol()
-	if err != nil {
-		return nil, err
-	}
-	return [][]string{f.PrefixCol(), dates, f.AuthorCol(), f.TitleCol(), f.UrlCol()}, nil
-}
-
-func (f *Feed) ElementIdx(article Page) (int, error) {
-	for i, a := range f.Articles {
-		if a.Url == article.(*Article).Url {
-			return i, nil
+func (f *Feed) updateUnreadCount() {
+	f.UnreadCount = 0
+	for _, a := range f.Articles {
+		if a.Unread == 1 {
+			f.UnreadCount++
 		}
 	}
-	return 0, errors.New("Couldn't find article in feed.")
 }

@@ -8,11 +8,14 @@ function M.seek_id(line, separator)
 		local url = line:reverse():sub(1, url_start - #separator):reverse()
 		return url
 	end
+	return line
 end
 
-function M.seek_tag(line)
+function M.seek_tag()
+	local row_num = api.nvim_win_get_cursor(0)[1]
+	local line = api.nvim_buf_get_lines(0, row_num - 1, row_num, true)[1]
 	local tag_end, _, _ = line:find("%s%(%d+%)")
-	local tag = line:sub(2, tag_end - 1)
+	local tag = line:sub(1, tag_end - 1)
 	return tag
 end
 
@@ -25,13 +28,11 @@ function M.seek_ids_visual(separator)
 	else
 		direction = -1
 	end
-
 	local urls = {}
 	for row_num = start_row, end_row, direction do
 		local line = api.nvim_buf_get_lines(0, row_num - 1, row_num, true)[1]
 		table.insert(urls, M.seek_id(line, separator))
 	end
-
 	return urls
 end
 
@@ -111,6 +112,17 @@ function M.sort_by_reloader(feeds)
 		end
 	end
 	return default_reload, reloaders
+end
+
+function M.article_url()
+	local lines = #api.nvim_buf_get_lines(0, 0, -1, false)
+	for i = 0, lines, 1 do
+		local node_type = vim.treesitter.get_node({ pos = { i, 0 } }):type()
+		local line = api.nvim_buf_get_lines(0, i, i + 1, false)[1]
+		if node_type == "header" and line:sub(1, 6) == "Link: " then
+			return line:gsub("Link: ", "")
+		end
+	end
 end
 
 return M

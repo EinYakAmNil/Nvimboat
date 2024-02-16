@@ -1,6 +1,17 @@
 package nvimboat
 
 const (
+	nvimboatState       = "return package.loaded.nvimboat."
+	nvimboatEnable      = nvimboatState + "enable()"
+	nvimboatDisable     = nvimboatState + "disable()"
+	nvimboatConfig      = nvimboatState + "config"
+	nvimboatFeeds       = nvimboatState + "feeds"
+	nvimboatFilters     = nvimboatState + "filters"
+	nvimboatPage        = nvimboatState + "page"
+	nvimboatSetPageType = nvimboatState + "page.set(...)"
+)
+
+const (
 	createDB = `
 	CREATE TABLE google_replay (
 	id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
@@ -65,14 +76,14 @@ const (
 	ON rss_feed.rssurl = c.feedurl
 	ORDER BY rss_feed.title
 	`
-	feedArticlesQuery = `
-	SELECT guid, title, author, url, feedurl, pubDate, content, unread FROM rss_item
-	WHERE feedurl = ? AND deleted = 0
-	ORDER BY pubDate DESC
-	`
 	articleQuery = `
 	SELECT guid, title, author, feedurl, pubDate, content, unread
 	FROM rss_item WHERE url = ? AND deleted = 0
 	`
 	feedQuery = `SELECT title FROM rss_feed WHERE rssurl = ?`
+	feedArticlesQuery = `
+	SELECT guid, title, author, url, feedurl, pubDate, content, unread FROM rss_item
+	WHERE feedurl = ? AND deleted = 0
+	ORDER BY pubDate DESC
+	`
 )
