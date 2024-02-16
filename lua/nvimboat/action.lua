@@ -11,7 +11,8 @@ function M.setup(opts)
 end
 
 function M.select()
-	vim.cmd.Nvimboat("select")
+	local url = utils.line_id(M.separator)
+	vim.cmd.Nvimboat("select", url)
 end
 
 function M.back()
