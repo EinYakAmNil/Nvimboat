@@ -42,7 +42,7 @@ func (f *Feed) QueryChild(db *sql.DB, articleUrl string) (Page, error) {
 	return &article, err
 }
 
-func (f *Feed) ToggleUnread(nb Nvimboat, urls ...string) (err error) {
+func (f *Feed) ToggleUnread(nb *Nvimboat, urls ...string) (err error) {
 	var unreadState int
 	hasUnread, err := anyArticleUnread(nb.DBHandler, urls...)
 	if hasUnread {
@@ -59,6 +59,10 @@ func (f *Feed) ToggleUnread(nb Nvimboat, urls ...string) (err error) {
 		if urlMap[article.Url] {
 			f.Articles[idx].Unread = unreadState
 		}
+	}
+	err = setLines(nb.Nvim, *nb.Buffer, []string{""})
+	if err != nil {
+		return
 	}
 	err = f.Render(nb.Nvim, *nb.Buffer, nb.UnreadOnly, nb.Config["separator"].(string))
 	return

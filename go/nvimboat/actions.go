@@ -86,6 +86,6 @@ func (nb *Nvimboat) ToggleArticleRead(nv *nvim.Nvim, args ...string) (err error)
 	if len(args) < 2 {
 		return fmt.Errorf("not enough arguments to call 'toggle-unread'")
 	}
-	err = nb.Pages.Top().ToggleUnread(*nb, args[1:]...)
+	err = nb.Pages.Top().ToggleUnread(nb, args[1:]...)
 	return
 }

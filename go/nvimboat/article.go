@@ -43,7 +43,7 @@ func (a *Article) QueryChild(*sql.DB, string) (Page, error) {
 	return nil, nil
 }
 
-func (a *Article) ToggleUnread(nb Nvimboat, urls ...string) (err error) {
+func (a *Article) ToggleUnread(nb *Nvimboat, urls ...string) (err error) {
 	nb.Pages.Pop()
 	err = nb.Pages.Top().ToggleUnread(nb, urls...)
 	if err != nil {

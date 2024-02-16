@@ -48,7 +48,7 @@ func (f *Filter) QueryChild(db *sql.DB, articleUrl string) (Page, error) {
 	return &article, err
 }
 
-func (f *Filter) ToggleUnread(nb Nvimboat, urls ...string) (err error) {
+func (f *Filter) ToggleUnread(nb *Nvimboat, urls ...string) (err error) {
 	return nil
 }
 

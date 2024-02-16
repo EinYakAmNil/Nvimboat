@@ -38,7 +38,7 @@ func (tp *TagsPage) QueryChild(db *sql.DB, tag string) (Page, error) {
 	return &feeds, err
 }
 
-func (tp *TagsPage) ToggleUnread(nb Nvimboat, urls ...string) (err error) {
+func (tp *TagsPage) ToggleUnread(nb *Nvimboat, urls ...string) (err error) {
 	return nil
 }
 
@@ -78,7 +78,7 @@ func (tf *TagFeeds) QueryChild(*sql.DB, string) (Page, error) {
 	return nil, nil
 }
 
-func (tf *TagFeeds) ToggleUnread(nb Nvimboat, urls ...string) (err error) {
+func (tf *TagFeeds) ToggleUnread(nb *Nvimboat, urls ...string) (err error) {
 	return nil
 }
 

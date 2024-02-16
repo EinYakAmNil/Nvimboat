@@ -12,7 +12,7 @@ type (
 		ChildIdx(Page) (int, error)
 		QuerySelf(*sql.DB) (Page, error)
 		QueryChild(*sql.DB, string) (Page, error)
-		ToggleUnread(nb Nvimboat, urls ...string) (err error)
+		ToggleUnread(nb *Nvimboat, urls ...string) (err error)
 	}
 	PageStack struct {
 		Pages []Page
