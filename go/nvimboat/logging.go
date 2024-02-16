@@ -6,7 +6,7 @@ import (
 	"os"
 )
 
-func SetupLogging(path string) (error) {
+func SetupLogging(path string) error {
 	logFile, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
 		return err
@@ -17,7 +17,10 @@ func SetupLogging(path string) (error) {
 }
 
 func (nb *Nvimboat) Log(val ...any) {
-	log.Println(val...)
-	msg := fmt.Sprintf(`echo "%v"`, val)
-	nb.Nvim.Exec(msg, false)
+	var msg string
+	for _, v := range val {
+		msg += fmt.Sprintf("%+v\n", v)
+	}
+	log.Println(msg)
+	nb.Nvim.Exec("echo "+msg, false)
 }

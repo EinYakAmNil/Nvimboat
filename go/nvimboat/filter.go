@@ -49,7 +49,29 @@ func (f *Filter) QueryChild(db *sql.DB, articleUrl string) (Page, error) {
 }
 
 func (f *Filter) ToggleUnread(nb *Nvimboat, urls ...string) (err error) {
-	return nil
+	var unreadState int
+	hasUnread, err := anyArticleUnread(nb.DBHandler, urls...)
+	if hasUnread {
+		unreadState = 0
+	} else {
+		unreadState = 1
+	}
+	nb.SyncDBchan <- SyncDB{Unread: unreadState, ArticleUrls: urls}
+	urlMap := make(map[string]bool)
+	for _, url := range urls {
+		urlMap[url] = true
+	}
+	for idx, article := range f.Articles {
+		if urlMap[article.Url] {
+			f.Articles[idx].Unread = unreadState
+		}
+	}
+	err = setLines(nb.Nvim, *nb.Buffer, []string{""})
+	if err != nil {
+		return
+	}
+	err = f.Render(nb.Nvim, *nb.Buffer, nb.UnreadOnly, nb.Config["separator"].(string))
+	return
 }
 
 func (f *Filter) MainPrefix() string {

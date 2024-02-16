@@ -11,8 +11,13 @@ function M.setup(opts)
 end
 
 function M.select()
-	local url = utils.line_id(M.separator)
-	vim.cmd.Nvimboat("select", url)
+	if page.page_type == "TagsPage" then
+		local tag = utils.seek_tag()
+		vim.cmd.Nvimboat("select", tag)
+		return
+	end
+	local id = utils.line_id(M.separator)
+	vim.cmd.Nvimboat("select", id)
 end
 
 function M.back()

@@ -7,41 +7,8 @@ import (
 	"github.com/neovim/go-client/nvim"
 )
 
-func (nb *Nvimboat) Push(p Page) error {
-	err := nb.Show(p)
-	if err != nil {
-		return err
-	}
-	nb.Pages.Push(p)
-	return err
-}
-
-func (nb *Nvimboat) Pop() error {
-	currentPage := nb.Pages.Top()
-	nb.Pages.Pop()
-	pos, err := nb.Pages.Top().ChildIdx(currentPage)
-	if err != nil {
-		return err
-	}
-	page, err := nb.Pages.Top().QuerySelf(nb.DBHandler)
-	if err != nil {
-		return err
-	}
-	err = nb.Show(page)
-	if err != nil {
-		return err
-	}
-	err = nb.Nvim.SetWindowCursor(*nb.Window, [2]int{pos + 1, 0})
-	return err
-}
-
-func (nb *Nvimboat) Show(newPage Page) (err error) {
-	defer trimTrail(nb.Nvim, *nb.Buffer)
-	err = setLines(nb.Nvim, *nb.Buffer, []string{""})
-	if err != nil {
-		return
-	}
-	err = newPage.Render(nb.Nvim, *nb.Buffer, nb.UnreadOnly, nb.Config["separator"].(string))
+func (nb *Nvimboat) Push(newPage Page) (err error) {
+	err = nb.Show(newPage)
 	if err != nil {
 		return
 	}
@@ -55,7 +22,40 @@ func (nb *Nvimboat) Show(newPage Page) (err error) {
 		if err != nil {
 			return err
 		}
-		nb.Pages.Pages[idx].(*Article).Unread = 0
+		page.Articles[idx].Unread = 0
+	}
+	nb.Pages.Push(newPage)
+	return
+}
+
+func (nb *Nvimboat) Pop() (err error) {
+	currentPage := nb.Pages.Top()
+	nb.Pages.Pop()
+	pos, err := nb.Pages.Top().ChildIdx(currentPage)
+	if err != nil {
+		return
+	}
+	page, err := nb.Pages.Top().QuerySelf(nb.DBHandler)
+	if err != nil {
+		return
+	}
+	err = nb.Show(page)
+	if err != nil {
+		return
+	}
+	err = nb.Nvim.SetWindowCursor(*nb.Window, [2]int{pos + 1, 0})
+	return
+}
+
+func (nb *Nvimboat) Show(newPage Page) (err error) {
+	defer trimTrail(nb.Nvim, *nb.Buffer)
+	err = setLines(nb.Nvim, *nb.Buffer, []string{""})
+	if err != nil {
+		return
+	}
+	err = newPage.Render(nb.Nvim, *nb.Buffer, nb.UnreadOnly, nb.Config["separator"].(string))
+	if err != nil {
+		return
 	}
 	err = nb.setPageType(newPage)
 	return
