@@ -4,17 +4,26 @@ import (
 	"database/sql"
 	"errors"
 	"strconv"
+
+	"github.com/neovim/go-client/nvim"
 )
 
-func (f *Feed) Render(unreadOnly bool) ([][]string, error) {
+func (f *Feed) Render(nv *nvim.Nvim, buffer nvim.Buffer, unreadOnly bool, separator string) (err error) {
 	dates, err := f.PubDateCol()
 	if err != nil {
-		return nil, err
+		return
 	}
-	return [][]string{f.PrefixCol(), dates, f.AuthorCol(), f.TitleCol(), f.UrlCol()}, nil
+	cols := [][]string{f.PrefixCol(), dates, f.AuthorCol(), f.TitleCol(), f.UrlCol()}
+	for _, col := range cols {
+		err = addColumn(nv, buffer, col, separator)
+		if err != nil {
+			return
+		}
+	}
+	return
 }
 
-func (f *Feed) SubPageIdx(article Page) (int, error) {
+func (f *Feed) ChildIdx(article Page) (int, error) {
 	for i, a := range f.Articles {
 		if a.Url == article.(*Article).Url {
 			return i, nil
@@ -23,7 +32,7 @@ func (f *Feed) SubPageIdx(article Page) (int, error) {
 	return 0, errors.New("Couldn't find article in feed.")
 }
 
-func (f *Feed) QuerySelect(db *sql.DB, articleUrl string) (Page, error) {
+func (f *Feed) QueryChild(db *sql.DB, articleUrl string) (Page, error) {
 	article, err := QueryArticle(db, articleUrl)
 	return &article, err
 }

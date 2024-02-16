@@ -4,9 +4,21 @@ import (
 	"database/sql"
 	"fmt"
 	"strconv"
+
+	"github.com/neovim/go-client/nvim"
 )
 
-func (mm *MainMenu) Render(unreadOnly bool) ([][]string, error) {
+func (mm *MainMenu) Render(nv *nvim.Nvim, buffer nvim.Buffer, unreadOnly bool, separator string) (err error) {
+	for _, col := range mm.columns(unreadOnly) {
+		err = addColumn(nv, buffer, col, separator)
+		if err != nil {
+			return
+		}
+	}
+	return
+}
+
+func (mm *MainMenu) columns(unreadOnly bool) [][]string {
 	var (
 		prefixCol []string
 		titleCol  []string
@@ -22,10 +34,10 @@ func (mm *MainMenu) Render(unreadOnly bool) ([][]string, error) {
 		titleCol = append(titleCol, f.Title)
 		urlCol = append(urlCol, f.RssUrl)
 	}
-	return [][]string{prefixCol, titleCol, urlCol}, nil
+	return [][]string{prefixCol, titleCol, urlCol}
 }
 
-func (mm *MainMenu) SubPageIdx(feed Page) (int, error) {
+func (mm *MainMenu) ChildIdx(feed Page) (int, error) {
 	switch feed.(type) {
 	case *Filter:
 		for i, f := range mm.Filters {
@@ -50,13 +62,13 @@ func (mm *MainMenu) QuerySelf(db *sql.DB) (Page, error) {
 	return mainmenu, err
 }
 
-func (mm *MainMenu) QuerySelect(db *sql.DB, id string) (Page, error) {
+func (mm *MainMenu) QueryChild(db *sql.DB, id string) (Page, error) {
 	switch {
 	case id[:4] == "http":
 		feed, err := QueryFeed(db, id)
 		return &feed, err
 	case id[:6] == "query:":
-		query, inTags, exTags, err := parseFilterID(id)
+		query, inTags, exTags := parseFilterID(id)
 		filter, err := QueryFilter(db, mm.ConfigFeeds, query, inTags, exTags)
 		return &filter, err
 	}

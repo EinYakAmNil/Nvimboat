@@ -11,22 +11,7 @@ function M.setup(opts)
 end
 
 function M.select()
-	if page.page_type == "Article" then
-		return
-	end
-	if page.page_type == "TagsPage" then
-		local tag = utils.line_tag()
-		vim.cmd.Nvimboat("select", tag)
-		return
-	end
-	local url_pages = { "MainMenu", "TagFeeds", "Feed", "Filter" }
-	for _, p in ipairs(url_pages) do
-		if page.page_type == p then
-			local id = utils.line_id(M.separator)
-			vim.cmd.Nvimboat("select", id)
-			return
-		end
-	end
+	vim.cmd.Nvimboat("select")
 end
 
 function M.back()

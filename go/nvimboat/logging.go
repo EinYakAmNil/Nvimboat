@@ -6,19 +6,18 @@ import (
 	"os"
 )
 
-func (nb *Nvimboat) setupLogging() {
-	var err error
-
-	nb.LogFile, err = os.OpenFile(nb.Config["log"].(string), os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+func SetupLogging(path string) (error) {
+	logFile, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
-		log.Println(err)
+		return err
 	}
-	log.SetOutput(nb.LogFile)
+	log.SetOutput(logFile)
 	log.SetFlags(0)
+	return nil
 }
 
 func (nb *Nvimboat) Log(val ...any) {
 	log.Println(val...)
 	msg := fmt.Sprintf(`echo "%v"`, val)
-	nb.Nvim.Plugin.Nvim.Exec(msg, false)
+	nb.Nvim.Exec(msg, false)
 }

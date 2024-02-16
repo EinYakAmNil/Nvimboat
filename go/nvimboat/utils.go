@@ -4,13 +4,44 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"reflect"
 	"regexp"
 	"slices"
+	"sort"
 	"strings"
 	"time"
 
 	md "github.com/JohannesKaufmann/html-to-markdown"
+	"github.com/neovim/go-client/nvim"
 )
+
+func (nb *Nvimboat) init(nv *nvim.Nvim) (err error) {
+	nb.Nvim = nv
+	nb.SyncDBchan = make(chan SyncDB)
+	nb.Config = make(map[string]any)
+	nb.Window = new(nvim.Window)
+	nb.Buffer = new(nvim.Buffer)
+	nb.UnreadOnly = false
+	execBatch := nv.NewBatch()
+	execBatch.CurrentWindow(nb.Window)
+	execBatch.CurrentBuffer(nb.Buffer)
+	execBatch.ExecLua(nvimboatConfig, &nb.Config)
+	execBatch.ExecLua(nvimboatFeeds, &nb.Feeds)
+	execBatch.ExecLua(nvimboatFilters, &nb.Filters)
+	execBatch.SetBufferOption(*nb.Buffer, "filetype", "nvimboat")
+	execBatch.SetBufferOption(*nb.Buffer, "buftype", "nofile")
+	execBatch.SetWindowOption(*nb.Window, "wrap", false)
+	err = execBatch.Execute()
+	if err != nil {
+		return
+	}
+	nb.DBHandler, err = initDB(nb.Config["dbpath"].(string))
+	if err != nil {
+		return
+	}
+	err = SetupLogging(nb.Config["log"].(string))
+	return
+}
 
 func articlesUneadQuery(n int) string {
 	if n == 0 {
@@ -28,19 +59,16 @@ func articlesUneadQuery(n int) string {
 	return prefix + articleCount + suffix
 }
 
-func (nb *Nvimboat) setPageType(p Page) error {
+func (nb *Nvimboat) setPageType(p Page) (err error) {
 	t := pageTypeString(p)
-	err := nb.Nvim.Plugin.Nvim.ExecLua(nvimboatSetPageType, new(any), t)
-	if err != nil {
-		return err
-	}
-	return nil
+	err = nb.Nvim.ExecLua(nvimboatSetPageType, new(any), t)
+	return
 }
 
-func (nb *Nvimboat) addColumn(col []string, separator string) error {
-	currentLines, err := nb.Nvim.Plugin.Nvim.BufferLines(*nb.Nvim.Buffer, 0, -1, false)
+func addColumn(nv *nvim.Nvim, buffer nvim.Buffer, col []string, separator string) (err error) {
+	currentLines, err := nv.BufferLines(buffer, 0, -1, false)
 	if err != nil {
-		return err
+		return
 	}
 	var (
 		diff  int
@@ -53,13 +81,13 @@ func (nb *Nvimboat) addColumn(col []string, separator string) error {
 	for i, c := range col {
 		lines = append(lines, string(currentLines[i])+separator+c)
 	}
-	err = nb.SetLines(lines)
+	err = setLines(nv, buffer, lines)
 	if err != nil {
-		return err
+		return
 	}
-	vcl, err := nb.virtColLens()
+	vcl, err := virtColLens(nv)
 	if err != nil {
-		return err
+		return
 	}
 	maxLineLen := slices.Max(vcl)
 
@@ -67,41 +95,30 @@ func (nb *Nvimboat) addColumn(col []string, separator string) error {
 		diff = maxLineLen - vcl[i]
 		lines[i] = l + strings.Repeat(" ", diff)
 	}
-	err = nb.SetLines(lines)
-	if err != nil {
-		return err
-	}
-	return nil
+	err = setLines(nv, buffer, lines)
+	return err
 }
 
-func (nb *Nvimboat) virtColLens() ([]int, error) {
-	evalResult := []int{}
-	const virtcols = "map(range(1, line('$')), \"virtcol([v:val, '$'])\")"
-	err := nb.Nvim.Plugin.Nvim.Eval(virtcols, &evalResult)
-	if err != nil {
-		return nil, err
-	}
-	return evalResult, err
+func virtColLens(nv *nvim.Nvim) (evalResult []int, err error) {
+	virtCols := "map(range(1, line('$')), \"virtcol([v:val, '$'])\")"
+	err = nv.Eval(virtCols, &evalResult)
+	return
 }
 
-func (nb *Nvimboat) trimTrail() error {
-	currentLines, err := nb.Nvim.Plugin.Nvim.BufferLines(*nb.Nvim.Buffer, 0, -1, false)
+func trimTrail(nv *nvim.Nvim, buffer nvim.Buffer) (err error) {
+	currentLines, err := nv.BufferLines(buffer, 0, -1, false)
 	if err != nil {
-		return err
+		return
 	}
-	var lines = []string{}
+	var lines []string
 	for _, l := range currentLines {
 		lines = append(lines, strings.TrimRight(string(l), " "))
 	}
-	err = nb.SetLines(lines)
-	if err != nil {
-		return err
-	}
-	return nil
+	err = setLines(nv, buffer, lines)
+	return
 }
 
-func parseFilters(configFilters []map[string]any) ([]*Filter, error) {
-	var filters []*Filter
+func parseFilters(configFilters []map[string]any) (filters []*Filter, err error) {
 	for _, filter := range configFilters {
 		f := new(Filter)
 		if name, ok := filter["name"]; ok {
@@ -133,15 +150,10 @@ func parseFilters(configFilters []map[string]any) ([]*Filter, error) {
 		}
 		filters = append(filters, f)
 	}
-	return filters, nil
+	return
 }
 
-func parseFilterID(id string) (string, []string, []string, error) {
-	var (
-		query       string
-		includeTags []string
-		excludeTags []string
-	)
+func parseFilterID(id string) (query string, includeTags []string, excludeTags []string) {
 	query, rawTags, _ := strings.Cut(id, ", ")
 	_, query, _ = strings.Cut(query, "query: ")
 	_, rawTags, _ = strings.Cut(rawTags, "tags: ")
@@ -153,16 +165,14 @@ func parseFilterID(id string) (string, []string, []string, error) {
 			includeTags = append(includeTags, t)
 		}
 	}
-	return query, includeTags, excludeTags, nil
+	return
 }
 
-func strings2bytes(stringSlice []string) [][]byte {
-	byteSlices := [][]byte{}
-
+func strings2bytes(stringSlice []string) (byteSlices [][]byte) {
 	for _, s := range stringSlice {
 		byteSlices = append(byteSlices, []byte(s))
 	}
-	return byteSlices
+	return
 }
 
 func unixToDate(unixTime int) (string, error) {
@@ -176,8 +186,7 @@ func unixToDate(unixTime int) (string, error) {
 	return dateString, nil
 }
 
-func extracUrls(content string) []string {
-	var links []string
+func extracUrls(content string) (links []string) {
 	re := regexp.MustCompile(`\b((?:https?|ftp|file):\/\/[-a-zA-Z0-9+&@#\/%?=~_|!:,.;]*[-a-zA-Z0-9+&@#\/%=~_|])`)
 	matches := re.FindAll([]byte(content), -1)
 	for _, l := range matches {
@@ -195,11 +204,10 @@ func renderHTML(content string) ([]string, error) {
 	return strings.Split(markdown, "\n"), nil
 }
 
-func pageTypeString(p Page) string {
+func pageTypeString(p Page) (name string) {
 	fullName := fmt.Sprintf("%T", p)
-	_, name, _ := strings.Cut(fullName, "nvimboat.")
-
-	return name
+	_, name, _ = strings.Cut(fullName, "nvimboat.")
+	return
 }
 
 func articlesFilterQuery(query string, n int) string {
@@ -224,9 +232,8 @@ func articlesFilterQuery(query string, n int) string {
 	return prefix + articleCount + glue + query + suffix
 }
 
-func filterTags(configFeeds []map[string]any, inTags, exTags []string) []any {
+func filterTags(configFeeds []map[string]any, inTags, exTags []string) (urls []any) {
 	feedurls := make(map[string]bool)
-	var urls []any
 	for _, feed := range configFeeds {
 		if subset(inTags, anyToString(feed["tags"].([]any))) {
 			feedurls[feed["rssurl"].(string)] = true
@@ -243,7 +250,12 @@ func filterTags(configFeeds []map[string]any, inTags, exTags []string) []any {
 	for url := range feedurls {
 		urls = append(urls, url)
 	}
-	return urls
+	return
+}
+
+func setLines(nv *nvim.Nvim, buffer nvim.Buffer, lines []string) (err error) {
+	err = nv.SetBufferLines(buffer, 0, -1, false, strings2bytes(lines))
+	return
 }
 
 func tagFeedsQuery(feedurls []any) string {
@@ -281,31 +293,38 @@ func tagFeedsQuery(feedurls []any) string {
 }
 
 func subset(first, second []string) bool {
-	set := make(map[string]int)
+	set := make(map[string]bool)
 	for _, value := range second {
-		set[value] += 1
+		set[value] = true
 	}
 	for _, value := range first {
-		if count, found := set[value]; !found {
+		if item, found := set[value]; !found {
 			return false
-		} else if count < 1 {
+		} else if !item {
 			return false
-		} else {
-			set[value] = count - 1
 		}
 	}
 	return true
 }
 
-func anyToString(base []any) []string {
-	var conv []string
+func anyToString(base []any) (conv []string) {
 	for _, a := range base {
 		conv = append(conv, a.(string))
 	}
-	return conv
+	return
 }
 
 func fileExists(f string) bool {
 	_, err := os.Stat(f)
 	return !errors.Is(err, os.ErrNotExist)
+}
+
+func sortedMapKeys(m interface{}) (keyList []string) {
+	keys := reflect.ValueOf(m).MapKeys()
+
+	for _, key := range keys {
+		keyList = append(keyList, key.Interface().(string))
+	}
+	sort.Strings(keyList)
+	return
 }

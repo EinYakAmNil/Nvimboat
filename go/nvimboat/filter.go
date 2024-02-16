@@ -4,17 +4,33 @@ import (
 	"database/sql"
 	"errors"
 	"strconv"
+
+	"github.com/neovim/go-client/nvim"
 )
 
 func (f *Filter) QuerySelf(*sql.DB) (Page, error) {
 	return nil, nil
 }
 
-func (f *Filter) QuerySelect(*sql.DB, string) (Page, error) {
+func (f *Filter) QueryChild(*sql.DB, string) (Page, error) {
 	return nil, nil
 }
 
-func (f *Filter) Render(unreadOnly bool) ([][]string, error) {
+func (f *Filter) Render(nv *nvim.Nvim, buffer nvim.Buffer, unreadOnly bool, separator string) (err error) {
+	cols, err := f.columns(unreadOnly)
+	if err != nil {
+		return
+	}
+	for _, col := range cols {
+		err = addColumn(nv, buffer, col, separator)
+		if err != nil {
+			return
+		}
+	}
+	return
+}
+
+func (f *Filter) columns(unreadOnly bool) ([][]string, error) {
 	dates, err := f.PubDateCol()
 	if err != nil {
 		return nil, err
@@ -22,7 +38,7 @@ func (f *Filter) Render(unreadOnly bool) ([][]string, error) {
 	return [][]string{f.PrefixCol(), dates, f.AuthorCol(), f.TitleCol(), f.UrlCol()}, nil
 }
 
-func (f *Filter) SubPageIdx(article Page) (int, error) {
+func (f *Filter) ChildIdx(article Page) (int, error) {
 	for i, a := range f.Articles {
 		if a.Url == article.(*Article).Url {
 			return i, nil

@@ -5,61 +5,67 @@ import (
 	"os"
 
 	"github.com/neovim/go-client/nvim"
-	nvimPlugin "github.com/neovim/go-client/nvim/plugin"
 )
 
-func (nb *Nvimboat) Prepare(p *nvimPlugin.Plugin) {
-	nb.Nvim.Plugin = p
-	nb.Config = make(map[string]any)
-	nb.Nvim.Batch = p.Nvim.NewBatch()
-	nb.Nvim.Buffer = new(nvim.Buffer)
-	nb.Nvim.Window = new(nvim.Window)
-	nb.Nvim.Batch.CurrentBuffer(nb.Nvim.Buffer)
-	nb.Nvim.Batch.CurrentWindow(nb.Nvim.Window)
-	nb.Nvim.Batch.ExecLua(nvimboatConfig, &nb.Config)
-	nb.Nvim.Batch.ExecLua(nvimboatFeeds, &nb.ConfigFeeds)
-	nb.Nvim.Batch.ExecLua(nvimboatFilters, &nb.ConfigFilters)
-	nb.Nvim.Batch.SetBufferOption(*nb.Nvim.Buffer, "filetype", "nvimboat")
-	nb.Nvim.Batch.SetBufferOption(*nb.Nvim.Buffer, "buftype", "nofile")
-	nb.Nvim.Batch.SetWindowOption(*nb.Nvim.Window, "wrap", false)
+func (nb *Nvimboat) Push(p Page) error {
+	err := nb.Show(p)
+	if err != nil {
+		return err
+	}
+	nb.Pages.Push(p)
+	return err
 }
 
-func (nb *Nvimboat) init() error {
-	err := nb.Nvim.Batch.Execute()
-	if nb.LogFile == nil {
-		nb.setupLogging()
+func (nb *Nvimboat) Pop() error {
+	currentPage := nb.Pages.Top()
+	nb.Pages.Pop()
+	pos, err := nb.Pages.Top().ChildIdx(currentPage)
+	if err != nil {
+		return err
 	}
-	if nb.DB == nil {
-		dbpath := nb.Config["dbpath"].(string)
-		nb.DB, err = initDB(dbpath)
-		if err != nil {
-			nb.Log("Error opening the database:")
-			nb.Log(err)
-		}
+	page, err := nb.Pages.Top().QuerySelf(nb.DBHandler)
+	if err != nil {
+		return err
 	}
+	err = nb.Show(page)
+	if err != nil {
+		return err
+	}
+	err = nb.Nvim.SetWindowCursor(*nb.Window, [2]int{pos + 1, 0})
 	return err
+}
+
+func (nb *Nvimboat) Show(page Page) (err error) {
+	defer trimTrail(nb.Nvim, *nb.Buffer)
+	err = setLines(nb.Nvim, *nb.Buffer, []string{""})
+	if err != nil {
+		return
+	}
+	err = page.Render(nb.Nvim, *nb.Buffer, nb.UnreadOnly, nb.Config["separator"].(string))
+	if err != nil {
+		return
+	}
+	switch p := page.(type) {
+	case *Article:
+		nb.SyncDBchan <- SyncDB{Unread: 0, ArticleUrls: []string{p.Url}}
+	}
+	err = nb.setPageType(page)
+	return
 }
 
 type (
 	Nvimboat struct {
-		Config        map[string]any
-		Pages         PageStack
-		ConfigFeeds   []map[string]any
-		ConfigFilters []map[string]any
-		LogFile       *os.File
-		DB            *sql.DB
-		ChanExecDB    chan DBsync
-		Nvim          nvimConn
+		Config     map[string]any
+		Pages      PageStack
+		Feeds      []map[string]any
+		Filters    []map[string]any
+		LogFile    *os.File
+		DBHandler  *sql.DB
+		SyncDBchan chan SyncDB
+		Nvim       *nvim.Nvim
+		Window     *nvim.Window
+		Buffer     *nvim.Buffer
+		UnreadOnly bool
 	}
-	DBsync struct {
-		Unread      int
-		FeedUrls    []string
-		ArticleUrls []string
-	}
-	nvimConn struct {
-		Plugin *nvimPlugin.Plugin
-		Batch  *nvim.Batch
-		Buffer *nvim.Buffer
-		Window *nvim.Window
-	}
+	Action func(*Nvimboat, *nvim.Nvim, ...string) error
 )

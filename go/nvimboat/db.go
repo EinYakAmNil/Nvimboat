@@ -9,30 +9,29 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-func initDB(dbpath string) (*sql.DB, error) {
-	var err error
+func initDB(dbpath string) (db *sql.DB, err error) {
 	if fileExists(dbpath) {
-		d, err := sql.Open("sqlite3", dbpath)
-		return d, err
+		db, err = sql.Open("sqlite3", dbpath)
+		return
 	}
 	dbDir := path.Dir(dbpath)
 	err = os.MkdirAll(dbDir, os.FileMode(0755))
 	if err != nil {
-		return nil, err
+		return
 	}
 	d, err := sql.Open("sqlite3", dbpath)
 	if err != nil {
-		return nil, err
+		return
 	}
 	_, err = d.Exec(createDB)
-	return d, err
+	return
 }
 
 func QueryMain(db *sql.DB, configFeeds []map[string]any, configFilters []map[string]any) (*MainMenu, error) {
 	var (
 		err        error
 		tmp_filter Filter
-		mainmenu = &MainMenu{ConfigFeeds: configFeeds, ConfigFilters: configFilters}
+		mainmenu   = &MainMenu{ConfigFeeds: configFeeds, ConfigFilters: configFilters}
 	)
 	mainmenu.Feeds, err = QueryFeeds(db)
 	if err != nil {
@@ -55,15 +54,15 @@ func QueryMain(db *sql.DB, configFeeds []map[string]any, configFilters []map[str
 }
 
 func QueryFeed(db *sql.DB, feedUrl string) (Feed, error) {
-	var f = Feed{RssUrl: feedUrl, UnreadCount: 0}
-	row := singleRow(db, feedQuery, f.RssUrl)
-	err := row.Scan(&f.Title)
+	feed := Feed{RssUrl: feedUrl, UnreadCount: 0}
+	row := db.QueryRow(feedQuery, feed.RssUrl)
+	err := row.Scan(&feed.Title)
 	if err != nil {
-		return f, err
+		return feed, err
 	}
-	rows, err := multiRow(db, feedArticlesQuery, f.RssUrl)
+	rows, err := db.Query(feedArticlesQuery, feed.RssUrl)
 	if err != nil {
-		return f, err
+		return feed, err
 	}
 	defer rows.Close()
 
@@ -71,25 +70,23 @@ func QueryFeed(db *sql.DB, feedUrl string) (Feed, error) {
 		a := new(Article)
 		err = rows.Scan(&a.Guid, &a.Title, &a.Author, &a.Url, &a.FeedUrl, &a.PubDate, &a.Content, &a.Unread)
 		if err != nil {
-			return f, err
+			return feed, err
 		}
-
-		f.Articles = append(f.Articles, a)
+		feed.Articles = append(feed.Articles, a)
 	}
-	f.ArticleCount = len(f.Articles)
-	for _, a := range f.Articles {
+	feed.ArticleCount = len(feed.Articles)
+	for _, a := range feed.Articles {
 		if a.Unread == 1 {
-			f.UnreadCount++
+			feed.UnreadCount++
 		}
 	}
-	return f, nil
+	return feed, nil
 }
 
-func QueryFeeds(db *sql.DB) ([]*Feed, error) {
-	var feeds []*Feed
-	rows, err := multiRow(db, feedsMinimalQuery)
+func QueryFeeds(db *sql.DB) (feeds []*Feed, err error) {
+	rows, err := db.Query(feedsMinimalQuery)
 	if err != nil {
-		return feeds, err
+		return
 	}
 	defer rows.Close()
 
@@ -97,11 +94,11 @@ func QueryFeeds(db *sql.DB) ([]*Feed, error) {
 		f := new(Feed)
 		err = rows.Scan(&f.Title, &f.RssUrl, &f.UnreadCount, &f.ArticleCount)
 		if err != nil {
-			return feeds, err
+			return
 		}
 		feeds = append(feeds, f)
 	}
-	return feeds, nil
+	return
 }
 
 func QueryFilter(db *sql.DB, configFeeds []map[string]any, query string, inTags, exTags []string) (Filter, error) {
@@ -116,7 +113,7 @@ func QueryFilter(db *sql.DB, configFeeds []map[string]any, query string, inTags,
 		return f, nil
 	}
 	q := articlesFilterQuery(query, len(urls))
-	rows, err := multiRow(db, q, urls...)
+	rows, err := db.Query(q, urls...)
 	if err != nil {
 		return f, err
 	}
@@ -138,7 +135,7 @@ func QueryFilter(db *sql.DB, configFeeds []map[string]any, query string, inTags,
 
 func QueryArticle(db *sql.DB, url string) (Article, error) {
 	var a = Article{Url: url}
-	row := singleRow(db, articleQuery, a.Url)
+	row := db.QueryRow(articleQuery, a.Url)
 	err := row.Scan(&a.Guid, &a.Title, &a.Author, &a.FeedUrl, &a.PubDate, &a.Content, &a.Unread)
 	if err != nil {
 		return a, err
@@ -162,7 +159,7 @@ func QueryTagFeeds(db *sql.DB, tag string, configFeeds []map[string]any) (TagFee
 	q := tagFeedsQuery(feedurls)
 	feedurls = append(feedurls, feedurls...)
 	feedurls = append(feedurls, feedurls...)
-	rows, err := multiRow(db, q, feedurls...)
+	rows, err := db.Query(q, feedurls...)
 	if err != nil {
 		return tf, err
 	}
@@ -187,7 +184,7 @@ func QueryTags(configFeeds []map[string]any) (*TagsPage, error) {
 	return tp, nil
 }
 
-func (nb *Nvimboat) anyArticleUnread(url ...string) (bool, error) {
+func anyArticleUnread(db *sql.DB, url ...string) (bool, error) {
 	var (
 		count   int
 		sqlArgs []any
@@ -195,7 +192,7 @@ func (nb *Nvimboat) anyArticleUnread(url ...string) (bool, error) {
 	for _, u := range url {
 		sqlArgs = append(sqlArgs, u)
 	}
-	row := nb.DB.QueryRow(articlesUneadQuery(len(url)), sqlArgs...)
+	row := db.QueryRow(articlesUneadQuery(len(url)), sqlArgs...)
 	err := row.Scan(&count)
 	if err != nil {
 		return false, fmt.Errorf("AnyArticleUnread -> row.Scan: " + fmt.Sprintln(err))
@@ -206,15 +203,8 @@ func (nb *Nvimboat) anyArticleUnread(url ...string) (bool, error) {
 	return false, nil
 }
 
-func singleRow(db *sql.DB, query string, args ...any) *sql.Row {
-	row := db.QueryRow(query, args...)
-	return row
-}
-
-func multiRow(db *sql.DB, query string, args ...any) (*sql.Rows, error) {
-	rows, err := db.Query(query, args...)
-	if err != nil {
-		return nil, err
-	}
-	return rows, nil
+type SyncDB struct {
+	Unread      int
+	FeedUrls    []string
+	ArticleUrls []string
 }

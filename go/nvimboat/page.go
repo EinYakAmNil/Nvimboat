@@ -1,13 +1,17 @@
 package nvimboat
 
-import "database/sql"
+import (
+	"database/sql"
+
+	"github.com/neovim/go-client/nvim"
+)
 
 type (
 	Page interface {
-		Render(bool) ([][]string, error)
-		SubPageIdx(Page) (int, error)
+		Render(nv *nvim.Nvim, buffer nvim.Buffer, unreadOnly bool, separator string) (err error)
+		ChildIdx(Page) (int, error)
 		QuerySelf(*sql.DB) (Page, error)
-		QuerySelect(*sql.DB, string) (Page, error)
+		QueryChild(*sql.DB, string) (Page, error)
 	}
 	PageStack struct {
 		Pages []Page
@@ -15,8 +19,8 @@ type (
 	MainMenu struct {
 		ConfigFeeds   []map[string]any
 		ConfigFilters []map[string]any
-		Filters []*Filter
-		Feeds   []*Feed
+		Filters       []*Filter
+		Feeds         []*Feed
 	}
 	Filter struct {
 		Name         string

@@ -1,90 +1,97 @@
 package nvimboat
 
-func (nb *Nvimboat) ShowMain() error {
-	mainmenu, err := QueryMain(nb.DB, nb.ConfigFeeds, nb.ConfigFilters)
+import (
+	"fmt"
+
+	"github.com/neovim/go-client/nvim"
+)
+
+func (nb *Nvimboat) ShowMain(nv *nvim.Nvim, args ...string) (err error) {
+	mainMenu, err := QueryMain(nb.DBHandler, nb.Feeds, nb.Filters)
 	if err != nil {
-		return err
+		return
 	}
 	nb.Pages.Pages = nil
-	err = nb.Push(mainmenu)
-	return err
+	err = nb.Push(mainMenu)
+	return
 }
 
-func (nb *Nvimboat) Enable() error {
-	err := nb.ShowMain()
+func (nb *Nvimboat) Enable(nv *nvim.Nvim, args ...string) (err error) {
+	err = nb.init(nv)
 	if err != nil {
-		return err
+		return
 	}
-	err = nb.Nvim.Plugin.Nvim.ExecLua(nvimboatEnable, new(any))
-	return err
-}
-
-func (nb *Nvimboat) Disable() error {
-	err := nb.Nvim.Plugin.Nvim.ExecLua(nvimboatDisable, new(any))
-	return err
-}
-
-func (nb *Nvimboat) ShowTags() error {
-	tags, err := QueryTags(nb.ConfigFeeds)
+	err = nb.ShowMain(nv, args...)
 	if err != nil {
-		return err
+		return
 	}
-	nb.Push(tags)
-	if err != nil {
-		return err
-	}
-	return nil
+	err = nv.ExecLua(nvimboatEnable, new(any))
+	return
 }
 
-func (nb *Nvimboat) Select(id string) error {
-	defer nb.Nvim.Plugin.Nvim.SetWindowCursor(*nb.Nvim.Window, [2]int{0, 1})
-	page, err := nb.Pages.Top().QuerySelect(nb.DB, id)
+func (nb *Nvimboat) Disable(nv *nvim.Nvim, args ...string) (err error) {
+	err = nv.ExecLua(nvimboatDisable, new(any))
+	return
+}
+
+func (nb *Nvimboat) ShowTags(nv *nvim.Nvim, args ...string) (err error) {
+	tags, err := QueryTags(nb.Feeds)
 	if err != nil {
-		return err
+		return
+	}
+	err = nb.Push(tags)
+	return
+}
+
+func (nb *Nvimboat) Select(nv *nvim.Nvim, args ...string) (err error) {
+	defer nb.Nvim.SetWindowCursor(*nb.Window, [2]int{0, 1})
+	if len(args) < 2 {
+		return fmt.Errorf("not enough arguments to call 'select'")
+	}
+	page, err := nb.Pages.Top().QueryChild(nb.DBHandler, args[1])
+	if err != nil {
+		return
 	}
 	err = nb.Push(page)
-	return err
+	return
 }
 
-func (nb *Nvimboat) Back() error {
+func (nb *Nvimboat) Back(nv *nvim.Nvim, args ...string) (err error) {
 	switch nb.Pages.Top().(type) {
 	case *MainMenu:
-		return nil
+		return
 	default:
-		err := nb.Pop()
-		if err != nil {
-			return err
-		}
+		err = nb.Pop()
+		return
 	}
+}
+
+func (nb *Nvimboat) NextUnread(nv *nvim.Nvim, args ...string) error {
 	return nil
 }
 
-func (nb *Nvimboat) NextUnread() error {
+func (nb *Nvimboat) PrevUnread(nv *nvim.Nvim, args ...string) error {
 	return nil
 }
 
-func (nb *Nvimboat) PrevUnread() error {
+func (nb *Nvimboat) NextArticle(nv *nvim.Nvim, args ...string) error {
 	return nil
 }
 
-func (nb *Nvimboat) NextArticle() error {
+func (nb *Nvimboat) PrevArticle(nv *nvim.Nvim, args ...string) error {
 	return nil
 }
 
-func (nb *Nvimboat) PrevArticle() error {
-	return nil
-}
-
-func (nb *Nvimboat) ToggleArticleRead(urls ...string) error {
+func (nb *Nvimboat) ToggleArticleRead(nv *nvim.Nvim, args ...string) error {
 	var (
 		err  error
-		sync DBsync
+		sync SyncDB
 	)
-	if urls[0] == "Article" {
+	if args[0] == "Article" {
 		article := nb.Pages.Top().(*Article)
 		nb.Pages.Pop()
-		nb.ToggleArticleRead(article.Url)
-		idx, err := nb.Pages.Top().SubPageIdx(article)
+		nb.ToggleArticleRead(nv, article.Url)
+		idx, err := nb.Pages.Top().ChildIdx(article)
 		if err != nil {
 			return err
 		}
@@ -99,7 +106,7 @@ func (nb *Nvimboat) ToggleArticleRead(urls ...string) error {
 		err = nb.Show(nb.Pages.Top())
 		return err
 	}
-	anyUnread, err := nb.anyArticleUnread(urls...)
+	anyUnread, err := anyArticleUnread(nb.DBHandler, args...)
 	if err != nil {
 		return err
 	}
@@ -110,24 +117,10 @@ func (nb *Nvimboat) ToggleArticleRead(urls ...string) error {
 	}
 	switch nb.Pages.Top().(type) {
 	case *Filter:
-		sync.ArticleUrls = urls
+		sync.ArticleUrls = args
 	case *Feed:
-		sync.ArticleUrls = urls
+		sync.ArticleUrls = args
 	}
-	nb.ChanExecDB <- sync
+	nb.SyncDBchan <- sync
 	return err
-}
-
-var Actions = []string{
-	"enable",
-	"disable",
-	"show-main",
-	"show-tags",
-	"select",
-	"back",
-	"next-unread",
-	"prev-unread",
-	"next-article",
-	"prev-article",
-	"toggle-read",
 }
