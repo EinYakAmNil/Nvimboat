@@ -11,7 +11,7 @@ func TestArticleBack(t *testing.T) {
 		{Title: "Article 3"},
 	}}
 	selectedA := filter.Articles[1]
-	idx, err := filter.ElementIdx(selectedA)
+	idx, err := filter.ChildIdx(selectedA)
 	if err != nil {
 		t.Fatal("No index.")
 	}
