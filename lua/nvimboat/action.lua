@@ -1,6 +1,7 @@
 local page = require("nvimboat.page")
 local utils = require("nvimboat.utils")
 local api = vim.api
+local Nvimboat = vim.cmd.Nvimboat
 local M = {}
 
 function M.setup(opts)
@@ -13,24 +14,28 @@ end
 function M.select()
 	if page.page_type == "TagsPage" then
 		local tag = utils.seek_tag()
-		vim.cmd.Nvimboat("select", tag)
+		Nvimboat("select", tag)
 		return
 	end
 	local id = utils.line_id(M.separator)
-	vim.cmd.Nvimboat("select", id)
+	if page.page_type == "Article" then
+		vim.fn.jobstart({ M.linkhandler, id }, { detach = true })
+		return
+	end
+	Nvimboat("select", id)
 end
 
 function M.back()
-	vim.cmd.Nvimboat("back")
+	Nvimboat("back")
 end
 
 function M.show_main_menu()
-	vim.cmd.Nvimboat("show-main")
+	Nvimboat("show-main")
 end
 
 function M.show_tags()
 	if page.page_type ~= "TagsPage" then
-		vim.cmd.Nvimboat("show-tags")
+		Nvimboat("show-tags")
 	end
 end
 
@@ -39,7 +44,7 @@ function M.next_unread()
 		return
 	end
 	if page.page_type == "Article" then
-		vim.cmd.Nvimboat("next-unread")
+		Nvimboat("next-unread")
 		return
 	end
 
@@ -65,7 +70,7 @@ function M.prev_unread()
 		return
 	end
 	if page.page_type == "Article" then
-		vim.cmd.Nvimboat("prev-unread")
+		Nvimboat("prev-unread")
 		return
 	end
 
@@ -92,16 +97,16 @@ function M.toggle_article_read()
 		if page.page_type == "Article" then
 			local url = utils.article_url()
 			-- It doesn't actually matter what we pass as the second argument
-			vim.cmd.Nvimboat("toggle-read", url)
+			Nvimboat("toggle-read", url)
 			return
 		end
 		local id = utils.line_id(M.separator)
-		vim.cmd.Nvimboat("toggle-read", id)
+		Nvimboat("toggle-read", id)
 	elseif vim_mode == 'v' or vim_mode == 'V' then
 		local ids = utils.seek_ids_visual(M.separator)
 		local escape = api.nvim_replace_termcodes("<Esc>", true, false, true)
 		api.nvim_feedkeys(escape, "v", false)
-		vim.cmd.Nvimboat("toggle-read", unpack(ids))
+		Nvimboat("toggle-read", unpack(ids))
 	end
 	api.nvim_win_set_cursor(0, curpos)
 end
@@ -128,14 +133,14 @@ function M.next_article()
 	if page.page_type ~= "Article" then
 		return
 	end
-	vim.cmd.Nvimboat("next-article")
+	Nvimboat("next-article")
 end
 
 function M.prev_article()
 	if page.page_type ~= "Article" then
 		return
 	end
-	vim.cmd.Nvimboat("prev-article")
+	Nvimboat("prev-article")
 end
 
 function M.reload_all()

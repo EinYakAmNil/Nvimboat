@@ -44,6 +44,9 @@ func (nb *Nvimboat) ShowTags(nv *nvim.Nvim, args ...string) (err error) {
 }
 
 func (nb *Nvimboat) Select(nv *nvim.Nvim, args ...string) (err error) {
+	if _, isArticle := nb.Pages.Top().(*Article); isArticle {
+		return
+	}
 	defer nb.Nvim.SetWindowCursor(*nb.Window, [2]int{0, 1})
 	if len(args) < 2 {
 		return fmt.Errorf("not enough arguments to call 'select'")

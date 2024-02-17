@@ -44,6 +44,11 @@ func (f *Filter) QuerySelf(*sql.DB) (Page, error) {
 }
 
 func (f *Filter) QueryChild(db *sql.DB, articleUrl string) (Page, error) {
+	for _, article := range f.Articles {
+		if article.Url == articleUrl {
+			return article, nil
+		}
+	}
 	article, err := QueryArticle(db, articleUrl)
 	return &article, err
 }
