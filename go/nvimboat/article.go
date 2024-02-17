@@ -50,6 +50,14 @@ func (a *Article) ToggleUnread(nb *Nvimboat, urls ...string) (err error) {
 		return
 	}
 	err = nb.Show(nb.Pages.Top())
+	if err != nil {
+		return
+	}
+	pos, err := nb.Pages.Top().ChildIdx(a)
+	if err != nil {
+		return
+	}
+	err = nb.Nvim.SetWindowCursor(*nb.Window, [2]int{pos + 1, 1})
 	return
 }
 
