@@ -188,6 +188,7 @@ func QueryTagFeeds(db *sql.DB, tag string, configFeeds []map[string]any) (tf Tag
 }
 
 func QueryTags(configFeeds []map[string]any) (tp *TagsPage, err error) {
+	tp = new(TagsPage)
 	tp.TagFeedCount = make(map[string]int)
 	tp.Feeds = configFeeds
 	for _, feed := range tp.Feeds {
