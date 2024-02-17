@@ -90,13 +90,15 @@ func parseFilters(configFilters []map[string]any) (filters []*Filter, err error)
 		if name, ok := filter["name"]; ok {
 			f.Name = name.(string)
 		} else {
-			return filters, fmt.Errorf("Failed to parse: %v", filter)
+			err = fmt.Errorf("Failed to parse: %v", filter)
+			return
 		}
 		if query, ok := filter["query"]; ok {
 			f.Query = query.(string)
 			f.FilterID = "query: " + query.(string) + ", tags: "
 		} else {
-			return filters, fmt.Errorf("Failed to parse: %v", filter)
+			err = fmt.Errorf("Failed to parse: %v", filter)
+			return
 		}
 		if tags, ok := filter["tags"]; ok {
 			for _, tag := range tags.([]any) {
