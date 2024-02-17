@@ -74,8 +74,9 @@ func (tf *TagFeeds) QuerySelf(db *sql.DB) (Page, error) {
 	return tf, nil
 }
 
-func (tf *TagFeeds) QueryChild(*sql.DB, string) (Page, error) {
-	return nil, nil
+func (tf *TagFeeds) QueryChild(db *sql.DB, feedUrl string) (Page, error) {
+	feed, err := QueryFeed(db, feedUrl)
+	return &feed, err
 }
 
 func (tf *TagFeeds) ToggleUnread(nb *Nvimboat, urls ...string) (err error) {
