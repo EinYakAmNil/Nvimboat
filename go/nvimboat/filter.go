@@ -56,6 +56,10 @@ func (f *Filter) QueryChild(db *sql.DB, articleUrl string) (Page, error) {
 func (f *Filter) ToggleUnread(nb *Nvimboat, urls ...string) (err error) {
 	var unreadState int
 	hasUnread, err := anyArticleUnread(nb.DBHandler, urls...)
+	if err != nil {
+		err = fmt.Errorf("error querying article unread state for %v: %v\n", urls, err)
+		return
+	}
 	if hasUnread {
 		unreadState = 0
 	} else {

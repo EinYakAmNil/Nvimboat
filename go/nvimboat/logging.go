@@ -22,5 +22,8 @@ func (nb *Nvimboat) Log(val ...any) {
 		msg += fmt.Sprintf("%+v\n", v)
 	}
 	log.Println(msg)
-	nb.Nvim.Exec("echo "+msg, false)
+	err := nb.Nvim.Command(`echo "` + msg + `"`)
+	if err != nil {
+		nb.Log(err)
+	}
 }

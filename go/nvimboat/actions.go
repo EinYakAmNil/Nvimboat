@@ -166,6 +166,7 @@ func (nb *Nvimboat) PrevArticle(nv *nvim.Nvim, args ...string) error {
 }
 
 func (nb *Nvimboat) ToggleArticleRead(nv *nvim.Nvim, args ...string) (err error) {
+	defer trimTrail(nb.Nvim, *nb.Buffer)
 	if len(args) < 2 {
 		return fmt.Errorf("not enough arguments to call 'toggle-unread'")
 	}
