@@ -8,6 +8,7 @@ import (
 
 type (
 	Page interface {
+		Select(nb *Nvimboat, url string) (err error)
 		Render(nv *nvim.Nvim, buffer nvim.Buffer, unreadOnly bool, separator string) (err error)
 		ChildIdx(Page) (int, error)
 		QuerySelf(*sql.DB) (Page, error)
@@ -16,7 +17,7 @@ type (
 	}
 	ArticlesPage interface {
 		FindUnread(direction string, a Article) (Article, error)
-		SetArticleRead(article Article) error
+		SetArticleRead(nb Nvimboat, article Article) error
 	}
 	PageStack struct {
 		Pages []Page

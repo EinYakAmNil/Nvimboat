@@ -8,6 +8,24 @@ import (
 	"github.com/neovim/go-client/nvim"
 )
 
+func (f *Filter) Select(nb *Nvimboat, url string) (err error) {
+	article, err := f.QueryChild(nb.DBHandler, url)
+	if err != nil {
+		err = fmt.Errorf("error querying article '%s' in feed: %v\n", url, err)
+		return
+	}
+	err = nb.Push(article)
+	if err != nil {
+		err = fmt.Errorf("error pushing '%+v' on page stack in %+v: %v\n", article, f, err)
+	}
+	if a, ok := article.(*Article); ok {
+		err = f.SetArticleRead(*nb, *a)
+		return
+	}
+	err = fmt.Errorf("%+v is not an article\n", article)
+	return
+}
+
 func (f *Filter) Render(nv *nvim.Nvim, buffer nvim.Buffer, unreadOnly bool, separator string) (err error) {
 	cols, err := f.columns(unreadOnly)
 	if err != nil {
@@ -110,7 +128,8 @@ func (f *Filter) FindUnread(direction string, a Article) (article Article, err e
 	}
 }
 
-func (f *Filter) SetArticleRead(article Article) (err error) {
+func (f *Filter) SetArticleRead(nb Nvimboat, article Article) (err error) {
+	nb.SyncDBchan <- SyncDB{Unread: 0, ArticleUrls: []string{article.Url}}
 	idx, err := f.ChildIdx(&article)
 	if err != nil {
 		return

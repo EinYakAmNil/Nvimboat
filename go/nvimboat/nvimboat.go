@@ -12,18 +12,6 @@ func (nb *Nvimboat) Push(newPage Page) (err error) {
 	if err != nil {
 		return
 	}
-	switch page := newPage.(type) {
-	case *Article:
-		nb.SyncDBchan <- SyncDB{Unread: 0, ArticleUrls: []string{page.Url}}
-	}
-	switch page := nb.Pages.Top().(type) {
-	case *Filter:
-		idx, err := page.ChildIdx(newPage)
-		if err != nil {
-			return err
-		}
-		page.Articles[idx].Unread = 0
-	}
 	nb.Pages.Push(newPage)
 	return
 }

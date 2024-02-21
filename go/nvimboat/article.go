@@ -6,6 +6,10 @@ import (
 	"github.com/neovim/go-client/nvim"
 )
 
+func (a *Article) Select(nb *Nvimboat, url string) (err error) {
+	return
+}
+
 func (a *Article) Prefix() string {
 	if a.Unread == 1 {
 		return "N"

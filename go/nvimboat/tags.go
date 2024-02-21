@@ -9,6 +9,16 @@ import (
 	"github.com/neovim/go-client/nvim"
 )
 
+func (tp *TagsPage) Select(nb *Nvimboat, id string) (err error) {
+	page, err := tp.QueryChild(nb.DBHandler, id)
+	if err != nil {
+		err = fmt.Errorf("error querying tag '%s' in tags page: %v\n", id, err)
+		return
+	}
+	err = nb.Push(page)
+	return
+}
+
 func (tp *TagsPage) Render(nv *nvim.Nvim, buffer nvim.Buffer, unreadOnly bool, separator string) (err error) {
 	err = setLines(nv, buffer, tp.lines())
 	return
@@ -40,6 +50,16 @@ func (tp *TagsPage) QueryChild(db *sql.DB, tag string) (Page, error) {
 
 func (tp *TagsPage) ToggleUnread(nb *Nvimboat, urls ...string) (err error) {
 	return nil
+}
+
+func (tf *TagFeeds) Select(nb *Nvimboat, url string) (err error) {
+	page, err := tf.QueryChild(nb.DBHandler, url)
+	if err != nil {
+		err = fmt.Errorf("error querying feed '%s' in tag '%s': %v\n", url, tf.Tag, err)
+		return
+	}
+	err = nb.Push(page)
+	return
 }
 
 func (tf *TagFeeds) Render(nv *nvim.Nvim, buffer nvim.Buffer, unreadOnly bool, separator string) (err error) {

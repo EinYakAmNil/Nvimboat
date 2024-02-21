@@ -44,18 +44,11 @@ func (nb *Nvimboat) ShowTags(nv *nvim.Nvim, args ...string) (err error) {
 }
 
 func (nb *Nvimboat) Select(nv *nvim.Nvim, args ...string) (err error) {
-	if _, isArticle := nb.Pages.Top().(*Article); isArticle {
-		return
-	}
-	defer nb.Nvim.SetWindowCursor(*nb.Window, [2]int{0, 1})
 	if len(args) < 2 {
 		return fmt.Errorf("not enough arguments to call 'select'")
 	}
-	page, err := nb.Pages.Top().QueryChild(nb.DBHandler, args[1])
-	if err != nil {
-		return
-	}
-	err = nb.Push(page)
+	defer nb.Nvim.SetWindowCursor(*nb.Window, [2]int{0, 1})
+	err = nb.Pages.Top().Select(nb, args[1])
 	return
 }
 
@@ -77,12 +70,14 @@ func (nb *Nvimboat) NextUnread(nv *nvim.Nvim, args ...string) error {
 			if err != nil {
 				return err
 			}
-			err = nb.Push(&newArticle)
-			if err != nil {
-				return err
-			}
-			err = top.SetArticleRead(newArticle)
+			err = top.(Page).Select(nb, newArticle.Url)
 			return err
+			// err = nb.Push(&newArticle)
+			// if err != nil {
+			// 	return err
+			// }
+			// err = top.SetArticleRead(newArticle)
+			// return err
 		} else {
 			nb.Pages.Push(article)
 			return fmt.Errorf("next unread not implemented for: %v", top)
@@ -99,11 +94,7 @@ func (nb *Nvimboat) PrevUnread(nv *nvim.Nvim, args ...string) error {
 			if err != nil {
 				return err
 			}
-			err = nb.Push(&newArticle)
-			if err != nil {
-				return err
-			}
-			err = top.SetArticleRead(newArticle)
+			err = top.(Page).Select(nb, newArticle.Url)
 			return err
 		} else {
 			nb.Pages.Push(article)

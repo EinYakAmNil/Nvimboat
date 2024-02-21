@@ -8,6 +8,15 @@ import (
 	"github.com/neovim/go-client/nvim"
 )
 
+func (mm *MainMenu) Select(nb *Nvimboat, url string) (err error) {
+	page, err := mm.QueryChild(nb.DBHandler, url)
+	if err != nil {
+		err = fmt.Errorf("error querying page '%s' in main menu: %v\n", url, err)
+		return
+	}
+	err = nb.Push(page)
+	return
+}
 func (mm *MainMenu) Render(nv *nvim.Nvim, buffer nvim.Buffer, unreadOnly bool, separator string) (err error) {
 	for _, col := range mm.columns(unreadOnly) {
 		err = addColumn(nv, buffer, col, separator)
