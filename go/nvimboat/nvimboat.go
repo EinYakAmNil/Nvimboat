@@ -81,7 +81,7 @@ func (nb *Nvimboat) init(nv *nvim.Nvim) (err error) {
 	if err != nil {
 		return
 	}
-	nb.DBHandler, err = initDB(nb.Config["dbpath"].(string))
+	nb.DBHandler, err = InitDB(nb.Config["dbpath"].(string))
 	if err != nil {
 		return
 	}
