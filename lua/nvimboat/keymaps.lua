@@ -81,7 +81,7 @@ function M.configure(opts)
 	if opts.keymaps then
 		for mode, keymap in pairs(opts.keymaps) do
 			for lhs, map in pairs(keymap) do
-				M.keymaps[mode][lhs] = { map.rhs, map.opts }
+				M.keymaps[mode][lhs] = { rhs = map.rhs, opts = map.opts }
 			end
 		end
 	end

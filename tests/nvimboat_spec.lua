@@ -54,7 +54,17 @@ describe("nvimboat", function()
 	it("setup feeds.", function()
 		nvimboat.setup({
 			feeds = feeds_config,
-			filters = filter_config
+			filters = filter_config,
+			keymaps = {
+				n = {
+					z = {
+						rhs = function()
+							print("hello")
+						end,
+						opts = { silent = true },
+					}
+				},
+			}
 		})
 		eq(nvimboat.feeds, feeds_config)
 		Nvimboat("enable")

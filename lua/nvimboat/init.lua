@@ -41,7 +41,6 @@ function M.setup(opts)
 	M.filters = opts.filters or {}
 	M.config = load_config(opts)
 	M.action = require("nvimboat.action")
-	M.keymaps = require("nvimboat.keymaps").configure(opts)
 	M.enable = require("nvimboat.mode").enable
 	M.disable = require("nvimboat.mode").disable
 	vim.fn["remote#host#Register"]("nvimboat", 'x', init_nvimboat)
@@ -50,6 +49,7 @@ function M.setup(opts)
 		{ type = 'function', name = 'CompleteNvimboat', sync = 1, opts = { _ = "" } },
 	})
 	M.page = require("nvimboat.page")
+	M.keymaps = require("nvimboat.keymaps").configure(opts)
 end
 
 return M
