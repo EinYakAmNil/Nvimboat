@@ -44,14 +44,6 @@ function M.line_id(separator)
 	return url or "no url detected"
 end
 
-function M.line_tag()
-	local row_num = api.nvim_win_get_cursor(0)[1]
-	local line = api.nvim_buf_get_lines(0, row_num - 1, row_num, true)[1]
-	local tag = M.seek_tag(line)
-
-	return tag or "no tag detected"
-end
-
 function M.play_videos(urls)
 	local playlist_file = "/tmp/nvimboat.playlist"
 	local playlist = io.open(playlist_file, "w")

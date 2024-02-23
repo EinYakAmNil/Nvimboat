@@ -40,6 +40,7 @@ function M.setup(opts)
 	M.feeds = opts.feeds or {}
 	M.filters = opts.filters or {}
 	M.config = load_config(opts)
+	M.action = require("nvimboat.action")
 	M.keymaps = require("nvimboat.keymaps").configure(opts)
 	M.enable = require("nvimboat.mode").enable
 	M.disable = require("nvimboat.mode").disable
