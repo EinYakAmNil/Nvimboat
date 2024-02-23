@@ -72,12 +72,6 @@ func (nb *Nvimboat) NextUnread(nv *nvim.Nvim, args ...string) error {
 			}
 			err = top.(Page).Select(nb, newArticle.Url)
 			return err
-			// err = nb.Push(&newArticle)
-			// if err != nil {
-			// 	return err
-			// }
-			// err = top.SetArticleRead(newArticle)
-			// return err
 		} else {
 			nb.Pages.Push(article)
 			return fmt.Errorf("next unread not implemented for: %v", top)
@@ -112,20 +106,21 @@ func (nb *Nvimboat) NextArticle(nv *nvim.Nvim, args ...string) error {
 		switch feed := top.(type) {
 		case *Feed:
 			if idx+1 < len(feed.Articles) {
-				err = nb.Push(feed.Articles[idx+1])
+				err = feed.Select(nb, feed.Articles[idx+1].Url)
+				return err
 			} else {
-				nb.Pages.Push(article)
+				err = feed.Select(nb, feed.Articles[idx].Url)
 				return nil
 			}
 		case *Filter:
 			if idx+1 < len(feed.Articles) {
-				err = nb.Push(feed.Articles[idx+1])
+				err = feed.Select(nb, feed.Articles[idx+1].Url)
+				return err
 			} else {
-				nb.Pages.Push(article)
+				err = feed.Select(nb, feed.Articles[idx].Url)
 				return nil
 			}
 		}
-		return err
 	}
 	return fmt.Errorf("not inside an article")
 }
@@ -138,20 +133,21 @@ func (nb *Nvimboat) PrevArticle(nv *nvim.Nvim, args ...string) error {
 		switch feed := top.(type) {
 		case *Feed:
 			if idx-1 >= 0 {
-				err = nb.Push(feed.Articles[idx-1])
+				err = feed.Select(nb, feed.Articles[idx-1].Url)
+				return err
 			} else {
-				nb.Pages.Push(article)
+				err = feed.Select(nb, feed.Articles[idx].Url)
 				return nil
 			}
 		case *Filter:
 			if idx-1 >= 0 {
-				err = nb.Push(feed.Articles[idx-1])
+				err = feed.Select(nb, feed.Articles[idx-1].Url)
+				return err
 			} else {
-				nb.Pages.Push(article)
+				err = feed.Select(nb, feed.Articles[idx].Url)
 				return nil
 			}
 		}
-		return err
 	}
 	return fmt.Errorf("not inside an article")
 }
