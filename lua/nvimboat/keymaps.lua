@@ -51,7 +51,11 @@ M.keymaps = {
 		R = {
 			rhs = action.reload_all,
 			opts = map_opts
-		}
+		},
+		D = {
+			rhs = action.delete,
+			opts = map_opts
+		},
 	},
 	v = {
 		a = {
@@ -72,6 +76,10 @@ M.keymaps = {
 		},
 		N = {
 			rhs = action.prev_unread,
+			opts = map_opts
+		},
+		D = {
+			rhs = action.delete,
 			opts = map_opts
 		},
 	},

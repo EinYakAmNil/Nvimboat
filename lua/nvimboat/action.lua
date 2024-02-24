@@ -151,4 +151,26 @@ function M.reload_all()
 	end
 end
 
+function M.delete()
+	local vim_mode = vim.fn.mode()
+	local curpos = api.nvim_win_get_cursor(0)
+
+	if vim_mode == 'n' then
+		if page.page_type == "Article" then
+			local url = utils.article_url()
+			-- It doesn't actually matter what we pass as the second argument
+			Nvimboat("delete", url)
+			return
+		end
+		local id = utils.line_id(M.separator)
+		Nvimboat("delete", id)
+	elseif vim_mode == 'v' or vim_mode == 'V' then
+		local ids = utils.seek_ids_visual(M.separator)
+		local escape = api.nvim_replace_termcodes("<Esc>", true, false, true)
+		api.nvim_feedkeys(escape, "v", false)
+		Nvimboat("delete", unpack(ids))
+	end
+	api.nvim_win_set_cursor(0, curpos)
+end
+
 return M
