@@ -224,6 +224,7 @@ func anyArticleUnread(db *sql.DB, url ...string) (hasUnread bool, err error) {
 
 type SyncDB struct {
 	Unread      int
+	Delete      bool
 	FeedUrls    []string
 	ArticleUrls []string
 }

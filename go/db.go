@@ -3,25 +3,29 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"nvimboat"
 	"strings"
 	"time"
 )
 
-func unreadUpdate(nb *nvimboat.Nvimboat) {
+func dbUpdate(nb *nvimboat.Nvimboat) {
 	for {
-		err := handleExec(nb)
+		err := readDBSyncChan(nb)
 		if err != nil {
 			time.Sleep(time.Millisecond)
 		}
 	}
 }
 
-func handleExec(nb *nvimboat.Nvimboat) error {
+func readDBSyncChan(nb *nvimboat.Nvimboat) error {
 	select {
 	case exec, ok := <-nb.SyncDBchan:
 		if ok {
 			if len(exec.ArticleUrls) > 0 {
+				if exec.Delete {
+					deleteArticle(nb.DBHandler, exec.ArticleUrls...)
+				}
 				articleReadState(nb.DBHandler, exec.Unread, exec.ArticleUrls...)
 			}
 			if len(exec.FeedUrls) > 0 {
@@ -32,6 +36,24 @@ func handleExec(nb *nvimboat.Nvimboat) error {
 		return fmt.Errorf("channel closed")
 	}
 	return nil
+}
+
+func deleteArticle(db *sql.DB, urls ...string) (err error) {
+	log.Println("Delete", urls)
+	var (
+		deleteStmt = `UPDATE rss_item SET deleted = 1 WHERE url IN `
+		sqlArgs    []any
+	)
+	for _, u := range urls {
+		sqlArgs = append(sqlArgs, u)
+	}
+	placeholder := `(` + strings.Repeat("?, ", len(urls)) + `)`
+	deleteStmt += placeholder
+	_, err = db.Exec(deleteStmt, sqlArgs...)
+	if err != nil {
+		return fmt.Errorf("error deleting articles %v:\n%v\n", urls, err)
+	}
+	return
 }
 
 func articleReadUpdate(count int) string {

@@ -89,6 +89,10 @@ func (mm *MainMenu) ToggleUnread(nb *Nvimboat, urls ...string) (err error) {
 	return nil
 }
 
+func (f *MainMenu) Delete(nb *Nvimboat, urls ...string) (err error) {
+	return
+}
+
 func mainPrefix(p Page) string {
 	switch f := p.(type) {
 	case *Filter:

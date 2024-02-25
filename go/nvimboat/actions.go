@@ -160,3 +160,12 @@ func (nb *Nvimboat) ToggleArticleRead(nv *nvim.Nvim, args ...string) (err error)
 	err = nb.Pages.Top().ToggleUnread(nb, args[1:]...)
 	return
 }
+
+func (nb *Nvimboat) Delete(nv *nvim.Nvim, args ...string) (err error) {
+	defer trimTrail(nb.Nvim, *nb.Buffer)
+	if len(args) < 2 {
+		return fmt.Errorf("not enough arguments to call 'toggle-unread'")
+	}
+	err = nb.Pages.Top().Delete(nb, args[1:]...)
+	return
+}

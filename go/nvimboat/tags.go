@@ -52,6 +52,10 @@ func (tp *TagsPage) ToggleUnread(nb *Nvimboat, urls ...string) (err error) {
 	return nil
 }
 
+func (f *TagsPage) Delete(nb *Nvimboat, urls ...string) (err error) {
+	return
+}
+
 func (tf *TagFeeds) Select(nb *Nvimboat, url string) (err error) {
 	page, err := tf.QueryChild(nb.DBHandler, url)
 	if err != nil {
@@ -101,6 +105,10 @@ func (tf *TagFeeds) QueryChild(db *sql.DB, feedUrl string) (Page, error) {
 
 func (tf *TagFeeds) ToggleUnread(nb *Nvimboat, urls ...string) (err error) {
 	return nil
+}
+
+func (f *TagFeeds) Delete(nb *Nvimboat, urls ...string) (err error) {
+	return
 }
 
 func (tp *TagsPage) lines() (lines []string) {

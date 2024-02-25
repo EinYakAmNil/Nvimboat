@@ -63,12 +63,12 @@ const (
 	SELECT a.feedurl, b.unreadCount, a.articleCount
 	FROM (
 	SELECT feedurl, COUNT(*) AS articleCount
-	FROM rss_item
+	FROM rss_item WHERE deleted = 0
 	GROUP BY feedurl
 	) a
 	LEFT JOIN (
 	SELECT feedurl, sum(unread) AS unreadCount
-	FROM rss_item
+	FROM rss_item WHERE deleted = 0
 	GROUP BY feedurl
 	) b
 	ON a.feedurl = b.feedurl

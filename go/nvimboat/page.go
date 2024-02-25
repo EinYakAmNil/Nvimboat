@@ -14,6 +14,7 @@ type (
 		QuerySelf(*sql.DB) (Page, error)
 		QueryChild(*sql.DB, string) (Page, error)
 		ToggleUnread(nb *Nvimboat, urls ...string) (err error)
+		Delete(nb *Nvimboat, urls ...string) (err error)
 	}
 	ArticlesPage interface {
 		FindUnread(direction string, a Article) (Article, error)

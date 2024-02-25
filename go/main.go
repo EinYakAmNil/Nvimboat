@@ -11,7 +11,7 @@ func main() {
 	chanNvimboat := make(chan *nvimboat.Nvimboat)
 	go nvimboatLoop(chanNvimboat)
 	nb := <-chanNvimboat
-	unreadUpdate(nb)
+	dbUpdate(nb)
 }
 
 func nvimboatLoop(cnb chan *nvimboat.Nvimboat) {

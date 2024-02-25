@@ -65,6 +65,24 @@ func (a *Article) ToggleUnread(nb *Nvimboat, urls ...string) (err error) {
 	return
 }
 
+func (a *Article) Delete(nb *Nvimboat, urls ...string) (err error) {
+	nb.Pages.Pop()
+	pos, err := nb.Pages.Top().ChildIdx(a)
+	if err != nil {
+		return
+	}
+	err = nb.Pages.Top().Delete(nb, urls...)
+	if err != nil {
+		return
+	}
+	err = nb.Show(nb.Pages.Top())
+	if err != nil {
+		return
+	}
+	err = nb.Nvim.SetWindowCursor(*nb.Window, [2]int{pos + 1, 1})
+	return
+}
+
 func (a *Article) header() (lines []string, err error) {
 	date, err := unixToDate(a.PubDate)
 	lines = []string{

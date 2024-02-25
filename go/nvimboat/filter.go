@@ -101,6 +101,27 @@ func (f *Filter) ToggleUnread(nb *Nvimboat, urls ...string) (err error) {
 	return
 }
 
+func (f *Filter) Delete(nb *Nvimboat, urls ...string) (err error) {
+	nb.SyncDBchan <- SyncDB{Delete: true, ArticleUrls: urls}
+	var deleteIdx []int
+urlLoop:
+	for _, url := range urls {
+		for idx, article := range f.Articles {
+			if article.Url == url {
+				deleteIdx = append(deleteIdx, idx)
+				continue urlLoop
+			}
+		}
+	}
+	f.Articles = sliceDelete(f.Articles, deleteIdx...)
+	err = setLines(nb.Nvim, *nb.Buffer, []string{""})
+	if err != nil {
+		return
+	}
+	err = f.Render(nb.Nvim, *nb.Buffer, nb.UnreadOnly, nb.Config["separator"].(string))
+	return
+}
+
 func (f *Filter) FindUnread(direction string, a Article) (article Article, err error) {
 	idx, err := f.ChildIdx(&a)
 	if err != nil {

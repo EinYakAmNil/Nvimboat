@@ -15,6 +15,18 @@ import (
 	"github.com/neovim/go-client/nvim"
 )
 
+func sliceDelete[S ~[]E, E any](slice S, indexes ...int) (modSlice S) {
+	indexes = append([]int{-1}, indexes...)
+	sort.Slice(indexes, func(i, j int) bool {
+		return indexes[i] < indexes[j]
+	})
+	for idx := range indexes[:len(indexes)-1] {
+		modSlice = append(modSlice, slice[indexes[idx]+1:indexes[idx+1]]...)
+	}
+	modSlice = append(modSlice, slice[indexes[len(indexes)-1]+1:]...)
+	return
+}
+
 func articlesUneadQuery(n int) string {
 	if n == 0 {
 		return ""

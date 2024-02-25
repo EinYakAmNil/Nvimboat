@@ -49,4 +49,5 @@ var actions = map[string]Action{
 	"next-article": (*Nvimboat).NextArticle,
 	"prev-article": (*Nvimboat).PrevArticle,
 	"toggle-read":  (*Nvimboat).ToggleArticleRead,
+	"delete":       (*Nvimboat).Delete,
 }
