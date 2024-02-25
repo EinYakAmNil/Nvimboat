@@ -163,11 +163,17 @@ function M.delete()
 			return
 		end
 		local id = utils.line_id(M.separator)
+		if api.nvim_buf_line_count(0) == curpos then
+			api.nvim_win_set_cursor(0, { curpos - 1, 0 })
+		end
 		Nvimboat("delete", id)
 	elseif vim_mode == 'v' or vim_mode == 'V' then
 		local ids = utils.seek_ids_visual(M.separator)
 		local escape = api.nvim_replace_termcodes("<Esc>", true, false, true)
 		api.nvim_feedkeys(escape, "v", false)
+		if api.nvim_buf_line_count(0) == curpos then
+			api.nvim_win_set_cursor(0, { curpos - 1, 0 })
+		end
 		Nvimboat("delete", unpack(ids))
 	end
 	api.nvim_win_set_cursor(0, curpos)

@@ -235,6 +235,9 @@ func filterTags(configFeeds []map[string]any, inTags, exTags []string) (urls []a
 
 func setLines(nv *nvim.Nvim, buffer nvim.Buffer, lines []string) (err error) {
 	err = nv.SetBufferLines(buffer, 0, -1, false, strings2bytes(lines))
+	if err != nil {
+		err = fmt.Errorf("error setting buffer lines: %v\n", err)
+	}
 	return
 }
 
