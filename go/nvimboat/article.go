@@ -62,9 +62,6 @@ func (a *Article) ToggleUnread(nb *Nvimboat, urls ...string) (err error) {
 		return
 	}
 	err = nb.Nvim.SetWindowCursor(*nb.Window, [2]int{pos + 1, 1})
-	if err != nil {
-		err = nb.Nvim.SetWindowCursor(*nb.Window, [2]int{pos, 1})
-	}
 	return
 }
 
@@ -83,6 +80,9 @@ func (a *Article) Delete(nb *Nvimboat, urls ...string) (err error) {
 		return
 	}
 	err = nb.Nvim.SetWindowCursor(*nb.Window, [2]int{pos + 1, 1})
+	if err != nil {
+		err = nb.Nvim.SetWindowCursor(*nb.Window, [2]int{pos, 1})
+	}
 	return
 }
 
