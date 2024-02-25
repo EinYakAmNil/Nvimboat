@@ -39,19 +39,21 @@ func readDBSyncChan(nb *nvimboat.Nvimboat) error {
 }
 
 func deleteArticle(db *sql.DB, urls ...string) (err error) {
-	log.Println("Delete", urls)
 	var (
-		deleteStmt = `UPDATE rss_item SET deleted = 1 WHERE url IN `
-		sqlArgs    []any
+		deleteStmt   = "UPDATE rss_item SET deleted = 1 WHERE url IN (%s)"
+		sqlArgs      []any
+		placeholders []string
 	)
 	for _, u := range urls {
 		sqlArgs = append(sqlArgs, u)
+		placeholders = append(placeholders, "?")
 	}
-	placeholder := `(` + strings.Repeat("?, ", len(urls)) + `)`
-	deleteStmt += placeholder
+	deleteStmt = fmt.Sprintf(deleteStmt, strings.Join(placeholders, ", "))
 	_, err = db.Exec(deleteStmt, sqlArgs...)
 	if err != nil {
-		return fmt.Errorf("error deleting articles %v:\n%v\n", urls, err)
+		err = fmt.Errorf("error deleting articles %v:\n%v\n", urls, err)
+		log.Println(err)
+		return
 	}
 	return
 }
