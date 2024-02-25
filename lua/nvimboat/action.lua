@@ -172,7 +172,7 @@ function M.delete()
 	end
 	local max_lines = api.nvim_buf_line_count(0)
 	if max_lines <= curpos[1] then
-		api.nvim_win_set_cursor(0, { max_lines - 1, 0 })
+		api.nvim_win_set_cursor(0, { max_lines, 0 })
 		return
 	end
 	api.nvim_win_set_cursor(0, curpos)
