@@ -163,18 +163,18 @@ function M.delete()
 			return
 		end
 		local id = utils.line_id(M.separator)
-		local max_lines = api.nvim_buf_line_count(0)[1]
-		if max_lines  <= curpos then
-			api.nvim_win_set_cursor(0, { max_lines, 0 })
+		local max_lines = api.nvim_buf_line_count(0)
+		if max_lines <= curpos[1] then
+			api.nvim_win_set_cursor(0, { max_lines - 1, 0 })
 		end
 		Nvimboat("delete", id)
 	elseif vim_mode == 'v' or vim_mode == 'V' then
 		local ids = utils.seek_ids_visual(M.separator)
 		local escape = api.nvim_replace_termcodes("<Esc>", true, false, true)
 		api.nvim_feedkeys(escape, "v", false)
-		local max_lines = api.nvim_buf_line_count(0)[1]
-		if max_lines  <= curpos then
-			api.nvim_win_set_cursor(0, { max_lines, 0 })
+		local max_lines = api.nvim_buf_line_count(0)
+		if max_lines <= curpos[1] then
+			api.nvim_win_set_cursor(0, { max_lines - 1, 0 })
 		end
 		Nvimboat("delete", unpack(ids))
 	end
