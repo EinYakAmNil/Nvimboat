@@ -32,6 +32,7 @@ func InitDB(dbpath string) (db *sql.DB, err error) {
 	if err != nil {
 		err = fmt.Errorf("error creating tables for '%s': %v\n", dbpath, err)
 	}
+	db, err = sql.Open("sqlite3", dbpath)
 	return
 }
 

@@ -21,11 +21,11 @@ func (nb *Nvimboat) Enable(nv *nvim.Nvim, args ...string) (err error) {
 	if err != nil {
 		return
 	}
-	err = nb.ShowMain(nv, args...)
+	err = nv.ExecLua(nvimboatEnable, new(any))
 	if err != nil {
 		return
 	}
-	err = nv.ExecLua(nvimboatEnable, new(any))
+	err = nb.ShowMain(nv, args...)
 	return
 }
 
