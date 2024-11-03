@@ -1,5 +1,5 @@
 local feeds = {
-	{ rssurl = "https://notrelated.xyz/rss",                                  tags = { "Science" } },
+	{ rssurl = "https://notrelated.xyz/rss",                                  tags = { "Science", "Dead" } },
 	{ rssurl = "https://www.archlinux.org/feeds/news/",                       tags = { "Tech", "Linux" }, },
 	{ rssurl = "https://www.pathofexile.com/news/rss",                        tags = { "Gaming", "Path of Exile" } },
 	{ rssurl = "https://fractalsoftworks.com/feed/",                          tags = { "Gaming", "Starsector" } },
