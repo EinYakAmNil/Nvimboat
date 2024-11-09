@@ -11,35 +11,45 @@ import (
 	"os"
 	"path"
 	"time"
+
+	"github.com/mmcdole/gofeed"
 )
 
-func getUrlContent(url string, header http.Header, cacheTime time.Duration, cacheDir string) (content []byte, fromCache bool, err error) {
+// Requests the URL if not found in cacheDir or if the modification time of the cache file is too old.
+// The request will be cached in cacheDir.
+// Indicates with the return value fromCache if cache was used.
+func GetRss(url string, header http.Header, cacheTime time.Duration, cacheDir string) (feed *gofeed.Feed, fromCache bool, err error) {
+	rssParser := gofeed.NewParser()
 	cachePath := path.Join(cacheDir, hashUrl(url))
 	fileStats, err := os.Stat(cachePath)
 	if err != nil || time.Now().Sub(fileStats.ModTime()) > cacheTime {
 		err = fmt.Errorf("%s is not cached", url)
 		content, reqErr := requestUrl(url, header)
 		if reqErr != nil {
-			reqErr = fmt.Errorf("getUrlContent: %w", errors.Join(err, reqErr))
+			reqErr = fmt.Errorf("GetRss: %w", errors.Join(err, reqErr))
 			return nil, false, reqErr
 		}
-		log.Printf("requested %s\n", url)
+		log.Println("requested", url)
 		err = cacheUrl(url, cacheDir, content)
 		if err != nil {
-			err = fmt.Errorf("getUrlContent: %w", err)
+			err = fmt.Errorf("GetRss: %w", err)
 			return nil, false, err
 		}
-		log.Printf("cached %s\n", url)
-		return content, false, err
+		log.Println("cached", url)
+		return nil, false, err
 	} else {
 		log.Printf("reading %s from cache\n", url)
-		content, err = os.ReadFile(cachePath)
+		content, err := os.ReadFile(cachePath)
 		if err != nil {
-			err = fmt.Errorf("getUrlContent: %w", err)
+			err = fmt.Errorf("GetRss: %w", err)
 			return nil, false, err
 		}
-		fromCache = true
-		return
+		feed, err = rssParser.ParseString(string(content))
+		if err != nil {
+			err = fmt.Errorf("GetRss: %w", err)
+			return nil, true, err
+		}
+		return feed, true, err
 	}
 }
 
