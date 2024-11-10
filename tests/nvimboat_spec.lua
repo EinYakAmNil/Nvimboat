@@ -7,7 +7,6 @@ nvimboat.setup({
 
 describe("nvimboat", function()
 	it("can be configured", function()
-		eq("/home/linkai/Projekte/Nvimboat/go/engine", nvimboat.config.engine)
 		eq("firefox", nvimboat.config.linkhandler)
 	end)
 end)

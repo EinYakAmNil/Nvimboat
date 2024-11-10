@@ -20,7 +20,7 @@ func SetupLogging(logPath string) (err error) {
 func (nb *Nvimboat) Log(val ...any) {
 	var msg string
 	for _, v := range val {
-		msg += fmt.Sprintf("%+v\n", v)
+		msg += fmt.Sprintf("%+v", v)
 	}
 	log.Println(msg)
 	nb.Nvim.Command(`echo "` + msg + `"`)
