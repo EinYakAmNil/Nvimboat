@@ -1,4 +1,9 @@
-describe("go tests", function ()
-	it("are passing", function ()
+local nvimboat = require("nvimboat")
+
+nvimboat.setup()
+
+describe("nvimboat engine", function()
+	it("can handle commands", function()
+		vim.cmd.Nvimboat("enable")
 	end)
 end)

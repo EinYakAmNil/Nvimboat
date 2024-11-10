@@ -36,7 +36,12 @@ func GetRss(url string, header http.Header, cacheTime time.Duration, cacheDir st
 			return nil, false, err
 		}
 		log.Println("cached", url)
-		return nil, false, err
+		feed, err = rssParser.ParseString(string(content))
+		if err != nil {
+			err = fmt.Errorf("GetRss: %w", err)
+			return nil, false, err
+		}
+		return feed, false, err
 	} else {
 		log.Printf("reading %s from cache\n", url)
 		content, err := os.ReadFile(cachePath)

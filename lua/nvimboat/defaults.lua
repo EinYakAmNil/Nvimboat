@@ -9,6 +9,8 @@ end
 
 M.plugin_path = get_plugin_path()
 M.linkhandler = os.getenv("BROWSER")
-M.go = get_plugin_path() .. "go/"
+M.cache = get_plugin_path() .. "cache/"
+M.go = get_plugin_path() .. "go/engine"
+M.log = get_plugin_path() .. "nvimboat.log"
 
 return M

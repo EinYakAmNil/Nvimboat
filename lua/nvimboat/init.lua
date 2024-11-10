@@ -2,28 +2,24 @@ local M = {}
 local defaults = require("nvimboat.defaults")
 
 local function start_engine()
-	return vim.fn.jobstart({ M.go .. "/engine" }, {
-		rpc = true,
-		on_stderr = function(_, data)
-			local msg = ""
-			for _, line in ipairs(data) do
-				msg = msg .. "\n" .. line
-			end
-		end
-	})
+	return vim.fn.jobstart({ M.config.engine }, { rpc = true })
 end
 
 function M.setup(opts)
-	M.go = opts.go or defaults.go
+	opts = opts or {}
+	M.config.engine = opts.go or defaults.go
 	vim.fn["remote#host#Register"]("nvimboat", 'x', start_engine)
 	vim.fn["remote#host#RegisterPlugin"]("nvimboat", '0', {
 		{ type = 'command',  name = 'Nvimboat',         sync = 1, opts = { complete = "customlist,CompleteNvimboat", nargs = "+" } },
 		{ type = 'function', name = 'CompleteNvimboat', sync = 1, opts = { _ = "" } },
 	})
-	opts = opts or {}
 	M.feeds = opts.feeds or {}
 	M.filters = opts.filters or {}
-	M.linkhandler = opts.linkhandler or defaults.linkhandler
+	M.config.linkhandler = opts.linkhandler or defaults.linkhandler
+	M.config.log = opts.log or defaults.log
 end
+
+M.actions = require("nvimboat.actions")
+M.config = {}
 
 return M
