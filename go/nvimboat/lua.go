@@ -5,4 +5,5 @@ const (
 	luaEnable  = luaPackage + ".actions.enable()"
 	luaDisable = luaPackage + ".actions.disable()"
 	luaConfig  = luaPackage + ".config"
+	luaFeeds   = luaPackage + ".feeds"
 )

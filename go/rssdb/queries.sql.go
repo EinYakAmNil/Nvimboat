@@ -7,7 +7,47 @@ package rssdb
 
 import (
 	"context"
+	"database/sql"
 )
+
+const addArticles = `-- name: AddArticles :exec
+INSERT INTO rss_item (
+	guid, title, author, url, feedurl, pubDate, content, unread, enclosure_url, flags, content_mime_type
+	) VALUES (
+	?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+	)
+`
+
+type AddArticlesParams struct {
+	Guid            string
+	Title           string
+	Author          string
+	Url             string
+	Feedurl         string
+	Pubdate         int64
+	Content         string
+	Unread          interface{}
+	EnclosureUrl    sql.NullString
+	Flags           sql.NullString
+	ContentMimeType string
+}
+
+func (q *Queries) AddArticles(ctx context.Context, arg AddArticlesParams) error {
+	_, err := q.db.ExecContext(ctx, addArticles,
+		arg.Guid,
+		arg.Title,
+		arg.Author,
+		arg.Url,
+		arg.Feedurl,
+		arg.Pubdate,
+		arg.Content,
+		arg.Unread,
+		arg.EnclosureUrl,
+		arg.Flags,
+		arg.ContentMimeType,
+	)
+	return err
+}
 
 const createFeed = `-- name: CreateFeed :one
 INSERT INTO rss_feed (
@@ -38,6 +78,16 @@ func (q *Queries) CreateFeed(ctx context.Context, arg CreateFeedParams) (RssFeed
 	return i, err
 }
 
+const deleteArticle = `-- name: DeleteArticle :exec
+DELETE FROM rss_item
+WHERE url = ?
+`
+
+func (q *Queries) DeleteArticle(ctx context.Context, url string) error {
+	_, err := q.db.ExecContext(ctx, deleteArticle, url)
+	return err
+}
+
 const deleteFeed = `-- name: DeleteFeed :exec
 DELETE FROM rss_feed
 WHERE rssurl = ?
@@ -58,6 +108,37 @@ func (q *Queries) DeleteFeedArticles(ctx context.Context, feedurl string) error 
 	return err
 }
 
+const getArticle = `-- name: GetArticle :one
+SELECT id, guid, title, author, url, feedurl, pubdate, content, unread, enclosure_url, enclosure_type, enqueued, flags, deleted, base, content_mime_type, enclosure_description, enclosure_description_mime_type FROM rss_item
+WHERE url = ? LIMIT 1
+`
+
+func (q *Queries) GetArticle(ctx context.Context, url string) (RssItem, error) {
+	row := q.db.QueryRowContext(ctx, getArticle, url)
+	var i RssItem
+	err := row.Scan(
+		&i.ID,
+		&i.Guid,
+		&i.Title,
+		&i.Author,
+		&i.Url,
+		&i.Feedurl,
+		&i.Pubdate,
+		&i.Content,
+		&i.Unread,
+		&i.EnclosureUrl,
+		&i.EnclosureType,
+		&i.Enqueued,
+		&i.Flags,
+		&i.Deleted,
+		&i.Base,
+		&i.ContentMimeType,
+		&i.EnclosureDescription,
+		&i.EnclosureDescriptionMimeType,
+	)
+	return i, err
+}
+
 const getFeed = `-- name: GetFeed :one
 SELECT rssurl, url, title, lastmodified, is_rtl, etag FROM rss_feed
 WHERE rssurl = ? LIMIT 1
@@ -75,6 +156,54 @@ func (q *Queries) GetFeed(ctx context.Context, rssurl string) (RssFeed, error) {
 		&i.Etag,
 	)
 	return i, err
+}
+
+const listArticles = `-- name: ListArticles :many
+SELECT id, guid, title, author, url, feedurl, pubdate, content, unread, enclosure_url, enclosure_type, enqueued, flags, deleted, base, content_mime_type, enclosure_description, enclosure_description_mime_type FROM rss_item
+WHERE feedurl = ?
+ORDER BY pubDate DESC
+`
+
+func (q *Queries) ListArticles(ctx context.Context, feedurl string) ([]RssItem, error) {
+	rows, err := q.db.QueryContext(ctx, listArticles, feedurl)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []RssItem
+	for rows.Next() {
+		var i RssItem
+		if err := rows.Scan(
+			&i.ID,
+			&i.Guid,
+			&i.Title,
+			&i.Author,
+			&i.Url,
+			&i.Feedurl,
+			&i.Pubdate,
+			&i.Content,
+			&i.Unread,
+			&i.EnclosureUrl,
+			&i.EnclosureType,
+			&i.Enqueued,
+			&i.Flags,
+			&i.Deleted,
+			&i.Base,
+			&i.ContentMimeType,
+			&i.EnclosureDescription,
+			&i.EnclosureDescriptionMimeType,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const listFeeds = `-- name: ListFeeds :many

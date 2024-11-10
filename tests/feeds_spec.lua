@@ -11,6 +11,12 @@ nvimboat.setup({
 	feeds = feeds
 })
 
+describe("the engine", function ()
+	it("can reload the feeds", function ()
+		vim.cmd.Nvimboat("reload")
+	end)
+end)
+
 describe("the database", function ()
 	it("can initialize the database correctly", function ()
 	end)

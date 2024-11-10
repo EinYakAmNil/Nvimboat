@@ -1,6 +1,7 @@
 package reload
 
 import (
+	"context"
 	"crypto/sha1"
 	"encoding/hex"
 	"errors"
@@ -12,13 +13,40 @@ import (
 	"path"
 	"time"
 
+	"github.com/EinYakAmNil/Nvimboat/go/engine/rssdb"
 	"github.com/mmcdole/gofeed"
 )
+
+type Reloader interface {
+	UpdateFeed(
+		url string,
+		header http.Header,
+		cacheTime time.Duration,
+		cacheDir string,
+		dbPath string,
+	) (err error)
+	GetRss(url string,
+		header http.Header,
+		cacheTime time.Duration,
+		cacheDir string,
+	) (feed *gofeed.Feed, fromCache bool, err error)
+	GetFeed(feedurl string) (feed *rssdb.RssFeed, err error)
+	ListFeeds(condition string) (feeds []*rssdb.RssFeed, err error)
+	ListArticles(feedurl string) (articles []*rssdb.RssItem, err error)
+	AddFeed(feed rssdb.CreateFeedParams, queries *rssdb.Queries, ctx context.Context) error
+	AddArticles(
+		articles []rssdb.AddArticlesParams,
+		queries *rssdb.Queries,
+		ctx context.Context,
+	) (err error)
+}
+
+type StandardReloader struct{}
 
 // Requests the URL if not found in cacheDir or if the modification time of the cache file is too old.
 // The request will be cached in cacheDir.
 // Indicates with the return value fromCache if cache was used.
-func GetRss(url string, header http.Header, cacheTime time.Duration, cacheDir string) (feed *gofeed.Feed, fromCache bool, err error) {
+func (sr *StandardReloader) GetRss(url string, header http.Header, cacheTime time.Duration, cacheDir string) (feed *gofeed.Feed, fromCache bool, err error) {
 	rssParser := gofeed.NewParser()
 	cachePath := path.Join(cacheDir, hashUrl(url))
 	fileStats, err := os.Stat(cachePath)
@@ -56,6 +84,10 @@ func GetRss(url string, header http.Header, cacheTime time.Duration, cacheDir st
 		}
 		return feed, true, err
 	}
+}
+
+func (mr *StandardReloader) AddFeed(rssdb.RssFeed) (err error) {
+	return
 }
 
 func requestUrl(url string, header http.Header) (content []byte, err error) {

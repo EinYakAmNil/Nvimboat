@@ -18,6 +18,26 @@ RETURNING *;
 DELETE FROM rss_feed
 WHERE rssurl = ?;
 
+-- name: GetArticle :one
+SELECT * FROM rss_item
+WHERE url = ? LIMIT 1;
+
+-- name: ListArticles :many
+SELECT * FROM rss_item
+WHERE feedurl = ?
+ORDER BY pubDate DESC;
+
+-- name: AddArticles :exec
+INSERT INTO rss_item (
+	guid, title, author, url, feedurl, pubDate, content, unread, enclosure_url, flags, content_mime_type
+	) VALUES (
+	?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+);
+
+-- name: DeleteArticle :exec
+DELETE FROM rss_item
+WHERE url = ?;
+
 -- name: DeleteFeedArticles :exec
 DELETE FROM rss_item
 WHERE feedurl = ?;

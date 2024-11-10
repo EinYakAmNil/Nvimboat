@@ -9,6 +9,7 @@ import (
 var Actions = map[string]NvimboatAction{
 	"enable":       (*Nvimboat).Enable,
 	"disable":      (*Nvimboat).Disable,
+	"reload":       (*Nvimboat).Reload,
 	"show-main":    (*Nvimboat).ShowMain,
 	"show-tags":    (*Nvimboat).ShowTags,
 	"select":       (*Nvimboat).Select,
@@ -29,6 +30,7 @@ func (nb *Nvimboat) init(nv *nvim.Nvim) (err error) {
 	execBatch.CurrentWindow(nb.Window)
 	execBatch.CurrentBuffer(nb.Buffer)
 	execBatch.ExecLua(luaConfig, &nb.Config)
+	execBatch.ExecLua(luaFeeds, &nb.Feeds)
 	err = execBatch.Execute()
 	if err != nil {
 		err = fmt.Errorf("Nvimboat init: %w", err)
@@ -62,6 +64,19 @@ func (nb *Nvimboat) Disable(nv *nvim.Nvim, args ...string) (err error) {
 	if err != nil {
 		err = fmt.Errorf("Nvimboat disable: %w", err)
 		return
+	}
+	return
+}
+
+func (nb *Nvimboat) Reload(nv *nvim.Nvim, args ...string) (err error) {
+	if len(args) < 1 {
+		err = fmt.Errorf("reload: expected at least one argument")
+		return
+	}
+	if len(args) == 1 {
+		for _, _ = range nb.Feeds {
+
+		}
 	}
 	return
 }
