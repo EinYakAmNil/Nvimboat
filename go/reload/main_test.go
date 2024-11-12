@@ -27,11 +27,12 @@ func TestGetRss(t *testing.T) {
 	header := http.Header{
 		"User-Agent": {"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36"},
 	}
+	reloader := new(StandardReloader)
 	for title, url := range testFeeds {
 		fmt.Println("first iteration...")
-		GetRss(url, header, cacheTime, cachePath)
+		reloader.GetRss(url, header, cacheTime, cachePath)
 		fmt.Println("now try to get contents from cache...")
-		feed, fromCache, err := GetRss(url, header, cacheTime, cachePath)
+		feed, items, fromCache, err := reloader.GetRss(url, header, cacheTime, cachePath)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -40,6 +41,9 @@ func TestGetRss(t *testing.T) {
 		}
 		if title != feed.Title {
 			t.Errorf("expected: %s, parsed: %s\n", title, feed.Title)
+		}
+		if len(items) == 0 {
+			t.Fatal("no items in feed")
 		}
 	}
 }

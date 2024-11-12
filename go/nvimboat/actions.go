@@ -73,10 +73,19 @@ func (nb *Nvimboat) Reload(nv *nvim.Nvim, args ...string) (err error) {
 		err = fmt.Errorf("reload: expected at least one argument")
 		return
 	}
+	// reload all feeds if no arguments are given to the subcommand
+	var feedUrls []string
 	if len(args) == 1 {
-		for _, _ = range nb.Feeds {
-
+		for _, fu := range nb.Feeds {
+			feedUrls = append(feedUrls, fu.Rssurl)
 		}
+	} else {
+		feedUrls = args[1:]
+	}
+	err = nb.ReloadFeeds(feedUrls)
+	if err != nil {
+		err = fmt.Errorf("reload: %w", err)
+		return
 	}
 	return
 }
