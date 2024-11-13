@@ -45,7 +45,7 @@ type Reloader interface {
 	) (err error)
 
 	AddArticles(
-		articles map[string]*rssdb.AddArticlesParams,
+		articles map[string]*rssdb.AddArticleParams,
 		queries *rssdb.Queries,
 		ctx context.Context,
 	) (err error)
@@ -54,12 +54,53 @@ type Reloader interface {
 type StandardReloader struct{}
 
 func (sr *StandardReloader) UpdateFeed(
-	url string,
+	feedurl string,
 	header http.Header,
 	cacheTime time.Duration,
 	cacheDir string,
 	dbPath string,
 ) (err error) {
+	queries, ctx, err := ConnectDb(dbPath)
+	if err != nil {
+		err = fmt.Errorf("UpdateFeed: %w", err)
+		return
+	}
+	feed, items, _, err := sr.GetRss(feedurl, header, cacheTime, cacheDir)
+	if err != nil {
+		err = fmt.Errorf("UpdateFeed: %w", err)
+		return
+	}
+	feedParams := rssdb.CreateFeedParams{
+		Rssurl: feedurl,
+		Title:  feed.Title,
+		Url:    feed.Url,
+	}
+	err = sr.AddFeed(feedParams, queries, ctx)
+	if err != nil {
+		err = fmt.Errorf("UpdateFeed: %w", err)
+		return
+	}
+	itemsParams := make(map[string]*rssdb.AddArticleParams)
+	for _, i := range items {
+		itemsParams[i.Guid] = &rssdb.AddArticleParams{
+			Guid:            i.Guid,
+			Title:           i.Title,
+			Author:          i.Author,
+			Url:             i.Url,
+			Feedurl:         feedurl,
+			Pubdate:         i.Pubdate,
+			Content:         i.Content,
+			Unread:          i.Unread,
+			EnclosureUrl:    i.EnclosureUrl,
+			Flags:           i.Flags,
+			ContentMimeType: i.ContentMimeType,
+		}
+	}
+	err = sr.AddArticles(itemsParams, feedurl, queries, ctx)
+	if err != nil {
+		err = fmt.Errorf("UpdateFeed: %w", err)
+		return
+	}
 	return
 }
 
@@ -145,14 +186,34 @@ func (sr *StandardReloader) AddFeed(
 	queries *rssdb.Queries,
 	ctx context.Context,
 ) (err error) {
+	if _, noFeedErr := queries.GetFeed(ctx, feed.Rssurl); noFeedErr != nil {
+		_, err = queries.CreateFeed(ctx, feed)
+		if err != nil {
+			err = fmt.Errorf("AddFeed: %w", err)
+			return
+		}
+	}
 	return
 }
 
 func (sr *StandardReloader) AddArticles(
-	articles map[string]*rssdb.AddArticlesParams,
+	articles map[string]*rssdb.AddArticleParams,
+	feedUrl string,
 	queries *rssdb.Queries,
 	ctx context.Context,
 ) (err error) {
+	var ok bool
+	knownArticles, err := queries.MapArticles(ctx, feedUrl)
+	for aUrl, a := range articles {
+		if ok = knownArticles[aUrl]; !ok {
+			fmt.Println("new item:", aUrl)
+			err = queries.AddArticle(ctx, *a)
+			if err != nil {
+				err = fmt.Errorf("AddArticle: %w, %s", err, a.Guid)
+				return
+			}
+		}
+	}
 	return
 }
 

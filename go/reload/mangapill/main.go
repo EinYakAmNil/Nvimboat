@@ -20,43 +20,8 @@ func (mr *MangapillReloader) UpdateFeed(
 	cacheDir string,
 	dbPath string,
 ) (err error) {
-	feed, items, _, err := mr.GetRss(url, header, cacheTime, cacheDir)
-	if err != nil {
-		err = fmt.Errorf("UpdateFeed: %w", err)
-		return
-	}
-	feedParams := rssdb.CreateFeedParams{
-		Rssurl: feed.Rssurl,
-		Title:  feed.Title,
-		Url:    feed.Url,
-	}
-	itemsParams := make(map[string]*rssdb.AddArticlesParams)
-	for _, i := range items {
-		itemsParams[i.Url] = &rssdb.AddArticlesParams{
-			Guid:            i.Guid,
-			Title:           i.Title,
-			Author:          i.Author,
-			Url:             i.Url,
-			Feedurl:         i.Feedurl,
-			Pubdate:         i.Pubdate,
-			Content:         i.Content,
-			Unread:          i.Unread,
-			EnclosureUrl:    i.EnclosureUrl,
-			Flags:           i.Flags,
-			ContentMimeType: i.ContentMimeType,
-		}
-	}
-	queries, ctx, err := reload.ConnectDb(dbPath)
-	if err != nil {
-		err = fmt.Errorf("UpdateFeed: %w", err)
-		return
-	}
-	err = mr.AddFeed(feedParams, queries, ctx)
-	if err != nil {
-		err = fmt.Errorf("UpdateFeed: %w", err)
-		return
-	}
-	err = mr.AddArticles(itemsParams, queries, ctx)
+	sr := new(reload.StandardReloader)
+	err = sr.UpdateFeed(url, header, cacheTime, cacheDir, dbPath)
 	return
 }
 

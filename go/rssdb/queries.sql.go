@@ -10,15 +10,15 @@ import (
 	"database/sql"
 )
 
-const addArticles = `-- name: AddArticles :exec
+const addArticle = `-- name: AddArticle :exec
 INSERT INTO rss_item (
 	guid, title, author, url, feedurl, pubDate, content, unread, enclosure_url, flags, content_mime_type
 	) VALUES (
 	?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
-	)
+)
 `
 
-type AddArticlesParams struct {
+type AddArticleParams struct {
 	Guid            string
 	Title           string
 	Author          string
@@ -32,8 +32,8 @@ type AddArticlesParams struct {
 	ContentMimeType string
 }
 
-func (q *Queries) AddArticles(ctx context.Context, arg AddArticlesParams) error {
-	_, err := q.db.ExecContext(ctx, addArticles,
+func (q *Queries) AddArticle(ctx context.Context, arg AddArticleParams) error {
+	_, err := q.db.ExecContext(ctx, addArticle,
 		arg.Guid,
 		arg.Title,
 		arg.Author,
