@@ -1,9 +1,0 @@
-version: "2"
-sql:
-  - engine: "sqlite"
-    queries: "sql/queries.sql"
-    schema: "sql/schema.sql"
-    gen:
-      go:
-        package: "rssdb"
-        out: "go/rssdb"
