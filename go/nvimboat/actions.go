@@ -23,20 +23,26 @@ var Actions = map[string]NvimboatAction{
 }
 
 func (nb *Nvimboat) init(nv *nvim.Nvim) (err error) {
+	rawConfig := make(map[string]any)
 	nb.Nvim = nv
 	nb.Buffer = new(nvim.Buffer)
 	nb.Window = new(nvim.Window)
 	execBatch := nv.NewBatch()
 	execBatch.CurrentWindow(nb.Window)
 	execBatch.CurrentBuffer(nb.Buffer)
-	execBatch.ExecLua(luaConfig, &nb.Config)
+	execBatch.ExecLua(luaConfig, &rawConfig)
 	execBatch.ExecLua(luaFeeds, &nb.Feeds)
 	err = execBatch.Execute()
 	if err != nil {
 		err = fmt.Errorf("Nvimboat init: %w", err)
 		return
 	}
-	err = SetupLogging(nb.Config["log"].(string))
+	err = parseConfig(nb, rawConfig)
+	if err != nil {
+		err = fmt.Errorf("Nvimboat init parse lua config: %w", err)
+		return
+	}
+	err = SetupLogging(nb.LogPath)
 	if err != nil {
 		err = fmt.Errorf("Nvimboat init logging: %w", err)
 		return

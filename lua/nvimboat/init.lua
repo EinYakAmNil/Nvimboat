@@ -5,7 +5,7 @@ local function start_engine()
 	return vim.fn.jobstart({ M.config.engine }, {
 		rpc = true,
 		on_stderr = function(_, data)
-			local log = io.open(M.config.log, "a")
+			local log = io.open(M.config.logPath, "a")
 			if log == nil then
 				print("cannot open log file")
 				return
@@ -22,9 +22,12 @@ end
 
 function M.setup(opts)
 	opts = opts or {}
-	M.config.engine = opts.go or defaults.go
-	M.config.linkhandler = opts.linkhandler or defaults.linkhandler
-	M.config.log = opts.log or defaults.log
+	M.config.engine = opts.engine or defaults.engine
+	M.config.linkHandler = opts.linkHandler or defaults.linkHandler
+	M.config.logPath = opts.logPath or defaults.logPath
+	M.config.cachePath = opts.cachePath or defaults.cachePath
+	M.config.cacheTime = opts.cacheTime or defaults.cacheTime
+	M.config.dbPath = opts.dbPath or defaults.dbPath
 	M.feeds = opts.feeds or {}
 	M.filters = opts.filters or {}
 

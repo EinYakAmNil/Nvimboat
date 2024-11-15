@@ -2,9 +2,14 @@ package reload
 
 import (
 	"context"
+	"crypto/sha1"
 	"database/sql"
+	"encoding/hex"
 	"fmt"
+	"io"
+	"net/http"
 	"os"
+	"path"
 
 	"github.com/EinYakAmNil/Nvimboat/go/engine/rssdb"
 	_ "github.com/mattn/go-sqlite3"
@@ -59,20 +64,70 @@ CREATE TABLE metadata (
 );
 `
 
-func ConnectDb(dbPath string) (queries *rssdb.Queries, ctx context.Context, err error) {
-	ctx = context.Background()
-	db, err := sql.Open("sqlite3", dbPath)
+func ConnectDb(dbPath string) (dbh DbHandle, err error) {
+	dbh.Ctx = context.Background()
+	dbh.DB, err = sql.Open("sqlite3", dbPath)
 	if err != nil {
 		err = fmt.Errorf("ConnectDb: %w", err)
 		return
 	}
 	// only create tables, if the database does not exist yet
 	if _, noDbErr := os.Stat(dbPath); noDbErr != nil {
-		if _, err = db.ExecContext(ctx, createDbSql); err != nil {
+		if _, err = dbh.DB.ExecContext(dbh.Ctx, createDbSql); err != nil {
 			err = fmt.Errorf("ConnectDb: %w", err)
 			return
 		}
 	}
-	queries = rssdb.New(db)
+	dbh.Queries = rssdb.New(dbh.DB)
+	return
+}
+
+func requestUrl(url string, header http.Header) (content []byte, err error) {
+	client := &http.Client{}
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		err = fmt.Errorf("requestUrl: %w", err)
+		return
+	}
+	req.Header = header
+	resp, err := client.Do(req)
+	if err != nil {
+		err = fmt.Errorf("requestUrl: %w", err)
+		return
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode >= 400 {
+		err = fmt.Errorf("requestUrl: failed to request %s, status code: %d\n", url, resp.StatusCode)
+		return
+	}
+	content, err = io.ReadAll(resp.Body)
+	if err != nil {
+		err = fmt.Errorf("requestUrl: %w", err)
+		return
+	}
+	return
+}
+
+func cacheUrl(url string, cacheDir string, content []byte) (err error) {
+	fileName := hashUrl(url)
+	err = os.MkdirAll(cacheDir, 0755)
+	if err != nil {
+		err = fmt.Errorf("cacheUrl: %w", err)
+		return
+	}
+	err = os.WriteFile(path.Join(cacheDir, fileName), content, 0644)
+	if err != nil {
+		err = fmt.Errorf("cacheUrl: %w", err)
+		return
+	}
+	return
+}
+
+func hashUrl(url string) (fileName string) {
+	hasher := sha1.New()
+	hasher.Write([]byte(url))
+	hashBytes := hasher.Sum(nil)
+	fileName = hex.EncodeToString(hashBytes)
+	fileName = path.Clean(fileName)
 	return
 }

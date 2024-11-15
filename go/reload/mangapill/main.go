@@ -1,9 +1,7 @@
 package mangapill
 
 import (
-	"context"
 	"fmt"
-	"net/http"
 	"time"
 
 	"github.com/EinYakAmNil/Nvimboat/go/engine/reload"
@@ -15,21 +13,19 @@ type MangapillReloader struct {
 
 func (mr *MangapillReloader) UpdateFeed(
 	url string,
-	header http.Header,
 	cacheTime time.Duration,
 	cacheDir string,
-	dbPath string,
+	dbh reload.DbHandle,
 ) (err error) {
 	sr := new(reload.StandardReloader)
-	err = sr.UpdateFeed(url, header, cacheTime, cacheDir, dbPath)
+	err = sr.UpdateFeed(url, cacheTime, cacheDir, dbh)
 	return
 }
 
 func (mr *MangapillReloader) GetRss(url string,
-	header http.Header,
 	cacheTime time.Duration,
 	cacheDir string,
-) (feed *rssdb.RssFeed, items map[string]*rssdb.RssItem, fromCache bool, err error) {
+) (feed *rssdb.RssFeed, items []*rssdb.RssItem, fromCache bool, err error) {
 	return
 }
 
@@ -41,12 +37,12 @@ func (mr *MangapillReloader) ListFeeds(condition string) (feeds []*rssdb.RssFeed
 	return
 }
 
-func (mr *MangapillReloader) ListArticles(feedurl string) (articles map[string]*rssdb.RssItem, err error) {
+func (mr *MangapillReloader) ListArticles(feedurl string) (articles []*rssdb.RssItem, err error) {
 	return
 }
 
-func (mr *MangapillReloader) AddFeed(feed rssdb.CreateFeedParams, queries *rssdb.Queries, ctx context.Context) (err error) {
-	_, err = queries.CreateFeed(ctx, feed)
+func (mr *MangapillReloader) AddFeed(feed rssdb.CreateFeedParams, dbh reload.DbHandle) (err error) {
+	_, err = dbh.Queries.CreateFeed(dbh.Ctx, feed)
 	if err != nil {
 		err = fmt.Errorf("AddFeed: %w, %+v", err, feed)
 		return
@@ -54,13 +50,9 @@ func (mr *MangapillReloader) AddFeed(feed rssdb.CreateFeedParams, queries *rssdb
 	return
 }
 
-func (mr *MangapillReloader) AddArticles(
-	articles map[string]*rssdb.AddArticlesParams,
-	queries *rssdb.Queries,
-	ctx context.Context,
-) (err error) {
+func (mr *MangapillReloader) AddArticles(articles []*rssdb.AddArticleParams, dbh reload.DbHandle) (err error) {
 	for _, a := range articles {
-		err = queries.AddArticles(ctx, *a)
+		err = dbh.Queries.AddArticle(dbh.Ctx, *a)
 		if err != nil {
 			err = fmt.Errorf("AddArticles: %w, %+v", err, a)
 			return

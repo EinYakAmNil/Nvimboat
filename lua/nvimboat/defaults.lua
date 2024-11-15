@@ -7,10 +7,12 @@ local function get_plugin_path()
 	return path
 end
 
-M.plugin_path = get_plugin_path()
-M.linkhandler = os.getenv("BROWSER")
-M.cache = get_plugin_path() .. "cache/"
-M.go = get_plugin_path() .. "go/engine"
-M.log = get_plugin_path() .. "nvimboat.log"
+M.pluginPath = get_plugin_path()
+M.engine = get_plugin_path() .. "go/engine"
+M.linkHandler = os.getenv("BROWSER")
+M.cachePath = get_plugin_path() .. "cache/"
+M.cacheTime = "10m"
+M.logPath = get_plugin_path() .. "nvimboat.log"
+M.dbPath = M.cachePath .. "cache.db"
 
 return M

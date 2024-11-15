@@ -2,9 +2,7 @@ package nvimboat
 
 import (
 	"fmt"
-	"net/http"
 	"regexp"
-	"time"
 
 	"github.com/EinYakAmNil/Nvimboat/go/engine/reload"
 	"github.com/EinYakAmNil/Nvimboat/go/engine/reload/mangapill"
@@ -16,6 +14,16 @@ var CustomReload = map[string]reload.Reloader{
 
 func (nb *Nvimboat) ReloadFeeds(feedUrls []string) (err error) {
 	standardReloader := new(reload.StandardReloader)
+	dbh, err := reload.ConnectDb(nb.DbPath)
+	defer dbh.DB.Close()
+	if err != nil {
+		err = fmt.Errorf("ReloadFeed: %w", err)
+		return
+	}
+	if err != nil {
+		err = fmt.Errorf("ReloadFeed: %w", err)
+		return
+	}
 	var reloadErr error
 reloadFeed:
 	for _, feedUrl := range feedUrls {
@@ -26,24 +34,14 @@ reloadFeed:
 				return err
 			}
 			if ok {
-				reloadErr = reloader.UpdateFeed(feedUrl,
-					nb.Config["http_header"].(http.Header),
-					nb.Config["cache_time"].(time.Duration),
-					nb.Config["cache"].(string),
-					nb.Config["db_path"].(string),
-				)
+				reloadErr = reloader.UpdateFeed(feedUrl, nb.CacheTime, nb.CachePath, dbh)
 				if reloadErr != nil {
 					nb.Log(reloadErr)
 				}
 				continue reloadFeed
 			}
 		}
-		reloadErr = standardReloader.UpdateFeed(feedUrl,
-			nb.Config["http_header"].(http.Header),
-			nb.Config["cache_time"].(time.Duration),
-			nb.Config["cache"].(string),
-			nb.Config["db_path"].(string),
-		)
+		reloadErr = standardReloader.UpdateFeed(feedUrl, nb.CacheTime, nb.CachePath, dbh)
 		if reloadErr != nil {
 			nb.Log(reloadErr)
 		}
