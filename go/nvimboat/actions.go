@@ -3,6 +3,7 @@ package nvimboat
 import (
 	"fmt"
 
+	"github.com/EinYakAmNil/Nvimboat/go/engine/reload"
 	"github.com/neovim/go-client/nvim"
 )
 
@@ -18,7 +19,7 @@ var Actions = map[string]NvimboatAction{
 	"prev-unread":  (*Nvimboat).PrevUnread,
 	"next-article": (*Nvimboat).NextArticle,
 	"prev-article": (*Nvimboat).PrevArticle,
-	"toggle-read":  (*Nvimboat).ToggleArticleRead,
+	"toggle-read":  (*Nvimboat).ToggleRead,
 	"delete":       (*Nvimboat).Delete,
 }
 
@@ -97,6 +98,19 @@ func (nb *Nvimboat) Reload(nv *nvim.Nvim, args ...string) (err error) {
 }
 
 func (nb *Nvimboat) ShowMain(nv *nvim.Nvim, args ...string) (err error) {
+	dbh, err := reload.ConnectDb(nb.DbPath)
+	if err != nil {
+		err = fmt.Errorf("ShowMain: %w", err)
+		return
+	}
+	feeds, err := dbh.Queries.QueryMainPage(dbh.Ctx)
+	if err != nil {
+		err = fmt.Errorf("ShowMain: %w", err)
+		return
+	}
+	for _, f := range feeds {
+		nb.Log(f)
+	}
 	return
 }
 
@@ -128,7 +142,7 @@ func (nb *Nvimboat) PrevArticle(nv *nvim.Nvim, args ...string) (err error) {
 	return
 }
 
-func (nb *Nvimboat) ToggleArticleRead(nv *nvim.Nvim, args ...string) (err error) {
+func (nb *Nvimboat) ToggleRead(nv *nvim.Nvim, args ...string) (err error) {
 	return
 }
 

@@ -15,6 +15,13 @@ type GoogleReplay struct {
 	Ts    int64
 }
 
+type MainPageFeed struct {
+	Title        string
+	Feedurl      string
+	UnreadCount  int
+	ArticleCount int
+}
+
 type Metadatum struct {
 	DbSchemaVersionMajor int64
 	DbSchemaVersionMinor int64
@@ -24,8 +31,8 @@ type RssFeed struct {
 	Rssurl       string
 	Url          string
 	Title        string
-	Lastmodified interface{}
-	IsRtl        interface{}
+	Lastmodified int
+	IsRtl        int
 	Etag         string
 }
 
@@ -38,25 +45,14 @@ type RssItem struct {
 	Feedurl                      string
 	Pubdate                      int64
 	Content                      string
-	Unread                       interface{}
+	Unread                       int
 	EnclosureUrl                 sql.NullString
 	EnclosureType                sql.NullString
-	Enqueued                     interface{}
+	Enqueued                     int
 	Flags                        sql.NullString
-	Deleted                      interface{}
+	Deleted                      int
 	Base                         string
 	ContentMimeType              string
 	EnclosureDescription         string
 	EnclosureDescriptionMimeType string
-}
-
-type SqliteSequence struct {
-	Name interface{}
-	Seq  interface{}
-}
-
-type SqliteStat1 struct {
-	Tbl  interface{}
-	Idx  interface{}
-	Stat interface{}
 }

@@ -62,6 +62,27 @@ CREATE TABLE metadata (
 	db_schema_version_major INTEGER NOT NULL,
 	db_schema_version_minor INTEGER NOT NULL 
 );
+CREATE VIEW main_page_feed AS
+SELECT
+	rss_feed.title,
+	c.*
+FROM rss_feed
+LEFT JOIN (
+	SELECT a.feedurl, b.unread_count, a.article_count
+	FROM (
+		SELECT feedurl, COUNT(*) AS article_count
+		FROM rss_item WHERE deleted = 0
+		GROUP BY feedurl
+	) a
+	LEFT JOIN (
+		SELECT feedurl, SUM(unread) AS unread_count
+		FROM rss_item WHERE deleted = 0
+		GROUP BY feedurl
+	) b
+	ON a.feedurl = b.feedurl
+) c
+ON rss_feed.rssurl = c.feedurl
+ORDER BY rss_feed.title;
 `
 
 func ConnectDb(dbPath string) (dbh DbHandle, err error) {

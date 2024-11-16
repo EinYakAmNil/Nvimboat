@@ -41,3 +41,6 @@ WHERE url = ?;
 -- name: DeleteFeedArticles :exec
 DELETE FROM rss_item
 WHERE feedurl = ?;
+
+-- name: QueryMainPage :many
+SELECT * FROM main_page_feed;

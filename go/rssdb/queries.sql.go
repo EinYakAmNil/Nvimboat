@@ -26,7 +26,7 @@ type AddArticleParams struct {
 	Feedurl         string
 	Pubdate         int64
 	Content         string
-	Unread          interface{}
+	Unread          int
 	EnclosureUrl    sql.NullString
 	Flags           sql.NullString
 	ContentMimeType string
@@ -227,6 +227,38 @@ func (q *Queries) ListFeeds(ctx context.Context) ([]RssFeed, error) {
 			&i.Lastmodified,
 			&i.IsRtl,
 			&i.Etag,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const queryMainPage = `-- name: QueryMainPage :many
+SELECT title, feedurl, unread_count, article_count FROM main_page_feed
+`
+
+func (q *Queries) QueryMainPage(ctx context.Context) ([]MainPageFeed, error) {
+	rows, err := q.db.QueryContext(ctx, queryMainPage)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []MainPageFeed
+	for rows.Next() {
+		var i MainPageFeed
+		if err := rows.Scan(
+			&i.Title,
+			&i.Feedurl,
+			&i.UnreadCount,
+			&i.ArticleCount,
 		); err != nil {
 			return nil, err
 		}

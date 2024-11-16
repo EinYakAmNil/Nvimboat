@@ -7,3 +7,18 @@ sql:
       go:
         package: "rssdb"
         out: "rssdb"
+        overrides:
+          - column: "main_page_feed.unread_count"
+            go_type: "int"
+          - column: "main_page_feed.article_count"
+            go_type: "int"
+          - column: "rss_feed.lastmodified"
+            go_type: "int"
+          - column: "rss_feed.is_rtl"
+            go_type: "int"
+          - column: "rss_item.deleted"
+            go_type: "int"
+          - column: "rss_item.unread"
+            go_type: "int"
+          - column: "rss_item.enqueued"
+            go_type: "int"

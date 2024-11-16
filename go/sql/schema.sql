@@ -26,7 +26,6 @@ CREATE TABLE rss_item (
 	enclosure_description VARCHAR(1024) NOT NULL DEFAULT '',
 	enclosure_description_mime_type VARCHAR(128) NOT NULL DEFAULT ''
 );
-CREATE TABLE sqlite_sequence(name,seq);
 CREATE TABLE google_replay (
 	id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
 	guid VARCHAR(64) NOT NULL,
@@ -36,10 +35,31 @@ CREATE TABLE google_replay (
 CREATE INDEX idx_rssurl ON rss_feed(rssurl);
 CREATE INDEX idx_guid ON rss_item(guid);
 CREATE INDEX idx_feedurl ON rss_item(feedurl);
-CREATE TABLE sqlite_stat1(tbl,idx,stat);
 CREATE INDEX idx_lastmodified ON rss_feed(lastmodified);
 CREATE INDEX idx_deleted ON rss_item(deleted);
 CREATE TABLE metadata ( 
 	db_schema_version_major INTEGER NOT NULL,
 	db_schema_version_minor INTEGER NOT NULL 
 );
+
+CREATE VIEW main_page_feed AS
+SELECT 
+	rss_feed.title,
+	c.*
+FROM rss_feed
+LEFT JOIN (
+	SELECT a.feedurl, b.unread_count, a.article_count
+	FROM (
+		SELECT feedurl, COUNT(*) AS article_count
+		FROM rss_item WHERE deleted = 0
+		GROUP BY feedurl
+	) a
+	LEFT JOIN (
+		SELECT feedurl, SUM(unread) AS unread_count
+		FROM rss_item WHERE deleted = 0
+		GROUP BY feedurl
+	) b
+	ON a.feedurl = b.feedurl
+) c
+ON rss_feed.rssurl = c.feedurl
+ORDER BY rss_feed.title;
