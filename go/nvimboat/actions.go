@@ -88,7 +88,7 @@ func (nb *Nvimboat) Reload(nv *nvim.Nvim, args ...string) (err error) {
 	} else {
 		feedUrls = args[1:]
 	}
-	err = nb.ReloadFeeds(feedUrls)
+	err = ReloadFeeds(nb, feedUrls)
 	if err != nil {
 		err = fmt.Errorf("reload: %w", err)
 		return

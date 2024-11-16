@@ -2,7 +2,6 @@ package reload
 
 import (
 	"fmt"
-	"net/http"
 	"os"
 	"path"
 	"testing"
@@ -10,7 +9,7 @@ import (
 )
 
 var (
-	TestFeeds = map[string]string{
+	testFeeds = map[string]string{
 		"Not Related! A Big-Braned Podcast": "https://notrelated.xyz/rss",
 		"Arch Linux: Recent news updates":   "https://www.archlinux.org/feeds/news/",
 		"Path of Exile News":                "https://www.pathofexile.com/news/rss",
@@ -18,25 +17,22 @@ var (
 		"ShortFatOtaku on Odysee":           "https://odysee.com/$/rss/@ShortFatOtaku:1",
 		"CaravanPalace":                     "https://www.youtube.com/feeds/videos.xml?user=CaravanPalace",
 	}
-	CacheTime = 60 * time.Minute
-	CacheDir  = path.Join(os.Getenv("HOME"), ".cache", "nvimboat-test")
-	DbPath    = path.Join(os.Getenv("HOME"), ".cache", "nvimboat-test", "cache.db")
-	Header    = http.Header{
-		"User-Agent": {"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36"},
-	}
+	cacheTime = 60 * time.Minute
+	cacheDir  = path.Join(os.Getenv("HOME"), ".cache", "nvimboat-test")
+	dbPath    = path.Join(os.Getenv("HOME"), ".cache", "nvimboat-test", "getrss_test.db")
 )
 
 func TestGetRss(t *testing.T) {
-	err := os.MkdirAll(CacheDir, 0755)
+	err := os.MkdirAll(cacheDir, 0755)
 	if err != nil {
 		t.Fatal("cannot create cache directory")
 	}
 	reloader := new(StandardReloader)
-	for title, url := range TestFeeds {
+	for title, url := range testFeeds {
 		fmt.Println("first iteration...")
-		reloader.GetRss(url, CacheTime, CacheDir)
+		reloader.GetRss(url, cacheTime, cacheDir)
 		fmt.Println("now try to get contents from cache...")
-		feed, items, fromCache, err := reloader.GetRss(url, CacheTime, CacheDir)
+		feed, items, fromCache, err := reloader.GetRss(url, cacheTime, cacheDir)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -54,7 +50,7 @@ func TestGetRss(t *testing.T) {
 
 func TestUpdateFeeds(t *testing.T) {
 	reloader := new(StandardReloader)
-	dbh, err := ConnectDb(DbPath)
+	dbh, err := ConnectDb(dbPath)
 	defer dbh.DB.Close()
 	if err != nil {
 		t.Fatal(err)
@@ -64,11 +60,11 @@ func TestUpdateFeeds(t *testing.T) {
 		t.Fatal(err)
 	}
 	var addFeed bool
-	for _, url := range TestFeeds {
+	for _, url := range testFeeds {
 		if !knownFeeds[url] {
 			addFeed = true
 		}
-		_, err := reloader.UpdateFeed(dbh, url, CacheTime, CacheDir, addFeed)
+		_, err := reloader.UpdateFeed(dbh, url, cacheTime, cacheDir, addFeed)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -78,8 +74,8 @@ func TestUpdateFeeds(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	for _, url := range TestFeeds {
-		_, err := reloader.UpdateFeed(dbh, url, CacheTime, CacheDir, false)
+	for _, url := range testFeeds {
+		_, err := reloader.UpdateFeed(dbh, url, cacheTime, cacheDir, false)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -94,7 +90,7 @@ func TestUpdateFeeds(t *testing.T) {
 }
 
 func TestGetFeed(t *testing.T) {
-	dbh, err := ConnectDb(DbPath)
+	dbh, err := ConnectDb(dbPath)
 	defer dbh.DB.Close()
 	if err != nil {
 		t.Fatal(err)

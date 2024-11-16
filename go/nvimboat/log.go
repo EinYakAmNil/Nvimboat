@@ -23,5 +23,7 @@ func (nb *Nvimboat) Log(val ...any) {
 		msg += fmt.Sprintf("%+v", v)
 	}
 	log.Println(msg)
-	nb.Nvim.Command(`echo "` + msg + `"`)
+	if nb.Nvim != nil {
+		nb.Nvim.Command(`echo "` + msg + `"`)
+	}
 }

@@ -9,11 +9,13 @@ import (
 	"github.com/EinYakAmNil/Nvimboat/go/engine/rssdb"
 )
 
+// Custom reloaders can be defined here.
+// Use a regex as the key value to decide, when your reloader should be used.
 var CustomReload = map[string]reload.Reloader{
 	"https://mangapill.com": new(mangapill.MangapillReloader),
 }
 
-func (nb *Nvimboat) ReloadFeeds(feedUrls []string) (err error) {
+func ReloadFeeds(nb *Nvimboat, feedUrls []string) (err error) {
 	standardReloader := new(reload.StandardReloader)
 	dbh, err := reload.ConnectDb(nb.DbPath)
 	defer dbh.DB.Close()
