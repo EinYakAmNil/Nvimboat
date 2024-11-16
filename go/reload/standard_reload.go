@@ -16,11 +16,12 @@ import (
 type StandardReloader struct{}
 
 func (sr *StandardReloader) UpdateFeed(
+	dbh DbHandle,
 	feedurl string,
 	cacheTime time.Duration,
 	cachePath string,
-	dbh DbHandle,
-) (err error) {
+	addFeed bool,
+) (newFeed rssdb.RssFeed, err error) {
 	knownArticles, err := dbh.Queries.AllArticles(dbh.Ctx)
 	if err != nil {
 		err = fmt.Errorf("UpdateFeed: %w", err)
@@ -31,15 +32,17 @@ func (sr *StandardReloader) UpdateFeed(
 		err = fmt.Errorf("UpdateFeed: %w", err)
 		return
 	}
-	feedParams := rssdb.CreateFeedParams{
-		Rssurl: feedurl,
-		Title:  feed.Title,
-		Url:    feed.Url,
-	}
-	err = sr.AddFeed(feedParams, dbh)
-	if err != nil {
-		err = fmt.Errorf("UpdateFeed: %w", err)
-		return
+	if addFeed {
+		feedParams := rssdb.CreateFeedParams{
+			Rssurl: feedurl,
+			Title:  feed.Title,
+			Url:    feed.Url,
+		}
+		newFeed, err = sr.AddFeed(feedParams, dbh)
+		if err != nil {
+			err = fmt.Errorf("UpdateFeed: %w", err)
+			return
+		}
 	}
 	var (
 		itemsParams = []*rssdb.AddArticleParams{}
@@ -143,21 +146,11 @@ func (sr *StandardReloader) GetRss(url string,
 	return feed, items, true, err
 }
 
-func (sr *StandardReloader) ListFeeds(condition string) (feeds []*rssdb.RssFeed, err error) {
-	return
-}
-
-func (sr *StandardReloader) ListArticles(feedurl string) (articles map[string]*rssdb.RssItem, err error) {
-	return
-}
-
-func (sr *StandardReloader) AddFeed(feed rssdb.CreateFeedParams, dbh DbHandle) (err error) {
-	if _, noFeedErr := dbh.Queries.GetFeed(dbh.Ctx, feed.Rssurl); noFeedErr != nil {
-		_, err = dbh.Queries.CreateFeed(dbh.Ctx, feed)
-		if err != nil {
-			err = fmt.Errorf("AddFeed: %w", err)
-			return
-		}
+func (sr *StandardReloader) AddFeed(feed rssdb.CreateFeedParams, dbh DbHandle) (newFeed rssdb.RssFeed, err error) {
+	newFeed, err = dbh.Queries.CreateFeed(dbh.Ctx, feed)
+	if err != nil {
+		err = fmt.Errorf("AddFeed: %w", err)
+		return
 	}
 	return
 }

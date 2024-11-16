@@ -6,6 +6,7 @@ import (
 
 	"github.com/EinYakAmNil/Nvimboat/go/engine/reload"
 	"github.com/EinYakAmNil/Nvimboat/go/engine/reload/mangapill"
+	"github.com/EinYakAmNil/Nvimboat/go/engine/rssdb"
 )
 
 var CustomReload = map[string]reload.Reloader{
@@ -20,13 +21,17 @@ func (nb *Nvimboat) ReloadFeeds(feedUrls []string) (err error) {
 		err = fmt.Errorf("ReloadFeed: %w", err)
 		return
 	}
-	if err != nil {
-		err = fmt.Errorf("ReloadFeed: %w", err)
-		return
-	}
-	var reloadErr error
+	var (
+		newFeed   rssdb.RssFeed
+		reloadErr error
+		addFeed   bool
+	)
+	knownFeeds, err := dbh.Queries.MapFeedUrls(dbh.Ctx)
 reloadFeed:
 	for _, feedUrl := range feedUrls {
+		if !knownFeeds[feedUrl] {
+			addFeed = true
+		}
 		for urlPattern, reloader := range CustomReload {
 			ok, err := regexp.MatchString(urlPattern, feedUrl)
 			if err != nil {
@@ -34,17 +39,25 @@ reloadFeed:
 				return err
 			}
 			if ok {
-				reloadErr = reloader.UpdateFeed(feedUrl, nb.CacheTime, nb.CachePath, dbh)
+				newFeed, reloadErr = reloader.UpdateFeed(dbh, feedUrl, nb.CacheTime, nb.CachePath, addFeed)
 				if reloadErr != nil {
 					nb.Log(reloadErr)
 				}
+				if addFeed {
+					nb.Log("Added feed:", newFeed.Url)
+				}
+				addFeed = false
 				continue reloadFeed
 			}
 		}
-		reloadErr = standardReloader.UpdateFeed(feedUrl, nb.CacheTime, nb.CachePath, dbh)
+		newFeed, reloadErr = standardReloader.UpdateFeed(dbh, feedUrl, nb.CacheTime, nb.CachePath, addFeed)
 		if reloadErr != nil {
 			nb.Log(reloadErr)
 		}
+		if addFeed {
+			nb.Log("Added feed:", newFeed.Url)
+		}
+		addFeed = false
 	}
 	return
 }

@@ -59,18 +59,27 @@ func TestUpdateFeeds(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	knownFeeds, err := dbh.Queries.MapFeedUrls(dbh.Ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var addFeed bool
 	for _, url := range TestFeeds {
-		err := reloader.UpdateFeed(url, CacheTime, CacheDir, dbh)
+		if !knownFeeds[url] {
+			addFeed = true
+		}
+		_, err := reloader.UpdateFeed(dbh, url, CacheTime, CacheDir, addFeed)
 		if err != nil {
 			t.Fatal(err)
 		}
+		addFeed = false
 	}
-	allItems, err := dbh.Queries.AllArticles(dbh.Ctx)
+	allArticles, err := dbh.Queries.AllArticles(dbh.Ctx)
 	if err != nil {
 		t.Fatal(err)
 	}
 	for _, url := range TestFeeds {
-		err := reloader.UpdateFeed(url, CacheTime, CacheDir, dbh)
+		_, err := reloader.UpdateFeed(dbh, url, CacheTime, CacheDir, false)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -79,8 +88,8 @@ func TestUpdateFeeds(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(allItems) != len(noChange) {
-		t.Fatalf("item count should not increase: %d -> %d\n", len(allItems), len(noChange))
+	if len(allArticles) != len(noChange) {
+		t.Fatalf("item count should not increase: %d -> %d\n", len(allArticles), len(noChange))
 	}
 }
 

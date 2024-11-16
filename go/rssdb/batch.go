@@ -59,3 +59,32 @@ func (q *Queries) AllArticles(ctx context.Context) (guids map[string]bool, err e
 	}
 	return items, nil
 }
+
+const mapFeedUrls = `-- name: ListFeeds :many
+SELECT rssurl FROM rss_feed
+`
+
+func (q *Queries) MapFeedUrls(ctx context.Context) (map[string]bool, error) {
+	rows, err := q.db.QueryContext(ctx, mapFeedUrls)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var (
+		items = make(map[string]bool)
+		url   string
+	)
+	for rows.Next() {
+		if err := rows.Scan(&url); err != nil {
+			return nil, err
+		}
+		items[url] = true
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
