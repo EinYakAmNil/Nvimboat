@@ -98,6 +98,7 @@ func (nb *Nvimboat) Reload(nv *nvim.Nvim, args ...string) (err error) {
 }
 
 func (nb *Nvimboat) ShowMain(nv *nvim.Nvim, args ...string) (err error) {
+	defer trimTrail(nv, *nb.Buffer)
 	dbh, err := reload.ConnectDb(nb.DbPath)
 	if err != nil {
 		err = fmt.Errorf("ShowMain: %w", err)

@@ -12,6 +12,19 @@ import (
 	"github.com/neovim/go-client/nvim"
 )
 
+func trimTrail(nv *nvim.Nvim, buffer nvim.Buffer) (err error) {
+	currentLines, err := nv.BufferLines(buffer, 0, -1, false)
+	if err != nil {
+		return
+	}
+	var lines []string
+	for _, l := range currentLines {
+		lines = append(lines, strings.TrimRight(string(l), " "))
+	}
+	err = setLines(nv, buffer, lines)
+	return
+}
+
 func addColumn(nv *nvim.Nvim, buf nvim.Buffer, col []string) (err error) {
 	currentLines, err := nv.BufferLines(buf, 0, -1, false)
 	if err != nil {
