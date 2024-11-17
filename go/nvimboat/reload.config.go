@@ -17,7 +17,7 @@ var CustomReload = map[string]reload.Reloader{
 
 func ReloadFeeds(nb *Nvimboat, feedUrls []string) (err error) {
 	standardReloader := new(reload.StandardReloader)
-	dbh, err := reload.ConnectDb(nb.DbPath)
+	dbh, err := rssdb.ConnectDb(nb.DbPath)
 	defer dbh.DB.Close()
 	if err != nil {
 		err = fmt.Errorf("ReloadFeed: %w", err)

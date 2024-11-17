@@ -16,7 +16,7 @@ import (
 type StandardReloader struct{}
 
 func (sr *StandardReloader) UpdateFeed(
-	dbh DbHandle,
+	dbh rssdb.DbHandle,
 	feedurl string,
 	cacheTime time.Duration,
 	cachePath string,
@@ -146,7 +146,7 @@ func (sr *StandardReloader) GetRss(url string,
 	return feed, items, true, err
 }
 
-func (sr *StandardReloader) AddFeed(feed rssdb.CreateFeedParams, dbh DbHandle) (newFeed rssdb.RssFeed, err error) {
+func (sr *StandardReloader) AddFeed(feed rssdb.CreateFeedParams, dbh rssdb.DbHandle) (newFeed rssdb.RssFeed, err error) {
 	newFeed, err = dbh.Queries.CreateFeed(dbh.Ctx, feed)
 	if err != nil {
 		err = fmt.Errorf("AddFeed: %w", err)
@@ -155,7 +155,7 @@ func (sr *StandardReloader) AddFeed(feed rssdb.CreateFeedParams, dbh DbHandle) (
 	return
 }
 
-func (sr *StandardReloader) AddArticles(articles []*rssdb.AddArticleParams, feedUrl string, dbh DbHandle) (err error) {
+func (sr *StandardReloader) AddArticles(articles []*rssdb.AddArticleParams, feedUrl string, dbh rssdb.DbHandle) (err error) {
 	tx, err := dbh.DB.Begin()
 	if err != nil {
 		err = fmt.Errorf("AddArticles: %w", err)

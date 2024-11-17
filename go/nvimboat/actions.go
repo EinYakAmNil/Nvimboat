@@ -3,7 +3,7 @@ package nvimboat
 import (
 	"fmt"
 
-	"github.com/EinYakAmNil/Nvimboat/go/engine/reload"
+	"github.com/EinYakAmNil/Nvimboat/go/engine/rssdb"
 	"github.com/neovim/go-client/nvim"
 )
 
@@ -91,7 +91,7 @@ func (nb *Nvimboat) Reload(nv *nvim.Nvim, args ...string) (err error) {
 	}
 	err = ReloadFeeds(nb, feedUrls)
 	if err != nil {
-		err = fmt.Errorf("reload: %w", err)
+		err = fmt.Errorf("Reload: %w", err)
 		return
 	}
 	return
@@ -99,7 +99,7 @@ func (nb *Nvimboat) Reload(nv *nvim.Nvim, args ...string) (err error) {
 
 func (nb *Nvimboat) ShowMain(nv *nvim.Nvim, args ...string) (err error) {
 	defer trimTrail(nv, *nb.Buffer)
-	dbh, err := reload.ConnectDb(nb.DbPath)
+	dbh, err := rssdb.ConnectDb(nb.DbPath)
 	if err != nil {
 		err = fmt.Errorf("ShowMain: %w", err)
 		return

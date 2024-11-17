@@ -6,6 +6,8 @@ import (
 	"path"
 	"testing"
 	"time"
+
+	"github.com/EinYakAmNil/Nvimboat/go/engine/rssdb"
 )
 
 var (
@@ -50,7 +52,7 @@ func TestGetRss(t *testing.T) {
 
 func TestUpdateFeeds(t *testing.T) {
 	reloader := new(StandardReloader)
-	dbh, err := ConnectDb(dbPath)
+	dbh, err := rssdb.ConnectDb(dbPath)
 	defer dbh.DB.Close()
 	if err != nil {
 		t.Fatal(err)
@@ -90,7 +92,7 @@ func TestUpdateFeeds(t *testing.T) {
 }
 
 func TestGetFeed(t *testing.T) {
-	dbh, err := ConnectDb(dbPath)
+	dbh, err := rssdb.ConnectDb(dbPath)
 	defer dbh.DB.Close()
 	if err != nil {
 		t.Fatal(err)

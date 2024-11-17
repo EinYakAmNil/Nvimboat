@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/EinYakAmNil/Nvimboat/go/engine/reload"
 	"github.com/EinYakAmNil/Nvimboat/go/engine/rssdb"
 )
 
@@ -12,7 +11,7 @@ type MangapillReloader struct {
 }
 
 func (mr *MangapillReloader) UpdateFeed(
-	dbh reload.DbHandle,
+	dbh rssdb.DbHandle,
 	url string,
 	cacheTime time.Duration,
 	cacheDir string,

@@ -44,7 +44,7 @@ describe("nvimboat", function()
 		local main_menu_buf = {
 			" | N (10/10) | Arch Linux: Recent news updates   | https://www.archlinux.org/feeds/news/",
 			" | N (15/15) | CaravanPalace                     | https://www.youtube.com/feeds/videos.xml?user=CaravanPalace",
-			" | N (16/17) | Not Related! A Big-Braned Podcast | https://notrelated.xyz/rss",
+			" | N (17/17) | Not Related! A Big-Braned Podcast | https://notrelated.xyz/rss",
 			" | N (30/30) | Path of Exile News                | https://www.pathofexile.com/news/rss",
 			" | N (50/50) | ShortFatOtaku on Odysee           | https://odysee.com/$/rss/@ShortFatOtaku:1",
 			" | N (10/10) | Starsector                        | https://fractalsoftworks.com/feed/",
