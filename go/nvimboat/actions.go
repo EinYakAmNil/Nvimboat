@@ -103,13 +103,16 @@ func (nb *Nvimboat) ShowMain(nv *nvim.Nvim, args ...string) (err error) {
 		err = fmt.Errorf("ShowMain: %w", err)
 		return
 	}
-	feeds, err := dbh.Queries.QueryMainPage(dbh.Ctx)
+	mm := new(MainMenu)
+	mm.Feeds, err = dbh.Queries.QueryMainPage(dbh.Ctx)
 	if err != nil {
 		err = fmt.Errorf("ShowMain: %w", err)
 		return
 	}
-	for _, f := range feeds {
-		nb.Log(f)
+	err = mm.Render(nb.Nvim, *nb.Buffer)
+	if err != nil {
+		err = fmt.Errorf("ShowMain: %w", err)
+		return
 	}
 	return
 }
