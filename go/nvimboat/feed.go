@@ -13,6 +13,10 @@ type Feed struct {
 	Articles []rssdb.GetFeedPageRow
 }
 
+func (f *Feed) Select(nb *Nvimboat, id string) (err error) {
+	return
+}
+
 func (f *Feed) Render(nv *nvim.Nvim, buf nvim.Buffer) (err error) {
 	if len(f.Articles) == 0 {
 		err = setLines(nv, buf, []string{"No Articles found."})

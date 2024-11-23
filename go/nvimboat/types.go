@@ -18,7 +18,10 @@ type (
 		CacheTime   time.Duration
 		DbPath      string
 		LinkHandler string
+		Pages       PageStack
 	}
-
+	PageStack struct {
+		Pages []Page
+	}
 	NvimboatAction func(*Nvimboat, *nvim.Nvim, ...string) error
 )

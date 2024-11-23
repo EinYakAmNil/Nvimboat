@@ -53,9 +53,12 @@ describe("nvimboat", function()
 			" | N (10/10) | Starsector                        | https://fractalsoftworks.com/feed/",
 		}
 		eq_buf(main_menu_buf)
+		eq("MainMenu", nvimboat.pages[1].type)
+		eq("", nvimboat.pages[1].id)
 	end)
 	it("can select a feed", function()
-		vim.cmd.Nvimboat("select", "https://www.archlinux.org/feeds/news/")
+		local url = "https://www.archlinux.org/feeds/news/"
+		vim.cmd.Nvimboat("select", url)
 		local feed_buf = {
 			" | N | 19 Nov 24 | Rafael Epplée          | Providing a license for package sources                                   | https://archlinux.org/news/providing-a-license-for-package-sources/",
 			" | N | 14 Sep 24 | Morten Linderud        | Manual intervention for pacman 7.0.0 and local repositories required      | https://archlinux.org/news/manual-intervention-for-pacman-700-and-local-repositories-required/",
@@ -70,5 +73,7 @@ describe("nvimboat", function()
 			-- " | N | 22 Sep 23 | David Runge            | Changes to default password hashing algorithm and umask settings          | https://archlinux.org/news/changes-to-default-password-hashing-algorithm-and-umask-settings/",
 		}
 		eq_buf(feed_buf)
+		eq("Feed", nvimboat.pages[2].type)
+		eq(url, nvimboat.pages[2].id)
 	end)
 end)

@@ -39,6 +39,7 @@ function M.setup(opts)
 end
 
 M.actions = require("nvimboat.actions")
+M.pages = require("nvimboat.pages")
 M.config = {}
 
 return M
