@@ -13,6 +13,7 @@ end
 
 local function eq_buf(expected_buf)
 	local rendered = vim.api.nvim_buf_get_lines(0, 0, -1, false)
+	eq(#expected_buf, #rendered)
 	for idx, line in ipairs(rendered) do
 		eq(expected_buf[idx], line)
 	end
@@ -20,6 +21,7 @@ end
 
 nvimboat.setup({
 	linkHandler = "firefox",
+	-- dbPath = os.getenv("HOME") .. "/.cache/nvimboat-test/reload_test-20241123.db",
 	dbPath = os.getenv("HOME") .. "/.cache/nvimboat-test/reload_test.db",
 })
 
@@ -40,13 +42,14 @@ describe("nvimboat", function()
 	end)
 	it("can show the main page", function()
 		vim.cmd.Nvimboat("enable")
+		vim.cmd.Nvimboat("reload")
 		vim.cmd.Nvimboat("show-main")
 		local main_menu_buf = {
-			" | N (11/11) | Arch Linux: Recent news updates   | https://www.archlinux.org/feeds/news/",
+			" | N (10/10) | Arch Linux: Recent news updates   | https://www.archlinux.org/feeds/news/",
 			" | N (15/15) | CaravanPalace                     | https://www.youtube.com/feeds/videos.xml?user=CaravanPalace",
 			" | N (17/17) | Not Related! A Big-Braned Podcast | https://notrelated.xyz/rss",
-			" | N (34/34) | Path of Exile News                | https://www.pathofexile.com/news/rss",
-			" | N (55/55) | ShortFatOtaku on Odysee           | https://odysee.com/$/rss/@ShortFatOtaku:1",
+			" | N (30/30) | Path of Exile News                | https://www.pathofexile.com/news/rss",
+			" | N (50/50) | ShortFatOtaku on Odysee           | https://odysee.com/$/rss/@ShortFatOtaku:1",
 			" | N (10/10) | Starsector                        | https://fractalsoftworks.com/feed/",
 		}
 		eq_buf(main_menu_buf)
@@ -64,7 +67,7 @@ describe("nvimboat", function()
 			" | N | 09 Jan 24 | Jan Alexander Steffens | Making dbus-broker our default D-Bus daemon                               | https://archlinux.org/news/making-dbus-broker-our-default-d-bus-daemon/",
 			" | N | 04 Dec 23 | Christian Heusel       | Bugtracker migration to GitLab completed                                  | https://archlinux.org/news/bugtracker-migration-to-gitlab-completed/",
 			" | N | 02 Nov 23 | Frederik Schwan        | Incoming changes in JDK / JRE 21 packages may require manual intervention | https://archlinux.org/news/incoming-changes-in-jdk-jre-21-packages-may-require-manual-intervention/",
-			" | N | 22 Sep 23 | David Runge            | Changes to default password hashing algorithm and umask settings          | https://archlinux.org/news/changes-to-default-password-hashing-algorithm-and-umask-settings/",
+			-- " | N | 22 Sep 23 | David Runge            | Changes to default password hashing algorithm and umask settings          | https://archlinux.org/news/changes-to-default-password-hashing-algorithm-and-umask-settings/",
 		}
 		eq_buf(feed_buf)
 	end)

@@ -77,7 +77,7 @@ func (nb *Nvimboat) Disable(nv *nvim.Nvim, args ...string) (err error) {
 
 func (nb *Nvimboat) Reload(nv *nvim.Nvim, args ...string) (err error) {
 	if len(args) < 1 {
-		err = fmt.Errorf("reload: expected at least one argument")
+		err = fmt.Errorf("Reload: expected at least one argument")
 		return
 	}
 	// reload all feeds if no arguments are given to the subcommand
