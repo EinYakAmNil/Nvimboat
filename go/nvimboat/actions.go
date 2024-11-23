@@ -98,6 +98,11 @@ func (nb *Nvimboat) Reload(nv *nvim.Nvim, args ...string) (err error) {
 }
 
 func (nb *Nvimboat) ShowMain(nv *nvim.Nvim, args ...string) (err error) {
+	err = setLines(nv, *nb.Buffer, []string{""})
+	if err != nil {
+		err = fmt.Errorf("ShowMain: %w", err)
+		return
+	}
 	defer trimTrail(nv, *nb.Buffer)
 	dbh, err := rssdb.ConnectDb(nb.DbPath)
 	if err != nil {
@@ -118,11 +123,37 @@ func (nb *Nvimboat) ShowMain(nv *nvim.Nvim, args ...string) (err error) {
 	return
 }
 
-func (nb *Nvimboat) ShowTags(nv *nvim.Nvim, args ...string) (err error) {
+func (nb *Nvimboat) Select(nv *nvim.Nvim, args ...string) (err error) {
+	if len(args) < 1 {
+		err = fmt.Errorf("Select: no arguments")
+		return
+	}
+	err = setLines(nv, *nb.Buffer, []string{""})
+	if err != nil {
+		err = fmt.Errorf("Select: %w", err)
+		return
+	}
+	defer trimTrail(nv, *nb.Buffer)
+	dbh, err := rssdb.ConnectDb(nb.DbPath)
+	if err != nil {
+		err = fmt.Errorf("Select: %w", err)
+		return
+	}
+	feedPage := new(Feed)
+	feedPage.Articles, err = dbh.Queries.GetFeedPage(dbh.Ctx, args[1])
+	if err != nil {
+		err = fmt.Errorf("Select: %w", err)
+		return
+	}
+	err = feedPage.Render(nb.Nvim, *nb.Buffer)
+	if err != nil {
+		err = fmt.Errorf("Select: %w", err)
+		return
+	}
 	return
 }
 
-func (nb *Nvimboat) Select(nv *nvim.Nvim, args ...string) (err error) {
+func (nb *Nvimboat) ShowTags(nv *nvim.Nvim, args ...string) (err error) {
 	return
 }
 

@@ -3,7 +3,6 @@ package nvimboat
 import (
 	"time"
 
-	"github.com/EinYakAmNil/Nvimboat/go/engine/rssdb"
 	"github.com/neovim/go-client/nvim"
 )
 
@@ -19,11 +18,6 @@ type (
 		CacheTime   time.Duration
 		DbPath      string
 		LinkHandler string
-	}
-
-	Feed struct {
-		rssdb.RssFeed
-		Tags []string
 	}
 
 	NvimboatAction func(*Nvimboat, *nvim.Nvim, ...string) error

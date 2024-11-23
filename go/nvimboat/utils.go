@@ -12,6 +12,17 @@ import (
 	"github.com/neovim/go-client/nvim"
 )
 
+func unixToDate(unixTime int64) (string, error) {
+	tz, err := time.LoadLocation("Local")
+	if err != nil {
+		return "", err
+	}
+	ut := time.Unix(unixTime, 0)
+	dateString := ut.In(tz).Format("02 Jan 06")
+
+	return dateString, nil
+}
+
 func trimTrail(nv *nvim.Nvim, buffer nvim.Buffer) (err error) {
 	currentLines, err := nv.BufferLines(buffer, 0, -1, false)
 	if err != nil {

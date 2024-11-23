@@ -2,10 +2,6 @@
 SELECT * FROM rss_feed
 WHERE rssurl = ? LIMIT 1;
 
--- name: ListFeeds :many
-SELECT * FROM rss_feed
-ORDER BY rssurl;
-
 -- name: CreateFeed :one
 INSERT INTO rss_feed (
 	rssurl, url, title
@@ -22,8 +18,8 @@ WHERE rssurl = ?;
 SELECT * FROM rss_item
 WHERE url = ? LIMIT 1;
 
--- name: ListArticles :many
-SELECT * FROM rss_item
+-- name: GetFeedPage :many
+SELECT unread, pubDate, author, title, url FROM rss_item
 WHERE feedurl = ?
 ORDER BY pubDate DESC;
 

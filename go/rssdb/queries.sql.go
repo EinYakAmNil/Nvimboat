@@ -158,75 +158,35 @@ func (q *Queries) GetFeed(ctx context.Context, rssurl string) (RssFeed, error) {
 	return i, err
 }
 
-const listArticles = `-- name: ListArticles :many
-SELECT id, guid, title, author, url, feedurl, pubdate, content, unread, enclosure_url, enclosure_type, enqueued, flags, deleted, base, content_mime_type, enclosure_description, enclosure_description_mime_type FROM rss_item
+const getFeedPage = `-- name: GetFeedPage :many
+SELECT unread, pubDate, author, title, url FROM rss_item
 WHERE feedurl = ?
 ORDER BY pubDate DESC
 `
 
-func (q *Queries) ListArticles(ctx context.Context, feedurl string) ([]RssItem, error) {
-	rows, err := q.db.QueryContext(ctx, listArticles, feedurl)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []RssItem
-	for rows.Next() {
-		var i RssItem
-		if err := rows.Scan(
-			&i.ID,
-			&i.Guid,
-			&i.Title,
-			&i.Author,
-			&i.Url,
-			&i.Feedurl,
-			&i.Pubdate,
-			&i.Content,
-			&i.Unread,
-			&i.EnclosureUrl,
-			&i.EnclosureType,
-			&i.Enqueued,
-			&i.Flags,
-			&i.Deleted,
-			&i.Base,
-			&i.ContentMimeType,
-			&i.EnclosureDescription,
-			&i.EnclosureDescriptionMimeType,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
+type GetFeedPageRow struct {
+	Unread  int
+	Pubdate int64
+	Author  string
+	Title   string
+	Url     string
 }
 
-const listFeeds = `-- name: ListFeeds :many
-SELECT rssurl, url, title, lastmodified, is_rtl, etag FROM rss_feed
-ORDER BY rssurl
-`
-
-func (q *Queries) ListFeeds(ctx context.Context) ([]RssFeed, error) {
-	rows, err := q.db.QueryContext(ctx, listFeeds)
+func (q *Queries) GetFeedPage(ctx context.Context, feedurl string) ([]GetFeedPageRow, error) {
+	rows, err := q.db.QueryContext(ctx, getFeedPage, feedurl)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []RssFeed
+	var items []GetFeedPageRow
 	for rows.Next() {
-		var i RssFeed
+		var i GetFeedPageRow
 		if err := rows.Scan(
-			&i.Rssurl,
-			&i.Url,
+			&i.Unread,
+			&i.Pubdate,
+			&i.Author,
 			&i.Title,
-			&i.Lastmodified,
-			&i.IsRtl,
-			&i.Etag,
+			&i.Url,
 		); err != nil {
 			return nil, err
 		}
