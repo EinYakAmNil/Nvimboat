@@ -2,7 +2,6 @@ package nvimboat
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/EinYakAmNil/Nvimboat/go/engine/rssdb"
 	"github.com/neovim/go-client/nvim"
@@ -99,36 +98,18 @@ func (nb *Nvimboat) Reload(nv *nvim.Nvim, args ...string) (err error) {
 }
 
 func (nb *Nvimboat) ShowMain(nv *nvim.Nvim, args ...string) (err error) {
-	err = setLines(nv, *nb.Buffer, []string{""})
-	if err != nil {
-		err = fmt.Errorf("ShowMain: %w", err)
-		return
-	}
-	defer trimTrail(nv, *nb.Buffer)
+	mm := new(MainMenu)
 	dbh, err := rssdb.ConnectDb(nb.DbPath)
 	if err != nil {
 		err = fmt.Errorf("ShowMain: %w", err)
 		return
 	}
-	mm := new(MainMenu)
 	mm.Feeds, err = dbh.Queries.QueryMainPage(dbh.Ctx)
 	if err != nil {
 		err = fmt.Errorf("ShowMain: %w", err)
 		return
 	}
-	err = mm.Render(nb.Nvim, *nb.Buffer)
-	if err != nil {
-		err = fmt.Errorf("ShowMain: %w", err)
-		return
-	}
-	pageType := fmt.Sprintf("%T", mm)
-	_, pageType, _ = strings.Cut(pageType, "nvimboat.")
-	err = nb.Nvim.ExecLua(luaPushPage, new(any), pageType, "")
-	if err != nil {
-		err = fmt.Errorf("Select: %w", err)
-		return
-	}
-	nb.Pages.Push(mm)
+	nb.Show(mm, "")
 	return
 }
 
@@ -137,8 +118,17 @@ func (nb *Nvimboat) Select(nv *nvim.Nvim, args ...string) (err error) {
 		err = fmt.Errorf("Select: no arguments")
 		return
 	}
-	defer nb.Nvim.SetWindowCursor(*nb.Window, [2]int{0, 1})
-	err = nb.Pages.Top().Select(nb, args[1])
+	dbh, err := rssdb.ConnectDb(nb.DbPath)
+	if err != nil {
+		err = fmt.Errorf("Select: %w", err)
+		return
+	}
+	p, err := nb.Pages.Top().Select(dbh, args[1])
+	if err != nil {
+		err = fmt.Errorf("Select: %w", err)
+		return
+	}
+	err = nb.Show(p, args[1])
 	if err != nil {
 		err = fmt.Errorf("Select: %w", err)
 		return

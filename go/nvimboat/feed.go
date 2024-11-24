@@ -13,7 +13,7 @@ type Feed struct {
 	Articles []rssdb.GetFeedPageRow
 }
 
-func (f *Feed) Select(nb *Nvimboat, id string) (err error) {
+func (f *Feed) Select(dbh rssdb.DbHandle, id string) (p Page, err error) {
 	return
 }
 

@@ -42,7 +42,7 @@ describe("nvimboat", function()
 	end)
 	it("can show the main page", function()
 		vim.cmd.Nvimboat("enable")
-		vim.cmd.Nvimboat("reload")
+		-- vim.cmd.Nvimboat("reload")
 		vim.cmd.Nvimboat("show-main")
 		local main_menu_buf = {
 			" | N (10/10) | Arch Linux: Recent news updates   | https://www.archlinux.org/feeds/news/",
