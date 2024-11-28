@@ -41,3 +41,7 @@ func (mm *MainMenu) Render(nv *nvim.Nvim, buf nvim.Buffer) (err error) {
 	}
 	return
 }
+
+func (mm *MainMenu) ChildIdx(p Page) (idx int) {
+	return
+}

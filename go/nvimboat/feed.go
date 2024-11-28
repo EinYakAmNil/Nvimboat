@@ -67,3 +67,22 @@ func (f *Feed) Render(nv *nvim.Nvim, buf nvim.Buffer) (err error) {
 	}
 	return
 }
+
+func (f *Feed) ChildIdx(p Page) (idx int) {
+	childDate := p.(*Article).Pubdate
+	var (
+		section     = len(f.Articles)
+		searchRange = f.Articles
+	)
+	for {
+		if childDate > searchRange[section/2].Pubdate {
+			searchRange = searchRange[section/2:]
+		} else if childDate < searchRange[section/2].Pubdate {
+			searchRange = searchRange[:section/2]
+		} else if childDate == searchRange[section/2].Pubdate {
+			idx = section / 2
+			return
+		}
+		section = len(searchRange)
+	}
+}
