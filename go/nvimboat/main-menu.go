@@ -43,5 +43,22 @@ func (mm *MainMenu) Render(nv *nvim.Nvim, buf nvim.Buffer) (err error) {
 }
 
 func (mm *MainMenu) ChildIdx(p Page) (idx int) {
-	return
+	childTitle := p.(*Feed).Title
+	var (
+		section     = len(mm.Feeds)
+		searchRange = mm.Feeds
+	)
+	for range mm.Feeds {
+		if childTitle > searchRange[section/2].Title {
+			idx += section / 2
+			searchRange = searchRange[section/2:]
+		} else if childTitle < searchRange[section/2].Title {
+			searchRange = searchRange[:section/2]
+		} else if childTitle == searchRange[section/2].Title {
+			idx += section / 2
+			return
+		}
+		section = len(searchRange)
+	}
+	panic("max iterations!")
 }

@@ -74,15 +74,17 @@ func (f *Feed) ChildIdx(p Page) (idx int) {
 		section     = len(f.Articles)
 		searchRange = f.Articles
 	)
-	for {
+	for range f.Articles {
 		if childDate > searchRange[section/2].Pubdate {
+			idx += section / 2
 			searchRange = searchRange[section/2:]
 		} else if childDate < searchRange[section/2].Pubdate {
 			searchRange = searchRange[:section/2]
 		} else if childDate == searchRange[section/2].Pubdate {
-			idx = section / 2
+			idx += section / 2
 			return
 		}
 		section = len(searchRange)
 	}
+	panic("max iterations!")
 }

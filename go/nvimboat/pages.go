@@ -11,7 +11,7 @@ import (
 type Page interface {
 	Select(dbh rssdb.DbHandle, id string) (p Page, err error)
 	Render(nv *nvim.Nvim, buf nvim.Buffer) (err error)
-	ChildIdx(id string) (p Page)
+	ChildIdx(p Page) (idx int)
 }
 
 func (nb *Nvimboat) Show(p Page, id string) (err error) {
