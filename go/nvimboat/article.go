@@ -28,6 +28,7 @@ func (a *Article) Render(nv *nvim.Nvim, buf nvim.Buffer) (err error) {
 		"Date: " + date,
 		"Link: " + a.Url,
 		"== Article Begin ==",
+		a.Content,
 	}
 	content, err := renderHTML(a.Content)
 	if err != nil {

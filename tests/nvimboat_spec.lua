@@ -46,11 +46,11 @@ describe("nvimboat", function()
 		vim.cmd.Nvimboat("show-main")
 		local main_menu_buf = {
 			" | N (10/10) | Arch Linux: Recent news updates   | https://www.archlinux.org/feeds/news/",
-			" | N (15/15) | CaravanPalace                     | https://www.youtube.com/feeds/videos.xml?user=CaravanPalace",
+			" | N (16/16) | CaravanPalace                     | https://www.youtube.com/feeds/videos.xml?user=CaravanPalace",
 			" | N (17/17) | Not Related! A Big-Braned Podcast | https://notrelated.xyz/rss",
-			" | N (30/30) | Path of Exile News                | https://www.pathofexile.com/news/rss",
-			" | N (50/50) | ShortFatOtaku on Odysee           | https://odysee.com/$/rss/@ShortFatOtaku:1",
-			" | N (10/10) | Starsector                        | https://fractalsoftworks.com/feed/",
+			" | N (40/40) | Path of Exile News                | https://www.pathofexile.com/news/rss",
+			" | N (82/82) | ShortFatOtaku on Odysee           | https://odysee.com/$/rss/@ShortFatOtaku:1",
+			" | N (11/11) | Starsector                        | https://fractalsoftworks.com/feed/",
 		}
 		eq_buf(main_menu_buf)
 		eq("MainMenu", nvimboat.pages[1].type)
@@ -75,5 +75,11 @@ describe("nvimboat", function()
 		eq_buf(feed_buf)
 		eq("Feed", nvimboat.pages[2].type)
 		eq(url, nvimboat.pages[2].id)
+	end)
+	it("can select an article", function()
+		local url = "https://archlinux.org/news/incoming-changes-in-jdk-jre-21-packages-may-require-manual-intervention/"
+		-- local url = "https://archlinux.org/news/the-sshd-service-needs-to-be-restarted-after-upgrading-to-openssh-98p1/"
+		vim.cmd.Nvimboat("select", url)
+		print_buf()
 	end)
 end)

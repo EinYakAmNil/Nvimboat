@@ -1,3 +1,6 @@
+# Rewrite
+- Write RSS parser, beacuse gofeed fails to detect content
+
 # Features
 
 - Read state toggling on feed basis
