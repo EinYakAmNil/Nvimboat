@@ -12,12 +12,14 @@ type MainMenu struct {
 }
 
 func (mm *MainMenu) Select(dbh rssdb.DbHandle, id string) (p Page, err error) {
-	p = new(Feed)
-	p.(*Feed).Articles, err = dbh.Queries.GetFeedPage(dbh.Ctx, id)
+	feed := new(Feed)
+	feed.Articles, err = dbh.Queries.GetFeedPage(dbh.Ctx, id)
+	feed.Url = id
 	if err != nil {
 		err = fmt.Errorf("Select: %w", err)
 		return
 	}
+	p = feed
 	return
 }
 

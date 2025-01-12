@@ -8,11 +8,32 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"regexp"
 
+	md "github.com/JohannesKaufmann/html-to-markdown"
 	"github.com/neovim/go-client/nvim"
 )
 
+func extracUrls(content string) (links []string) {
+		re := regexp.MustCompile(`\b((?:https?|ftp|file):\/\/[-a-zA-Z0-9+&@#\/%?=~_|!:,.;]*[-a-zA-Z0-9+&@#\/%=~_|])`)
+		matches := re.FindAll([]byte(content), -1)
+		for _, l := range matches {
+		links = append(links, string(l))
+	}
+		return links
+}
+
+func renderHTML(content string) ([]string, error) {
+	converter := md.NewConverter("", true, nil)
+	markdown, err := converter.ConvertString(content)
+	if err != nil {
+		return nil, err
+	}
+	return strings.Split(markdown, "\n"), nil
+}
+
 func unixToDate(unixTime int64) (string, error) {
+
 	tz, err := time.LoadLocation("Local")
 	if err != nil {
 		return "", err

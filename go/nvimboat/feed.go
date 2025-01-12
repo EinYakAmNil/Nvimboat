@@ -14,6 +14,12 @@ type Feed struct {
 }
 
 func (f *Feed) Select(dbh rssdb.DbHandle, id string) (p Page, err error) {
+	articleInfo, err := dbh.Queries.GetArticle(dbh.Ctx, id)
+	if err != nil {
+		err = fmt.Errorf("Article.Select: %w", err)
+		return
+	}
+	p = &Article{articleInfo}
 	return
 }
 

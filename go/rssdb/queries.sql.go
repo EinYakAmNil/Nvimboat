@@ -109,15 +109,25 @@ func (q *Queries) DeleteFeedArticles(ctx context.Context, feedurl string) error 
 }
 
 const getArticle = `-- name: GetArticle :one
-SELECT id, guid, title, author, url, feedurl, pubdate, content, unread, enclosure_url, enclosure_type, enqueued, flags, deleted, base, content_mime_type, enclosure_description, enclosure_description_mime_type FROM rss_item
+SELECT guid, title, author, url, feedurl, pubDate, content, unread FROM rss_item
 WHERE url = ? LIMIT 1
 `
 
-func (q *Queries) GetArticle(ctx context.Context, url string) (RssItem, error) {
+type GetArticleRow struct {
+	Guid    string
+	Title   string
+	Author  string
+	Url     string
+	Feedurl string
+	Pubdate int64
+	Content string
+	Unread  int
+}
+
+func (q *Queries) GetArticle(ctx context.Context, url string) (GetArticleRow, error) {
 	row := q.db.QueryRowContext(ctx, getArticle, url)
-	var i RssItem
+	var i GetArticleRow
 	err := row.Scan(
-		&i.ID,
 		&i.Guid,
 		&i.Title,
 		&i.Author,
@@ -126,15 +136,6 @@ func (q *Queries) GetArticle(ctx context.Context, url string) (RssItem, error) {
 		&i.Pubdate,
 		&i.Content,
 		&i.Unread,
-		&i.EnclosureUrl,
-		&i.EnclosureType,
-		&i.Enqueued,
-		&i.Flags,
-		&i.Deleted,
-		&i.Base,
-		&i.ContentMimeType,
-		&i.EnclosureDescription,
-		&i.EnclosureDescriptionMimeType,
 	)
 	return i, err
 }

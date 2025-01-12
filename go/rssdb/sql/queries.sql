@@ -15,7 +15,7 @@ DELETE FROM rss_feed
 WHERE rssurl = ?;
 
 -- name: GetArticle :one
-SELECT * FROM rss_item
+SELECT guid, title, author, url, feedurl, pubDate, content, unread FROM rss_item
 WHERE url = ? LIMIT 1;
 
 -- name: GetFeedPage :many
