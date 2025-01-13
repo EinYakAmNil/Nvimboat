@@ -17,5 +17,7 @@ func TestParse(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	fmt.Println(feed)
+	for _, i := range feed.FeedItems {
+		fmt.Println(i)
+	}
 }
