@@ -1,5 +1,6 @@
 nvimboat.log
 go/gonboat
+go/engine
 cache/*
 python/__pycache__/*
 python/test.*
