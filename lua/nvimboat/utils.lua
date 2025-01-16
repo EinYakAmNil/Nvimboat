@@ -56,7 +56,7 @@ function M.play_videos(urls)
 		playlist:close()
 	end
 	vim.fn.jobstart(
-		"mpv --ytdl-raw-options=force-ipv4= --no-terminal --profile=builtin-pseudo-gui --playlist=" .. playlist_file,
+		"mpv --no-terminal --profile=builtin-pseudo-gui --playlist=" .. playlist_file,
 		{ detach = true }
 	)
 end
