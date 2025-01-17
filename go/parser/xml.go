@@ -9,32 +9,44 @@ import (
 )
 
 type Rss struct {
-	XMLName xml.Name `xml:"rss"`
-	Channel Channel  `xml:"channel"`
+	XMLName   xml.Name  `xml:""`
+	Channel   Channel   `xml:"channel"`
+	ChannelId ChannelId `xml:"channelId"`
 }
 
 type Channel struct {
-	XMLName   xml.Name `xml:"channel"`
 	Items     []Item   `xml:"item"`
-	Links     []Links  `xml:"link"`
+	Entry     []Item   `xml:"entry"`
+	Links     []Link  `xml:"link"`
 	Title     string   `xml:"title"`
 	Desc      string   `xml:"description"`
 	Generator string   `xml:"generator"`
 }
 
-type Links struct {
+type ChannelId struct {
+	Items     []Item   `xml:"item"`
+	Entry     []Item   `xml:"entry"`
+	Links     []Link  `xml:"link"`
+	Title     string   `xml:"title"`
+	Desc      string   `xml:"description"`
+	Generator string   `xml:"generator"`
+}
+
+type Link struct {
 	XMLName xml.Name `xml:"link"`
 	RssUrl  string   `xml:",chardata"`
 	Url     string   `xml:"href,attr"`
 }
 
 type Item struct {
-	Title   string   `xml:"title"`
-	Content string   `xml:"description"`
-	Guid    string   `xml:"guid"`
-	Author  string   `xml:"author"`
-	Url     string   `xml:"link"`
-	Pubdate string   `xml:"pubDate"`
+	Title       string `xml:"title"`
+	Description string `xml:"description"`
+	Content     string `xml:"content"`
+	Encoded     string `xml:"encoded"`
+	Guid        string `xml:"guid"`
+	Author      string `xml:"author"`
+	Url         string `xml:"link"`
+	Pubdate     string `xml:"pubDate"`
 }
 
 type Feed struct {
@@ -71,6 +83,15 @@ func Parse(raw []byte) (feed Feed, err error) {
 	for _, item := range rss.Channel.Items {
 		feedItem.Author = item.Author
 		feedItem.Guid = item.Guid
+		if len(item.Content) > len(item.Encoded) {
+			feedItem.Content = item.Content
+		}
+		if len(item.Description) > len(item.Content) {
+			feedItem.Content = item.Description
+		}
+		if len(item.Encoded) > len(item.Description) {
+			feedItem.Content = item.Encoded
+		}
 		pubDate, err = time.Parse(time.RFC1123, item.Pubdate)
 		if err != nil {
 			err = fmt.Errorf("Parse:\npubDate parsing: %w\ninput: %v\n", err, item)
