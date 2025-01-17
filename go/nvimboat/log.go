@@ -2,6 +2,7 @@ package nvimboat
 
 import (
 	"fmt"
+	"io"
 	"log"
 	"os"
 )
@@ -11,7 +12,8 @@ func SetupLogging(logPath string) (err error) {
 	if err != nil {
 		return err
 	}
-	log.SetOutput(logFile)
+	logOutputs := io.MultiWriter(logFile, os.Stdout)
+	log.SetOutput(logOutputs)
 	log.SetFlags(0)
 
 	return
