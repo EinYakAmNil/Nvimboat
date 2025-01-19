@@ -15,21 +15,21 @@ type Rss struct {
 }
 
 type Channel struct {
-	Items     []Item   `xml:"item"`
-	Entry     []Item   `xml:"entry"`
-	Links     []Link  `xml:"link"`
-	Title     string   `xml:"title"`
-	Desc      string   `xml:"description"`
-	Generator string   `xml:"generator"`
+	Items     []Item `xml:"item"`
+	Entry     []Item `xml:"entry"`
+	Links     []Link `xml:"link"`
+	Title     string `xml:"title"`
+	Desc      string `xml:"description"`
+	Generator string `xml:"generator"`
 }
 
 type ChannelId struct {
-	Items     []Item   `xml:"item"`
-	Entry     []Item   `xml:"entry"`
-	Links     []Link  `xml:"link"`
-	Title     string   `xml:"title"`
-	Desc      string   `xml:"description"`
-	Generator string   `xml:"generator"`
+	Items     []Item `xml:"item"`
+	Entry     []Item `xml:"entry"`
+	Links     []Link `xml:"link"`
+	Title     string `xml:"title"`
+	Desc      string `xml:"description"`
+	Generator string `xml:"generator"`
 }
 
 type Link struct {
@@ -61,7 +61,11 @@ type FeedItem struct {
 }
 
 func Parse(raw []byte) (feed Feed, err error) {
-	var rss Rss
+	var (
+		feedItem = FeedItem{rssdb.GetArticleRow{Unread: 1}}
+		rss      Rss
+		pubDate  time.Time
+	)
 	err = xml.Unmarshal(raw, &rss)
 	if err != nil {
 		err = fmt.Errorf("Parse: %w", err)
@@ -76,10 +80,7 @@ func Parse(raw []byte) (feed Feed, err error) {
 			feed.Url = link.Url
 		}
 	}
-	var (
-		feedItem = FeedItem{rssdb.GetArticleRow{Feedurl: feed.Rssurl, Unread: 1}}
-		pubDate  time.Time
-	)
+	feedItem.Feedurl = feed.Rssurl
 	for _, item := range rss.Channel.Items {
 		feedItem.Author = item.Author
 		feedItem.Guid = item.Guid
