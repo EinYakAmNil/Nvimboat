@@ -4,14 +4,24 @@ import (
 	"bytes"
 	"encoding/xml"
 	"fmt"
+	"io"
+	"log"
 	"os"
 	"path"
 	"testing"
-
-	"github.com/EinYakAmNil/Nvimboat/go/engine/nvimboat"
 )
 
-var logger = nvimboat.Nvimboat{}
+func setupLogging(logPath string) (err error) {
+	logFile, err := os.OpenFile(logPath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0600)
+	if err != nil {
+		return err
+	}
+	logOutputs := io.MultiWriter(logFile, os.Stdout)
+	log.SetOutput(logOutputs)
+	log.SetFlags(0)
+
+	return
+}
 
 func printXMLTree(decoder *xml.Decoder, indent string) error {
 	var elemName string
@@ -24,7 +34,7 @@ func printXMLTree(decoder *xml.Decoder, indent string) error {
 		switch elem := token.(type) {
 		case xml.StartElement:
 			elemName = fmt.Sprintf("%s<%+v>", indent, elem)
-			logger.Log(elemName)
+			log.Println(elemName)
 			// Recurse into nested elements
 			if err := printXMLTree(decoder, indent+"  "); err != nil {
 				if err.Error() == "EOF" {
@@ -34,14 +44,14 @@ func printXMLTree(decoder *xml.Decoder, indent string) error {
 			}
 		case xml.EndElement:
 			elemName = fmt.Sprintf("%s</%s>", indent[:len(indent)-2], elem.Name.Local)
-			logger.Log(elemName)
+			log.Println(elemName)
 			return nil
 		}
 	}
 }
 
 func TestParse(t *testing.T) {
-	nvimboat.SetupLogging("./test.log")
+	setupLogging("./test.log")
 	// xmlFile := path.Join(os.Getenv("HOME"), ".cache", "nvimboat-test", "ce3abe666d14c50974ef261a0db008082dbb561f")
 	// xmlFile := path.Join(os.Getenv("HOME"), ".cache", "nvimboat-test", "47f781c383cefb9f11cf37fc6d6ecebec92ac7d9")
 	xmlFile := path.Join(os.Getenv("HOME"), ".cache", "nvimboat-test", "a1c549e0bf1aee1f7c1c9858b5654352a62a3acf")

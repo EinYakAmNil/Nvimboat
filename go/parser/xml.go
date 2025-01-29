@@ -49,20 +49,9 @@ type Item struct {
 	Pubdate     string `xml:"pubDate"`
 }
 
-type Feed struct {
-	Rssurl    string
-	Url       string
-	Title     string
-	FeedItems []FeedItem
-}
-
-type FeedItem struct {
-	rssdb.GetArticleRow
-}
-
-func Parse(raw []byte) (feed Feed, err error) {
+func ParseDefaultFeed(raw []byte) (feed Feed, err error) {
 	var (
-		feedItem = FeedItem{rssdb.GetArticleRow{Unread: 1}}
+		feedItem = rssdb.GetArticleRow{Unread: 1}
 		rss      Rss
 		pubDate  time.Time
 	)

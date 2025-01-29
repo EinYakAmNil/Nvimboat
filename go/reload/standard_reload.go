@@ -9,8 +9,8 @@ import (
 	"path"
 	"time"
 
+	"github.com/EinYakAmNil/Nvimboat/go/engine/parser"
 	"github.com/EinYakAmNil/Nvimboat/go/engine/rssdb"
-	"github.com/mmcdole/gofeed"
 )
 
 type StandardReloader struct{}
@@ -88,7 +88,7 @@ func (sr *StandardReloader) GetRss(url string,
 	header := http.Header{
 		"User-Agent": {"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36"},
 	}
-	rssParser := gofeed.NewParser()
+	rssParser := parser.ParseYtFeed
 	cachePath := path.Join(cacheDir, hashUrl(url))
 	fileStats, err := os.Stat(cachePath)
 	// Check if file exists and if the modification time is within cache duration.
