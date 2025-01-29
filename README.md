@@ -36,12 +36,6 @@ It aims to be fully compatible with the database schema of [newsboat](https://ne
 - Creates a special mode with slightly different keymaps
 - Colorscheme is based on [treesitter](https://tree-sitter.github.io/tree-sitter/) nodes
 
-## Python
-
-- Default reload script for standard RSS feeds
-- Caches recent requests
-- Makes updates to the database
-
 # Installation
 
 ## Lazy.nvim
@@ -61,8 +55,6 @@ nvimboat.cachedir = runtime_path .. "cache/"
 nvimboat.cachetime = 600
 nvimboat.dbpath = nvimboat.cachedir .. "cache.db"
 nvimboat.log = runtime_path .. "nvimboat.log"
-nvimboat.separator = " | "
-nvimboat.reloader = runtime_path .. "python/reloader.py"
 ```
 ## Configuration
 - Feeds can be tagged to put them into categories and mark them for filters
