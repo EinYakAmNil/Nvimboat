@@ -1,7 +1,7 @@
 package parser
 
 import (
-	"bytes"
+	// "bytes"
 	"encoding/xml"
 	"fmt"
 	"io"
@@ -50,8 +50,7 @@ func printXMLTree(decoder *xml.Decoder, indent string) error {
 	}
 }
 
-func TestParse(t *testing.T) {
-	setupLogging("./test.log")
+func TestParseFeed(t *testing.T) {
 	// xmlFile := path.Join(os.Getenv("HOME"), ".cache", "nvimboat-test", "ce3abe666d14c50974ef261a0db008082dbb561f")
 	// xmlFile := path.Join(os.Getenv("HOME"), ".cache", "nvimboat-test", "47f781c383cefb9f11cf37fc6d6ecebec92ac7d9")
 	xmlFile := path.Join(os.Getenv("HOME"), ".cache", "nvimboat-test", "a1c549e0bf1aee1f7c1c9858b5654352a62a3acf")
@@ -59,27 +58,12 @@ func TestParse(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	decoder := xml.NewDecoder(bytes.NewReader(raw))
-	if err := printXMLTree(decoder, ""); err != nil && err.Error() != "EOF" {
-		fmt.Println("Error parsing XML:", err)
+	feed, err := ParseFeed(raw, "Caravan Palace")
+	if err != nil {
+		t.Fatal(err)
+	}
+	fmt.Println(feed.FeedItems[0].Content)
+	for _, i := range feed.FeedItems {
+		fmt.Println(i.Guid)
 	}
 }
-
-// func TestParse(t *testing.T) {
-// 	xmlFile := path.Join(os.Getenv("HOME"), ".cache", "nvimboat-test", "ce3abe666d14c50974ef261a0db008082dbb561f")
-// 	// xmlFile := path.Join(os.Getenv("HOME"), ".cache", "nvimboat-test", "47f781c383cefb9f11cf37fc6d6ecebec92ac7d9")
-// 	// xmlFile := path.Join(os.Getenv("HOME"), ".cache", "nvimboat-test", "a1c549e0bf1aee1f7c1c9858b5654352a62a3acf")
-// 	raw, err := os.ReadFile(xmlFile)
-// 	if err != nil {
-// 		t.Fatal(err)
-// 	}
-// 	feed, err := Parse(raw)
-// 	if err != nil {
-// 		t.Fatal(err)
-// 	}
-// 	// fmt.Println(feed)
-// 	// fmt.Println(feed.FeedItems[0].Content)
-// 	for _, i := range feed.FeedItems {
-// 		fmt.Println(i.Guid)
-// 	}
-// }

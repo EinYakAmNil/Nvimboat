@@ -15,20 +15,23 @@ type Feed struct {
 }
 
 func ParseFeed(raw []byte, url string) (feed Feed, err error) {
-	var parsedFeed Feed
+	var (
+		parsedFeed Feed
+		parseErr error
+	)
 
 	parsers := []func([]byte) (Feed, error){
 		ParseDefaultFeed,
 		ParseYtFeed,
 	}
 	for _, parser := range parsers {
-		parsedFeed, err = parser(raw)
-		if err != nil {
-			log.Println(err)
+		parsedFeed, parseErr = parser(raw)
+		if parseErr != nil {
+			log.Println(parseErr)
 			continue
 		}
 		if len(parsedFeed.FeedItems) > len(feed.FeedItems) {
-			parsedFeed = feed
+			feed = parsedFeed
 		}
 	}
 	if len(parsedFeed.FeedItems) == 0 {

@@ -39,7 +39,7 @@ type (
 
 func ParseYtFeed(xmlBytes []byte) (feed Feed, err error) {
 	var (
-		feedItem = FeedItem{rssdb.GetArticleRow{Unread: 1}}
+		feedItem = rssdb.GetArticleRow{Unread: 1}
 		pubDate  time.Time
 		ytFeed   YTFeed
 	)

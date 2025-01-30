@@ -88,7 +88,6 @@ func (sr *StandardReloader) GetRss(url string,
 	header := http.Header{
 		"User-Agent": {"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36"},
 	}
-	rssParser := parser.ParseYtFeed
 	cachePath := path.Join(cacheDir, hashUrl(url))
 	fileStats, err := os.Stat(cachePath)
 	// Check if file exists and if the modification time is within cache duration.
@@ -114,10 +113,10 @@ func (sr *StandardReloader) GetRss(url string,
 			return nil, nil, false, err
 		}
 	}
-	feedParsed, err := rssParser.ParseString(string(content))
+	feedParsed, err := parser.ParseFeed(content, url)
 	feed = &rssdb.RssFeed{
-		Rssurl: feedParsed.FeedLink,
-		Url:    feedParsed.Link,
+		Rssurl: feedParsed.Rssurl,
+		Url:    feedParsed.Url,
 		Title:  feedParsed.Title,
 	}
 	if err != nil {
@@ -126,19 +125,19 @@ func (sr *StandardReloader) GetRss(url string,
 	}
 	items = make(map[string]*rssdb.RssItem)
 	var author string
-	for _, item := range feedParsed.Items {
-		if len(item.Authors) > 0 {
-			author = item.Authors[0].Name
+	for _, item := range feedParsed.FeedItems {
+		if len(item.Author) > 0 {
+			author = item.Author
 		} else {
 			author = ""
 		}
-		items[item.Link] = &rssdb.RssItem{
-			Guid:    item.GUID,
+		items[item.Url] = &rssdb.RssItem{
+			Guid:    item.Guid,
 			Title:   item.Title,
 			Author:  author,
-			Url:     item.Link,
-			Feedurl: feedParsed.FeedLink,
-			Pubdate: item.PublishedParsed.Unix(),
+			Url:     item.Url,
+			Feedurl: feedParsed.Rssurl,
+			Pubdate: item.Pubdate,
 			Content: item.Content,
 			Unread:  1,
 		}
