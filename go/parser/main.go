@@ -34,8 +34,8 @@ func ParseFeed(raw []byte, url string) (feed Feed, err error) {
 			feed = parsedFeed
 		}
 	}
-	if len(parsedFeed.FeedItems) == 0 {
-		err = fmt.Errorf(`ParseFeed: couldn't parse "%s" with available parsers\n`, url)
+	if len(feed.FeedItems) == 0 {
+		err = fmt.Errorf(`ParseFeed: couldn't parse "%s" with available parsers`, url)
 		return
 	}
 	return

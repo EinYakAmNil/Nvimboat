@@ -57,7 +57,7 @@ func ParseDefaultFeed(raw []byte) (feed Feed, err error) {
 	)
 	err = xml.Unmarshal(raw, &rss)
 	if err != nil {
-		err = fmt.Errorf("Parse: %w", err)
+		err = fmt.Errorf("ParseDefaultFeed: %w", err)
 		return
 	}
 	feed.Title = rss.Channel.Title
@@ -84,7 +84,7 @@ func ParseDefaultFeed(raw []byte) (feed Feed, err error) {
 		}
 		pubDate, err = time.Parse(time.RFC1123, item.Pubdate)
 		if err != nil {
-			err = fmt.Errorf("Parse:\npubDate parsing: %w\ninput: %v\n", err, item)
+			err = fmt.Errorf("ParseDefaultFeed:\npubDate parsing: %w\ninput: %v\n", err, item)
 			return
 		}
 		feedItem.Pubdate = pubDate.Unix()

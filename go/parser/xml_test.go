@@ -51,19 +51,21 @@ func printXMLTree(decoder *xml.Decoder, indent string) error {
 }
 
 func TestParseFeed(t *testing.T) {
-	// xmlFile := path.Join(os.Getenv("HOME"), ".cache", "nvimboat-test", "ce3abe666d14c50974ef261a0db008082dbb561f")
-	// xmlFile := path.Join(os.Getenv("HOME"), ".cache", "nvimboat-test", "47f781c383cefb9f11cf37fc6d6ecebec92ac7d9")
-	xmlFile := path.Join(os.Getenv("HOME"), ".cache", "nvimboat-test", "a1c549e0bf1aee1f7c1c9858b5654352a62a3acf")
-	raw, err := os.ReadFile(xmlFile)
-	if err != nil {
-		t.Fatal(err)
+	var testFiles = map[string]string{
+		// xmlFile := path.Join(os.Getenv("HOME"), ".cache", "nvimboat-test", "ce3abe666d14c50974ef261a0db008082dbb561f")
+		"https://fractalsoftworks.com/feed/":                         path.Join(os.Getenv("HOME"), ".cache", "nvimboat-test", "47f781c383cefb9f11cf37fc6d6ecebec92ac7d9"),
+		"http://www.youtube.com/feeds/videos.xml?user=CaravanPalace": path.Join(os.Getenv("HOME"), ".cache", "nvimboat-test", "a1c549e0bf1aee1f7c1c9858b5654352a62a3acf"),
 	}
-	feed, err := ParseFeed(raw, "Caravan Palace")
-	if err != nil {
-		t.Fatal(err)
-	}
-	fmt.Println(feed.FeedItems[0].Content)
-	for _, i := range feed.FeedItems {
-		fmt.Println(i.Guid)
+	for url, xmlFile := range testFiles {
+		raw, err := os.ReadFile(xmlFile)
+		if err != nil {
+			t.Fatal(err)
+		}
+		feed, err := ParseFeed(raw, url)
+		if err != nil {
+			t.Fatal(err)
+		}
+		_ = feed
+		// fmt.Println(feed.FeedItems[0].Content)
 	}
 }
