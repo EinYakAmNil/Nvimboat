@@ -49,11 +49,20 @@ type Item struct {
 	Pubdate     string `xml:"pubDate"`
 }
 
-func ParseDefaultFeed(raw []byte) (feed Feed, err error) {
+func ParseDefaultFeed(raw []byte, url string) (feed Feed, err error) {
 	var (
-		feedItem = rssdb.GetArticleRow{Unread: 1}
-		rss      Rss
-		pubDate  time.Time
+		feedItem    = rssdb.GetArticleRow{Unread: 1}
+		rss         Rss
+		pubDate     time.Time
+		timeFormats = []string{
+			time.RFC1123,
+			time.RFC1123Z,
+			time.RFC3339,
+			time.RFC3339Nano,
+			time.RFC822,
+			time.RFC822Z,
+		}
+		timeParseErr error
 	)
 	err = xml.Unmarshal(raw, &rss)
 	if err != nil {
@@ -82,9 +91,15 @@ func ParseDefaultFeed(raw []byte) (feed Feed, err error) {
 		if len(item.Encoded) > len(item.Description) {
 			feedItem.Content = item.Encoded
 		}
-		pubDate, err = time.Parse(time.RFC1123, item.Pubdate)
-		if err != nil {
-			err = fmt.Errorf("ParseDefaultFeed:\npubDate parsing: %w\ninput: %v\n", err, item)
+	timeParseLoop:
+		for _, layout := range timeFormats {
+			pubDate, timeParseErr = time.Parse(layout, item.Pubdate)
+			if timeParseErr == nil {
+				break timeParseLoop
+			}
+		}
+		if timeParseErr != nil {
+			err = fmt.Errorf(`Could not parse "%s" in feed "%s" with available time formats`, item.Pubdate, url)
 			return
 		}
 		feedItem.Pubdate = pubDate.Unix()

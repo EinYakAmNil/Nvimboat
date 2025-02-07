@@ -12,12 +12,12 @@ import (
 
 var (
 	testFeeds = map[string]string{
-		// "Not Related! A Big-Braned Podcast": "https://notrelated.xyz/rss",
-		// "Arch Linux: Recent news updates":   "https://www.archlinux.org/feeds/news/",
-		// "Path of Exile News":                "https://www.pathofexile.com/news/rss",
+		"Not Related! A Big-Braned Podcast": "https://notrelated.xyz/rss",
+		"Arch Linux: Recent news updates":   "https://www.archlinux.org/feeds/news/",
+		"Path of Exile News":                "https://www.pathofexile.com/news/rss",
 		"Starsector":                        "https://fractalsoftworks.com/feed/",
-		// "ShortFatOtaku on Odysee":           "https://odysee.com/$/rss/@ShortFatOtaku:1",
-		"CaravanPalace": "https://www.youtube.com/feeds/videos.xml?user=CaravanPalace",
+		"ShortFatOtaku on Odysee":           "https://odysee.com/$/rss/@ShortFatOtaku:1",
+		"CaravanPalace":                     "https://www.youtube.com/feeds/videos.xml?user=CaravanPalace",
 	}
 	cacheTime = 60 * time.Minute
 	cacheDir  = path.Join(os.Getenv("HOME"), ".cache", "nvimboat-test")

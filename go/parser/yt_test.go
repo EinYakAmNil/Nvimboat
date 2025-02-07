@@ -12,7 +12,7 @@ func TestParseYtFeed(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	feed, err := ParseYtFeed(raw)
+	feed, err := ParseYtFeed(raw, "")
 	if err != nil {
 		t.Fatal(err)
 	}

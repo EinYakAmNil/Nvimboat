@@ -20,12 +20,12 @@ func ParseFeed(raw []byte, url string) (feed Feed, err error) {
 		parseErr error
 	)
 
-	parsers := []func([]byte) (Feed, error){
+	parsers := []func([]byte, string) (Feed, error){
 		ParseDefaultFeed,
 		ParseYtFeed,
 	}
 	for _, parser := range parsers {
-		parsedFeed, parseErr = parser(raw)
+		parsedFeed, parseErr = parser(raw, url)
 		if parseErr != nil {
 			log.Println(parseErr)
 			continue

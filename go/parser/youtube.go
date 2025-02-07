@@ -37,7 +37,7 @@ type (
 	}
 )
 
-func ParseYtFeed(xmlBytes []byte) (feed Feed, err error) {
+func ParseYtFeed(xmlBytes []byte, url string) (feed Feed, err error) {
 	var (
 		feedItem = rssdb.GetArticleRow{Unread: 1}
 		pubDate  time.Time

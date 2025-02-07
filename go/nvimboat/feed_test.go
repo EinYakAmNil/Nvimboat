@@ -19,7 +19,7 @@ func TestFeedChildIdx(t *testing.T) {
 		},
 	}
 	for i, a := range feed.Articles {
-		idx := feed.ChildIdx(&Article{rssdb.RssItem{Pubdate: a.Pubdate}})
+		idx := feed.ChildIdx(&Article{rssdb.GetArticleRow{Pubdate: a.Pubdate}})
 		if feed.Articles[i].Title != feed.Articles[idx].Title {
 			t.Fatal("expected:", a, "got:", feed.Articles[idx])
 		}
