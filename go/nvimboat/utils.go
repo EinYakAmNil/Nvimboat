@@ -71,7 +71,7 @@ func addColumn(nv *nvim.Nvim, buf nvim.Buffer, col []string) (err error) {
 		currentLines = append(currentLines, []byte{})
 	}
 	for i, c := range col {
-		lines = append(lines, string(currentLines[i])+" | "+c)
+		lines = append(lines, string(currentLines[i])+" │ "+c)
 	}
 	err = setLines(nv, buf, lines)
 	if err != nil {
