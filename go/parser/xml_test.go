@@ -2,6 +2,7 @@ package parser
 
 import (
 	// "bytes"
+	"bytes"
 	"encoding/xml"
 	"fmt"
 	"io"
@@ -50,6 +51,22 @@ func printXMLTree(decoder *xml.Decoder, indent string) error {
 	}
 }
 
+func TestPrintFeed(t *testing.T) {
+	if testing.Short() {
+		t.Skip()
+	}
+	xmlFile := path.Join(os.Getenv("HOME"), ".cache", "nvimboat-test", "851066edb1ff2ed061430a9b89a3ab2657d9416f")
+	setupLogging("./test.log")
+	raw, err := os.ReadFile(xmlFile)
+	if err != nil {
+		t.Fatal(err)
+	}
+	decoder := xml.NewDecoder(bytes.NewReader(raw))
+	if err := printXMLTree(decoder, ""); err != nil && err.Error() != "EOF" {
+		fmt.Println("Error parsing XML:", err)
+	}
+}
+
 func TestParseFeed(t *testing.T) {
 	var testFiles = map[string]string{
 		"https://archlinux.org/feeds/news/":                          path.Join(os.Getenv("HOME"), ".cache", "nvimboat-test", "851066edb1ff2ed061430a9b89a3ab2657d9416f"),
@@ -67,7 +84,12 @@ func TestParseFeed(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		_ = feed
-		// fmt.Println(feed.FeedItems[0].Content)
+		fmt.Println(len(feed.FeedItems))
+		if url != "https://www.pathofexile.com/news/rss" {
+			fmt.Println(feed.FeedItems[0].Author)
+			if feed.FeedItems[0].Author == "" {
+				t.Fatal("No author parsed", url)
+			}
+		}
 	}
 }

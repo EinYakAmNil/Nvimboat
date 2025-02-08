@@ -16,6 +16,7 @@ var (
 		"https://odysee.com/$/rss/@ShortFatOtaku:1",
 		"https://www.youtube.com/feeds/videos.xml?user=CaravanPalace",
 		"https://mangapill.com/manga/1817/houseki-no-kuni",
+		"https://blog.lilydjwg.me/feed",
 	}
 	cacheTime = 60 * time.Minute
 	cachePath = path.Join(os.Getenv("HOME"), ".cache", "nvimboat-test")

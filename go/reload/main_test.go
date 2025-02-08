@@ -18,6 +18,7 @@ var (
 		"Starsector":                        "https://fractalsoftworks.com/feed/",
 		"ShortFatOtaku on Odysee":           "https://odysee.com/$/rss/@ShortFatOtaku:1",
 		"CaravanPalace":                     "https://www.youtube.com/feeds/videos.xml?user=CaravanPalace",
+		"依云's Blog":                         "https://blog.lilydjwg.me/feed",
 	}
 	cacheTime = 60 * time.Minute
 	cacheDir  = path.Join(os.Getenv("HOME"), ".cache", "nvimboat-test")
