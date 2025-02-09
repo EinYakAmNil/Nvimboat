@@ -14,7 +14,7 @@ type MainMenu struct {
 func (mm *MainMenu) Select(dbh rssdb.DbHandle, id string) (p Page, err error) {
 	feed := new(Feed)
 	feed.Articles, err = dbh.Queries.GetFeedPage(dbh.Ctx, id)
-	feed.Url = id
+	feed.Rssurl = id
 	if err != nil {
 		err = fmt.Errorf("Select: %w", err)
 		return
@@ -44,7 +44,7 @@ func (mm *MainMenu) Render(nv *nvim.Nvim, buf nvim.Buffer) (err error) {
 	return
 }
 
-func (mm *MainMenu) ChildIdx(p Page) (idx int) {
+func (mm *MainMenu) ChildIdx(p Page) (idx int, err error) {
 	childTitle := p.(*Feed).Title
 	var (
 		section     = len(mm.Feeds)
@@ -63,4 +63,8 @@ func (mm *MainMenu) ChildIdx(p Page) (idx int) {
 		section = len(searchRange)
 	}
 	panic("max iterations!")
+}
+
+func (mm *MainMenu) Back(*Nvimboat) (int, error) {
+	return 0, nil
 }

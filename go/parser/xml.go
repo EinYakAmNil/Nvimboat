@@ -100,14 +100,11 @@ func ParseDefaultFeed(raw []byte, url string) (feed Feed, err error) {
 	}
 	feed.Title = strings.Trim(rss.Channel.Title, "\n\t ")
 	for _, link := range rss.Channel.Links {
-		if len(link.RssUrl) > 0 {
-			feed.Rssurl = link.RssUrl
-		}
 		if len(link.Url) > 0 {
 			feed.Url = link.Url
 		}
 	}
-	feedItem.Feedurl = feed.Rssurl
+	feedItem.Feedurl = feed.Url
 	for _, item := range rss.Channel.Items {
 		feedItem.Author = strings.Trim(item.Author, "\n\t ")
 		feedItem.Guid = strings.Trim(item.Guid, "\n\t ")

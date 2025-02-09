@@ -1,6 +1,7 @@
 package nvimboat
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"github.com/EinYakAmNil/Nvimboat/go/engine/rssdb"
@@ -16,10 +17,21 @@ type Feed struct {
 func (f *Feed) Select(dbh rssdb.DbHandle, id string) (p Page, err error) {
 	articleInfo, err := dbh.Queries.GetArticle(dbh.Ctx, id)
 	if err != nil {
-		err = fmt.Errorf("Article.Select: %w", err)
+		err = fmt.Errorf("nvimboat/Feed.Select: %w\n", err)
+		return
+	}
+	err = dbh.Queries.SetArticleRead(dbh.Ctx, id)
+	if err != nil {
+		err = fmt.Errorf("nvimboat/Feed.Select: %w\n", err)
 		return
 	}
 	p = &Article{articleInfo}
+	idx, err := f.ChildIdx(p)
+	if err != nil {
+		err = fmt.Errorf("nvimboat/Feed.Select: %w\n", err)
+		return
+	}
+	f.Articles[idx].Unread = 0
 	return
 }
 
@@ -27,7 +39,7 @@ func (f *Feed) Render(nv *nvim.Nvim, buf nvim.Buffer) (err error) {
 	if len(f.Articles) == 0 {
 		err = setLines(nv, buf, []string{"No Articles found."})
 		if err != nil {
-			err = fmt.Errorf("Feed.Render: %w", err)
+			err = fmt.Errorf("nvimboat/Feed.Render: %w\n", err)
 			return
 		}
 		return
@@ -47,7 +59,7 @@ func (f *Feed) Render(nv *nvim.Nvim, buf nvim.Buffer) (err error) {
 			readStatusCol = append(readStatusCol, "N")
 
 		} else {
-			err = fmt.Errorf(`Feed.Render: Bad unread number for "%s" in feed %s: %d\n`,
+			err = fmt.Errorf(`nvimboat/Feed.Render: Bad unread number for "%s" in feed %s: %d\n`,
 				a.Url,
 				f.Rssurl,
 				a.Unread,
@@ -56,7 +68,7 @@ func (f *Feed) Render(nv *nvim.Nvim, buf nvim.Buffer) (err error) {
 		}
 		parsedTime, err = unixToDate(a.Pubdate)
 		if err != nil {
-			err = fmt.Errorf("Feed.Render: %w", err)
+			err = fmt.Errorf("nvimboat/Feed.Render: %w\n", err)
 			return
 		}
 		pubDateCol = append(pubDateCol, parsedTime)
@@ -67,14 +79,14 @@ func (f *Feed) Render(nv *nvim.Nvim, buf nvim.Buffer) (err error) {
 	for _, c := range [][]string{readStatusCol, pubDateCol, authorCol, titleCol, urlCol} {
 		err = addColumn(nv, buf, c)
 		if err != nil {
-			err = fmt.Errorf("Feed.Render: %w", err)
+			err = fmt.Errorf("nvimboat/Feed.Render: %w\n", err)
 			return
 		}
 	}
 	return
 }
 
-func (f *Feed) ChildIdx(p Page) (idx int) {
+func (f *Feed) ChildIdx(p Page) (idx int, err error) {
 	childDate := p.(*Article).Pubdate
 	var (
 		section     = len(f.Articles)
@@ -82,15 +94,21 @@ func (f *Feed) ChildIdx(p Page) (idx int) {
 	)
 	for range f.Articles {
 		if childDate > searchRange[section/2].Pubdate {
+			searchRange = searchRange[:section/2]
+		} else if childDate < searchRange[section/2].Pubdate {
 			idx += section / 2
 			searchRange = searchRange[section/2:]
-		} else if childDate < searchRange[section/2].Pubdate {
-			searchRange = searchRange[:section/2]
 		} else if childDate == searchRange[section/2].Pubdate {
 			idx += section / 2
 			return
 		}
 		section = len(searchRange)
 	}
-	panic("max iterations!")
+	feedStruct, _ := json.MarshalIndent(f, "", "	")
+	pageStruct, _ := json.MarshalIndent(p, "", "	")
+	return -1, fmt.Errorf(`"%v" doesn't contain: "%+v"`, string(feedStruct), string(pageStruct))
+}
+
+func (f *Feed) Back(nb *Nvimboat) (cursor_x int, err error) {
+	return
 }

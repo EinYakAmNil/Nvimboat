@@ -2,6 +2,7 @@ package nvimboat
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/EinYakAmNil/Nvimboat/go/engine/rssdb"
 	"github.com/neovim/go-client/nvim"
@@ -109,28 +110,44 @@ func (nb *Nvimboat) ShowMain(nv *nvim.Nvim, args ...string) (err error) {
 		err = fmt.Errorf("ShowMain: %w", err)
 		return
 	}
-	nb.Show(mm, "")
+	nb.Show(mm)
+	nb.Pages.Push(mm)
+	pageType := fmt.Sprintf("%T", mm)
+	_, pageType, _ = strings.Cut(pageType, "nvimboat.")
+	err = nb.Nvim.ExecLua(luaPushPage, new(any), pageType, "")
+	if err != nil {
+		err = fmt.Errorf("nvimboat/Nvimboat.ShowMain: %w\n", err)
+		return
+	}
 	return
 }
 
 func (nb *Nvimboat) Select(nv *nvim.Nvim, args ...string) (err error) {
 	if len(args) < 2 {
-		err = fmt.Errorf("Select: no arguments")
+		err = fmt.Errorf("nvimboat/Nvimboat.Select: no arguments")
 		return
 	}
 	dbh, err := rssdb.ConnectDb(nb.DbPath)
 	if err != nil {
-		err = fmt.Errorf("Select: %w", err)
+		err = fmt.Errorf("nvimboat/Nvimboat.Select: %w\n", err)
 		return
 	}
 	p, err := nb.Pages.Top().Select(dbh, args[1])
 	if err != nil {
-		err = fmt.Errorf("Select: %w", err)
+		err = fmt.Errorf("nvimboat/Nvimboat.Select: %w\n", err)
 		return
 	}
-	err = nb.Show(p, args[1])
+	err = nb.Show(p)
 	if err != nil {
-		err = fmt.Errorf("Select: %w", err)
+		err = fmt.Errorf("nvimboat/Nvimboat.Select: %w\n", err)
+		return
+	}
+	nb.Pages.Push(p)
+	pageType := fmt.Sprintf("%T", p)
+	_, pageType, _ = strings.Cut(pageType, "nvimboat.")
+	err = nb.Nvim.ExecLua(luaPushPage, new(any), pageType, args[1])
+	if err != nil {
+		err = fmt.Errorf("nvimboat/Nvimboat.Select: %w\n", err)
 		return
 	}
 	return
@@ -140,8 +157,23 @@ func (nb *Nvimboat) ShowTags(nv *nvim.Nvim, args ...string) (err error) {
 	return
 }
 
-func (nb *Nvimboat) Back(nv *nvim.Nvim, args ...string) (err error) {
-	return
+func (nb *Nvimboat) Back(nv *nvim.Nvim, args ...string) error {
+	switch nb.Pages.Top().(type) {
+	case *MainMenu:
+		return nil
+	default:
+		cursor_x, err := nb.Pages.Top().Back(nb)
+		if err != nil {
+			return fmt.Errorf("nvimboat/Nvimboat.Back: %w\n", err)
+		}
+		defer nb.Nvim.SetWindowCursor(*nb.Window, [2]int{cursor_x, 0})
+		parentPage := nb.Pages.Pop()
+		err = nb.Show(parentPage)
+		if err != nil {
+			return fmt.Errorf("nvimboat/Nvimboat.Back: %w\n", err)
+		}
+		return nil
+	}
 }
 
 func (nb *Nvimboat) NextUnread(nv *nvim.Nvim, args ...string) (err error) {

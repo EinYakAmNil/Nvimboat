@@ -18,7 +18,10 @@ func TestMainMenuChildIdx(t *testing.T) {
 		},
 	}
 	for i, f := range mm.Feeds {
-		idx := mm.ChildIdx(&Feed{RssFeed: rssdb.RssFeed{Title: f.Title}})
+		idx, err := mm.ChildIdx(&Feed{RssFeed: rssdb.RssFeed{Title: f.Title}})
+		if err != nil {
+			t.Fatal(err)
+		}
 		if mm.Feeds[i] != mm.Feeds[idx] {
 			t.Fatal("expected:", mm.Feeds[i], "got:", mm.Feeds[idx])
 		}

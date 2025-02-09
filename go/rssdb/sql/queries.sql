@@ -18,6 +18,16 @@ WHERE rssurl = ?;
 SELECT guid, title, author, url, feedurl, pubDate, content, unread FROM rss_item
 WHERE url = ? LIMIT 1;
 
+-- name: SetArticleRead :exec
+UPDATE rss_item
+SET unread = 0
+WHERE url = ?;
+
+-- name: SetArticleUnread :exec
+UPDATE rss_item
+SET unread = 1
+WHERE url = ?;
+
 -- name: GetFeedPage :many
 SELECT unread, pubDate, author, title, url FROM rss_item
 WHERE feedurl = ?
