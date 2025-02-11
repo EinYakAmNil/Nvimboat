@@ -65,7 +65,6 @@ func TestUpdateFeeds(t *testing.T) {
 	var addFeed bool
 	for _, url := range testFeeds {
 		if !knownFeeds[url] {
-			fmt.Println("Here:", url)
 			addFeed = true
 		}
 		_, err := reloader.UpdateFeed(dbh, url, cacheTime, cacheDir, addFeed)

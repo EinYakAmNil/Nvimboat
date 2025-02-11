@@ -41,8 +41,17 @@ if go_build.stderr ~= "" then
 	end
 end
 
-local main_menu_buf = {
+local main_menu_buf_0 = {
 	" │ N (10/10) │ Arch Linux: Recent news updates   │ https://www.archlinux.org/feeds/news/",
+	" │ N (15/15) │ CaravanPalace                     │ https://www.youtube.com/feeds/videos.xml?user=CaravanPalace",
+	" │ N (17/17) │ Not Related! A Big-Braned Podcast │ https://notrelated.xyz/rss",
+	" │ N (30/30) │ Path of Exile News                │ https://www.pathofexile.com/news/rss",
+	" │ N (50/50) │ ShortFatOtaku on Odysee           │ https://odysee.com/$/rss/@ShortFatOtaku:1",
+	" │ N (10/10) │ Starsector                        │ https://fractalsoftworks.com/feed/",
+	" │ N (12/12) │ 依云's Blog                       │ https://blog.lilydjwg.me/feed",
+}
+local main_menu_buf_1 = {
+	" │ N (9/10)  │ Arch Linux: Recent news updates   │ https://www.archlinux.org/feeds/news/",
 	" │ N (15/15) │ CaravanPalace                     │ https://www.youtube.com/feeds/videos.xml?user=CaravanPalace",
 	" │ N (17/17) │ Not Related! A Big-Braned Podcast │ https://notrelated.xyz/rss",
 	" │ N (30/30) │ Path of Exile News                │ https://www.pathofexile.com/news/rss",
@@ -104,7 +113,7 @@ describe("nvimboat", function()
 		vim.cmd.Nvimboat("enable")
 		-- vim.cmd.Nvimboat("reload")
 		vim.cmd.Nvimboat("show-main")
-		eq_buf(main_menu_buf)
+		eq_buf(main_menu_buf_0)
 		eq("MainMenu", nvimboat.pages[1].type)
 		eq("", nvimboat.pages[1].id)
 	end)
@@ -122,10 +131,15 @@ describe("nvimboat", function()
 		eq("Article", nvimboat.pages[3].type)
 		eq(url, nvimboat.pages[3].id)
 	end)
-	it("can go back", function()
+	it("can go back to the feed with correct cursor position", function()
 		vim.cmd.Nvimboat("back")
 		eq_buf(feed_buf_1)
 		eq_cursor_row(2)
+	end)
+	it("can go back to the main menu with correct cursor position", function()
+		vim.cmd.Nvimboat("back")
+		eq_buf(main_menu_buf_1)
+		eq_cursor_row(1)
 	end)
 end)
 

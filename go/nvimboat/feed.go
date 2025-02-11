@@ -109,6 +109,17 @@ func (f *Feed) ChildIdx(p Page) (idx int, err error) {
 	return -1, fmt.Errorf(`"%v" doesn't contain: "%+v"`, string(feedStruct), string(pageStruct))
 }
 
+// TODO: This is very buggy.
+// Feeds have to handle going back to either the main menu
+// or the tags page where they came from.
+// The current implementation is just there to pass the tests
 func (f *Feed) Back(nb *Nvimboat) (cursor_x int, err error) {
+	if len(nb.Pages.Pages) == 2 {
+		err = nb.ShowMain(nb.Nvim, "")
+		if err != nil {
+			err = fmt.Errorf("nvimboat/Feed.Back: %w\n", err)
+			return
+		}
+	}
 	return
 }

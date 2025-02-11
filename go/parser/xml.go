@@ -10,33 +10,14 @@ import (
 )
 
 type Rss struct {
-	XMLName   xml.Name  `xml:""`
-	Channel   Channel   `xml:"channel"`
-	ChannelId ChannelId `xml:"channelId"`
+	XMLName xml.Name `xml:""`
+	Channel Channel  `xml:"channel"`
 }
 
 type Channel struct {
-	Items     []Item `xml:"item"`
-	Entry     []Item `xml:"entry"`
-	Links     []Link `xml:"link"`
-	Title     string `xml:"title"`
-	Desc      string `xml:"description"`
-	Generator string `xml:"generator"`
-}
-
-type ChannelId struct {
-	Items     []Item `xml:"item"`
-	Entry     []Item `xml:"entry"`
-	Links     []Link
-	Title     string `xml:"title"`
-	Desc      string `xml:"description"`
-	Generator string `xml:"generator"`
-}
-
-type Link struct {
-	XMLName xml.Name `xml:"link"`
-	RssUrl  string   `xml:",chardata"`
-	Url     string   `xml:"href,attr"`
+	Items []Item
+	Urls  []string
+	Title string
 }
 
 type Item struct {
@@ -46,6 +27,45 @@ type Item struct {
 	Pubdate string
 	Title   string
 	Url     string
+}
+
+func (c *Channel) UnmarshalXML(d *xml.Decoder, start xml.StartElement) (err error) {
+	var (
+		url string
+		i   Item
+	)
+	for {
+		token, err := d.Token()
+		if err != nil {
+			return err
+		}
+		switch se := token.(type) {
+		case xml.StartElement:
+			switch se.Name.Local {
+			case "item":
+				d.DecodeElement(&i, &se)
+				c.Items = append(c.Items, i)
+			case "link":
+				d.DecodeElement(&url, &se)
+				if url == "" {
+					for _, attr := range se.Attr {
+						if attr.Name.Local == "href" {
+							url = attr.Value
+						}
+					}
+				}
+				c.Urls = append(c.Urls, strings.Trim(url, "\n\t "))
+			case "title":
+				if c.Title == "" {
+					d.DecodeElement(&c.Title, &se)
+				}
+			}
+		case xml.EndElement:
+			if se.Name.Local == start.Name.Local {
+				return nil
+			}
+		}
+	}
 }
 
 func (i *Item) UnmarshalXML(d *xml.Decoder, start xml.StartElement) (err error) {
@@ -80,7 +100,7 @@ func (i *Item) UnmarshalXML(d *xml.Decoder, start xml.StartElement) (err error) 
 
 func ParseDefaultFeed(raw []byte, url string) (feed Feed, err error) {
 	var (
-		feedItem     = rssdb.GetArticleRow{Unread: 1}
+		feedItem     = rssdb.GetArticleRow{Unread: 1, Feedurl: url}
 		rss          Rss
 		pubDate      time.Time
 		timeParseErr error
@@ -99,12 +119,13 @@ func ParseDefaultFeed(raw []byte, url string) (feed Feed, err error) {
 		return
 	}
 	feed.Title = strings.Trim(rss.Channel.Title, "\n\t ")
-	for _, link := range rss.Channel.Links {
-		if len(link.Url) > 0 {
-			feed.Url = link.Url
+findChannelUrl:
+	for _, u := range rss.Channel.Urls {
+		if strings.Trim(u, "\\") != strings.Trim(url, "\\") {
+			feed.Url = u
+			break findChannelUrl
 		}
 	}
-	feedItem.Feedurl = feed.Url
 	for _, item := range rss.Channel.Items {
 		feedItem.Author = strings.Trim(item.Author, "\n\t ")
 		feedItem.Guid = strings.Trim(item.Guid, "\n\t ")

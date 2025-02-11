@@ -111,6 +111,7 @@ func (nb *Nvimboat) ShowMain(nv *nvim.Nvim, args ...string) (err error) {
 		return
 	}
 	nb.Show(mm)
+	nb.Pages = PageStack{}
 	nb.Pages.Push(mm)
 	pageType := fmt.Sprintf("%T", mm)
 	_, pageType, _ = strings.Cut(pageType, "nvimboat.")
