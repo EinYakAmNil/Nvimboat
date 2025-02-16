@@ -8,4 +8,10 @@ function M:pop()
 	self[#self] = nil
 end
 
+function M:reset()
+	for p in ipairs(self) do
+		self[p] = nil
+	end
+end
+
 return M

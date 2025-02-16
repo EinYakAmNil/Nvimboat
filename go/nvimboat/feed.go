@@ -114,12 +114,36 @@ func (f *Feed) ChildIdx(p Page) (idx int, err error) {
 // or the tags page where they came from.
 // The current implementation is just there to pass the tests
 func (f *Feed) Back(nb *Nvimboat) (cursor_x int, err error) {
-	if len(nb.Pages.Pages) == 2 {
-		err = nb.ShowMain(nb.Nvim, "")
+	var parentPage Page
+	if len(nb.Pages) >= 2 {
+		parentPage = nb.Pages[len(nb.Pages)-2]
+	} else {
+		err = fmt.Errorf("nvimboat/Feed.Back: page stack is less than 2.\nNo parent page possible.\n")
+		return -1, err
+	}
+	switch pp := parentPage.(type) {
+	case *MainMenu:
+		dbh, dbErr := rssdb.ConnectDb(nb.DbPath)
+		if dbErr != nil {
+			dbErr = fmt.Errorf("nvimboat/Feed.Back: %w\n", dbErr)
+			return -1, dbErr
+		}
+		pp.Feeds, err = dbh.Queries.QueryMainPage(dbh.Ctx)
 		if err != nil {
 			err = fmt.Errorf("nvimboat/Feed.Back: %w\n", err)
-			return
+			return -1, err
 		}
+		cursor_x, err = pp.ChildIdx(f)
+		if err != nil {
+			err = fmt.Errorf("nvimboat/Feed.Back: %w\n", err)
+			return -1, err
+		}
+		return cursor_x + 1, nil
+	case *TagsPage:
+		return
+	default:
+		pageType := fmt.Sprintf("%T", parentPage)
+		err = fmt.Errorf("parent page type is unaccounted for: %s", pageType)
+		return -1, err
 	}
-	return
 }

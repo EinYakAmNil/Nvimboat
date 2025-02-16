@@ -52,10 +52,10 @@ func (a *Article) ChildIdx(Page) (int, error) {
 
 func (a *Article) Back(nb *Nvimboat) (cursor_x int, err error) {
 	var parentPage Page
-	if len(nb.Pages.Pages) >= 2 {
-		parentPage = nb.Pages.Pages[len(nb.Pages.Pages)-2]
+	if len(nb.Pages) >= 2 {
+		parentPage = nb.Pages[len(nb.Pages)-2]
 	} else {
-		err = fmt.Errorf("nvimboat/Article.Back: PageStack is less than 2.\nNo parent page possible.\n")
+		err = fmt.Errorf("nvimboat/Article.Back: page stack is less than 2.\nNo parent page possible.\n")
 		return
 	}
 	cursor_x, err = parentPage.ChildIdx(a)

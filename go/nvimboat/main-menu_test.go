@@ -10,15 +10,15 @@ import (
 func TestMainMenuChildIdx(t *testing.T) {
 	mm := MainMenu{
 		Feeds: []rssdb.MainPageFeed{
-			{Title: "Abc"},
-			{Title: "Abd"},
-			{Title: "Bbc"},
-			{Title: "abc"},
-			{Title: "bbc"},
+			{Feedurl: "Abc"},
+			{Feedurl: "Abd"},
+			{Feedurl: "Bbc"},
+			{Feedurl: "abc"},
+			{Feedurl: "bbc"},
 		},
 	}
 	for i, f := range mm.Feeds {
-		idx, err := mm.ChildIdx(&Feed{RssFeed: rssdb.RssFeed{Title: f.Title}})
+		idx, err := mm.ChildIdx(&Feed{RssFeed: rssdb.RssFeed{Rssurl: f.Feedurl}})
 		if err != nil {
 			t.Fatal(err)
 		}

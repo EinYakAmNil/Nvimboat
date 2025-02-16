@@ -1,26 +1,27 @@
 package nvimboat
 
 import (
+	"encoding/json"
 	"fmt"
 	"reflect"
+	"regexp"
 	"slices"
 	"sort"
 	"strconv"
 	"strings"
 	"time"
-	"regexp"
 
 	md "github.com/JohannesKaufmann/html-to-markdown"
 	"github.com/neovim/go-client/nvim"
 )
 
 func extracUrls(content string) (links []string) {
-		re := regexp.MustCompile(`\b((?:https?|ftp|file):\/\/[-a-zA-Z0-9+&@#\/%?=~_|!:,.;]*[-a-zA-Z0-9+&@#\/%=~_|])`)
-		matches := re.FindAll([]byte(content), -1)
-		for _, l := range matches {
+	re := regexp.MustCompile(`\b((?:https?|ftp|file):\/\/[-a-zA-Z0-9+&@#\/%?=~_|!:,.;]*[-a-zA-Z0-9+&@#\/%=~_|])`)
+	matches := re.FindAll([]byte(content), -1)
+	for _, l := range matches {
 		links = append(links, string(l))
 	}
-		return links
+	return links
 }
 
 func renderHTML(content string) ([]string, error) {
@@ -182,4 +183,9 @@ func parseConfig(nb *Nvimboat, rawConfig map[string]any) (err error) {
 	}
 	nb.LinkHandler = linkHandler
 	return
+}
+
+func prettyStruct(s any) (pretty string) {
+	marshal, _ := json.MarshalIndent(s, "", "	")
+	return string(marshal)
 }

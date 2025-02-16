@@ -2,6 +2,7 @@ package nvimboat
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/EinYakAmNil/Nvimboat/go/engine/rssdb"
 	"github.com/neovim/go-client/nvim"
@@ -34,20 +35,43 @@ func (nb *Nvimboat) Show(p Page) (err error) {
 	return
 }
 
-func (ps *PageStack) Top() (p Page) {
-	if pageCount := len(ps.Pages); pageCount > 0 {
-		return ps.Pages[pageCount-1]
+func (nb *Nvimboat) Top() (p Page) {
+	if pageCount := len(nb.Pages); pageCount > 0 {
+		return nb.Pages[pageCount-1]
 	}
 	return nil
 }
 
-func (ps *PageStack) Push(p Page) {
-	ps.Pages = append(ps.Pages, p)
+func (nb *Nvimboat) PushPage(p Page, id string) (err error) {
+	nb.Pages = append(nb.Pages, p)
+	pageType := fmt.Sprintf("%T", p)
+	_, pageType, _ = strings.Cut(pageType, "nvimboat.")
+	err = nb.Nvim.ExecLua(luaPushPage, new(any), pageType, id)
+	if err != nil {
+		err = fmt.Errorf("nvimboat/Nvimboat.ShowMain: %w\n", err)
+		return
+	}
+	return
 }
 
-func (ps *PageStack) Pop() (p Page) {
-	if len(ps.Pages) > 1 {
-		ps.Pages = ps.Pages[:len(ps.Pages)-1]
+func (nb *Nvimboat) PopPage() (p Page, err error) {
+	if len(nb.Pages) > 1 {
+		nb.Pages = nb.Pages[:len(nb.Pages)-1]
 	}
-	return ps.Top()
+	err = nb.Nvim.ExecLua(luaPopPage, new(any))
+	if err != nil {
+		err = fmt.Errorf("nvimboat/Nvimboat.PopPage: %w\n", err)
+		return
+	}
+	return nb.Top(), nil
+}
+
+func (nb *Nvimboat) ResetPages() (err error) {
+	nb.Pages = []Page{}
+	err = nb.Nvim.ExecLua(luaResetPages, new(any))
+	if err != nil {
+		err = fmt.Errorf("nvimboat/Nvimboat.ResetPages: %w\n", err)
+		return
+	}
+	return
 }
