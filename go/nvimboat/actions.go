@@ -25,6 +25,8 @@ var Actions = map[string]NvimboatAction{
 
 func (nb *Nvimboat) init(nv *nvim.Nvim) (err error) {
 	rawConfig := make(map[string]any)
+	rawFeeds := new([]map[string]any)
+	rawFilters := new([]map[string]any)
 	nb.Nvim = nv
 	nb.Buffer = new(nvim.Buffer)
 	nb.Window = new(nvim.Window)
@@ -32,15 +34,21 @@ func (nb *Nvimboat) init(nv *nvim.Nvim) (err error) {
 	execBatch.CurrentWindow(nb.Window)
 	execBatch.CurrentBuffer(nb.Buffer)
 	execBatch.ExecLua(luaConfig, &rawConfig)
-	execBatch.ExecLua(luaFeeds, &nb.Feeds)
+	execBatch.ExecLua(luaFeeds, rawFeeds)
+	execBatch.ExecLua(luaFilters, rawFilters)
 	err = execBatch.Execute()
 	if err != nil {
-		err = fmt.Errorf("Nvimboat init: %w", err)
+		err = fmt.Errorf("nvimboat/Nvimboat.init: %w", err)
 		return
 	}
 	err = parseConfig(nb, rawConfig)
 	if err != nil {
-		err = fmt.Errorf("Nvimboat init parse lua config: %w", err)
+		err = fmt.Errorf("nvimboat/Nvimboat.init parse lua config: %w", err)
+		return
+	}
+	nb.FeedConfig, err = parseFeeds(*rawFeeds)
+	if err != nil {
+		err = fmt.Errorf("nvimboat/Nvimboat.init: %w\n", err)
 		return
 	}
 	err = SetupLogging(nb.LogPath)
@@ -83,8 +91,8 @@ func (nb *Nvimboat) Reload(nv *nvim.Nvim, args ...string) (err error) {
 	// reload all feeds if no arguments are given to the subcommand
 	var feedUrls []string
 	if len(args) == 1 {
-		for _, fu := range nb.Feeds {
-			feedUrls = append(feedUrls, fu.Rssurl)
+		for feedUrl := range nb.FeedConfig {
+			feedUrls = append(feedUrls, feedUrl)
 		}
 	} else {
 		feedUrls = args[1:]

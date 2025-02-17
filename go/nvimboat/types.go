@@ -8,17 +8,17 @@ import (
 
 type (
 	Nvimboat struct {
-		Nvim        *nvim.Nvim
-		Buffer      *nvim.Buffer
-		Window      *nvim.Window
-		Feeds       []*Feed
-		Filters     []map[string]any
-		LogPath     string
-		CachePath   string
-		CacheTime   time.Duration
-		DbPath      string
-		LinkHandler string
-		Pages       []Page
+		FeedConfig   map[string][]string
+		Buffer       *nvim.Buffer
+		CachePath    string
+		CacheTime    time.Duration
+		DbPath       string
+		FilterConfig []Filter
+		LinkHandler  string
+		LogPath      string
+		Nvim         *nvim.Nvim
+		Pages        []Page
+		Window       *nvim.Window
 	}
 	NvimboatAction func(*Nvimboat, *nvim.Nvim, ...string) error
 )
