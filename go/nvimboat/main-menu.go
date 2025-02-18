@@ -8,18 +8,29 @@ import (
 )
 
 type MainMenu struct {
-	Feeds []rssdb.MainPageFeed
+	Feeds   []rssdb.MainPageFeed
+	Filters map[string]*Filter
 }
 
+// If the id is a URL then Select() assumes, that a feed is being searched.
+// Otherwise the id is matched against the name of a filter.
+// Errors if no matching filter is found.
 func (mm *MainMenu) Select(dbh rssdb.DbHandle, id string) (p Page, err error) {
-	feed := new(Feed)
-	feed.Articles, err = dbh.Queries.GetFeedPage(dbh.Ctx, id)
-	feed.Rssurl = id
-	if err != nil {
-		err = fmt.Errorf("Select: %w", err)
+	if len(extracUrls(id)) > 0 {
+		feed := new(Feed)
+		feed.Articles, err = dbh.Queries.GetFeedPage(dbh.Ctx, id)
+		feed.Rssurl = id
+		if err != nil {
+			err = fmt.Errorf("Select: %w", err)
+			return
+		}
+		p = feed
 		return
 	}
-	p = feed
+	if filter, ok := mm.Filters[id]; ok {
+		return filter, nil
+	}
+	err = fmt.Errorf(`nvimboat/MainMenu.Select: "%s" is not recognized as an URL or found as a filter name.`, id)
 	return
 }
 

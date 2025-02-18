@@ -64,10 +64,8 @@ func parseConfig(nb *Nvimboat, rawConfig map[string]any) (err error) {
 func parseFeeds(rawFeeds []map[string]any) (feedConfig map[string][]string, err error) {
 	feedConfig = make(map[string][]string)
 	for _, feed := range rawFeeds {
-		rssurl, okUrl := feed["rssurl"].(string)
-		if okUrl {
-			tags, okTags := feed["tags"].([]any)
-			if okTags {
+		if rssurl, okUrl := feed["rssurl"].(string); okUrl {
+			if tags, okTags := feed["tags"].([]any); okTags {
 				for i := range tags {
 					tag, okTag := tags[i].(string)
 					if okTag {
@@ -85,6 +83,43 @@ func parseFeeds(rawFeeds []map[string]any) (feedConfig map[string][]string, err 
 			err = fmt.Errorf(`nvimboat/parseFeeds: tag "%v" is not of type string`, feed["rssurl"])
 			return
 		}
+	}
+	return
+}
+
+func parseFilters(rawFilters []map[string]any) (filterConfig []*Filter, err error) {
+	f := new(Filter)
+	for _, filter := range rawFilters {
+		if name, okName := filter["name"].(string); okName {
+			f.Name = name
+		} else {
+			err = fmt.Errorf("nvimboat/parseFilters: cannot parse %+v\n", filter)
+			return
+		}
+		if query, okQuery := filter["query"].(string); okQuery {
+			f.Query = query
+		} else {
+			err = fmt.Errorf("nvimboat/parseFilters: cannot parse %+v\n", filter)
+			return
+		}
+		if tags, okTags := filter["tags"].([]any); okTags {
+			for _, tag := range tags {
+				if t, ok := tag.(string); ok {
+					if len(t) == 0 {
+						err = fmt.Errorf("nvimboat/parseFilters: cannot parse %+v\n", filter)
+						return
+					} else if t[0] == '!' {
+						f.ExcludeTags = append(f.ExcludeTags, t)
+					} else {
+						f.IncludeTags = append(f.IncludeTags, t)
+					}
+				}
+			}
+		} else {
+			err = fmt.Errorf("nvimboat/parseFilters: cannot parse %+v\n", filter)
+			return
+		}
+		filterConfig = append(filterConfig, f)
 	}
 	return
 }

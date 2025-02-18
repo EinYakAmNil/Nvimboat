@@ -26,6 +26,15 @@ local function eq_cursor_row(expected_row)
 end
 local dbPath = os.getenv("HOME") .. "/.cache/nvimboat-test/lua-test.db"
 nvimboat.setup({
+	feeds = {
+		{ rssurl = "https://www.youtube.com/feeds/videos.xml?user=CaravanPalace", tags = { "Video", "YouTube", "Music" } },
+		{ rssurl = "https://www.archlinux.org/feeds/news/",                       tags = { "Tech", "Linux" }, },
+		{ rssurl = "https://www.pathofexile.com/news/rss",                        tags = { "Gaming", "Path of Exile" } },
+		{ rssurl = "https://fractalsoftworks.com/feed/",                          tags = { "Gaming", "Starsector" } },
+		{ rssurl = "https://blog.lilydjwg.me/feed",                               tags = { "Linux", "Tech", "Chinese" } },
+		{ rssurl = "https://odysee.com/$/rss/@ShortFatOtaku:1",                   tags = { "Video", "Politics", "Odysee" } },
+		{ rssurl = "https://notrelated.xyz/rss",                                  tags = { "Science" } },
+	},
 	linkHandler = "firefox",
 	dbPath = dbPath
 })

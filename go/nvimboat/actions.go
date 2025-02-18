@@ -51,6 +51,11 @@ func (nb *Nvimboat) init(nv *nvim.Nvim) (err error) {
 		err = fmt.Errorf("nvimboat/Nvimboat.init: %w\n", err)
 		return
 	}
+	nb.FilterConfig, err = parseFilters(*rawFilters)
+	if err != nil {
+		err = fmt.Errorf("nvimboat/Nvimboat.init: %w\n", err)
+		return
+	}
 	err = SetupLogging(nb.LogPath)
 	if err != nil {
 		err = fmt.Errorf("Nvimboat init logging: %w", err)
@@ -116,6 +121,9 @@ func (nb *Nvimboat) ShowMain(nv *nvim.Nvim, args ...string) (err error) {
 	if err != nil {
 		err = fmt.Errorf("ShowMain: %w", err)
 		return
+	}
+	for _, filter := range nb.FilterConfig {
+		mm.Filters[filter.Name] = filter
 	}
 	err = nb.ResetPages()
 	if err != nil {

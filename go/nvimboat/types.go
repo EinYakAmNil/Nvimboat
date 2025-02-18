@@ -13,7 +13,7 @@ type (
 		CachePath    string
 		CacheTime    time.Duration
 		DbPath       string
-		FilterConfig []Filter
+		FilterConfig []*Filter
 		LinkHandler  string
 		LogPath      string
 		Nvim         *nvim.Nvim
