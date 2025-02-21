@@ -1,10 +1,12 @@
 package nvimboat
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"log"
 	"os"
+	"reflect"
 )
 
 func SetupLogging(logPath string) (err error) {
@@ -20,9 +22,22 @@ func SetupLogging(logPath string) (err error) {
 }
 
 func (nb *Nvimboat) Log(val ...any) {
-	var msg string
+	var (
+		msg string
+		w   any
+	)
 	for _, v := range val {
-		msg += fmt.Sprintf("%+v", v)
+		if reflect.ValueOf(v).Kind() == reflect.Pointer {
+			w = reflect.ValueOf(v).Elem().Interface()
+		} else {
+			w = v
+		}
+		if reflect.ValueOf(w).Kind() == reflect.Struct {
+			prettyVal, _ := json.MarshalIndent(w, "", "	")
+			msg += fmt.Sprintf("%+v\n", string(prettyVal))
+		} else {
+			msg += fmt.Sprintf("%+v\n", w)
+		}
 	}
 	log.Println(msg)
 	if nb.Nvim != nil {

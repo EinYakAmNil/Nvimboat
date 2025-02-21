@@ -122,6 +122,7 @@ func (nb *Nvimboat) ShowMain(nv *nvim.Nvim, args ...string) (err error) {
 		err = fmt.Errorf("ShowMain: %w", err)
 		return
 	}
+	mm.Filters = make(map[string]*Filter)
 	for _, filter := range nb.FilterConfig {
 		mm.Filters[filter.Name] = filter
 	}
