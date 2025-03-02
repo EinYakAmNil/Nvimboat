@@ -2,6 +2,7 @@ package nvimboat
 
 import (
 	"fmt"
+	"strings"
 	"time"
 )
 
@@ -88,8 +89,11 @@ func parseFeeds(rawFeeds []map[string]any) (feedConfig map[string][]string, err 
 }
 
 func parseFilters(rawFilters []map[string]any) (filterConfig []*Filter, err error) {
-	f := new(Filter)
 	for _, filter := range rawFilters {
+		f := new(Filter)
+		f.ID = `query: `
+		f.ExcludeTags = make(map[string]bool)
+		f.IncludeTags = make(map[string]bool)
 		if name, okName := filter["name"].(string); okName {
 			f.Name = name
 		} else {
@@ -98,20 +102,25 @@ func parseFilters(rawFilters []map[string]any) (filterConfig []*Filter, err erro
 		}
 		if query, okQuery := filter["query"].(string); okQuery {
 			f.Query = query
+			f.ID += query
 		} else {
 			err = fmt.Errorf("nvimboat/parseFilters: cannot parse %+v\n", filter)
 			return
 		}
+		var idTags []string
 		if tags, okTags := filter["tags"].([]any); okTags {
+			f.ID += ", tags: "
 			for _, tag := range tags {
 				if t, ok := tag.(string); ok {
 					if len(t) == 0 {
 						err = fmt.Errorf("nvimboat/parseFilters: cannot parse %+v\n", filter)
 						return
 					} else if t[0] == '!' {
-						f.ExcludeTags = append(f.ExcludeTags, t)
+						f.ExcludeTags[t[1:]] = true
+						idTags = append(idTags, t)
 					} else {
-						f.IncludeTags = append(f.IncludeTags, t)
+						f.IncludeTags[t] = true
+						idTags = append(idTags, t)
 					}
 				}
 			}
@@ -119,6 +128,7 @@ func parseFilters(rawFilters []map[string]any) (filterConfig []*Filter, err erro
 			err = fmt.Errorf("nvimboat/parseFilters: cannot parse %+v\n", filter)
 			return
 		}
+		f.ID += strings.Join(idTags, ", ")
 		filterConfig = append(filterConfig, f)
 	}
 	return

@@ -7,10 +7,16 @@ import (
 	"github.com/neovim/go-client/nvim"
 )
 
-type MainMenu struct {
-	Feeds   []rssdb.MainPageFeed
-	Filters map[string]*Filter
-}
+type (
+	MainPageFeed struct {
+		rssdb.MainPageFeed
+		Tags map[string]bool
+	}
+	MainMenu struct {
+		Feeds   []MainPageFeed
+		Filters map[string]*Filter
+	}
+)
 
 // If the id is a URL then Select() assumes, that a feed is being searched.
 // Otherwise the id is matched against the name of a filter.
@@ -40,6 +46,17 @@ func (mm *MainMenu) Render(nv *nvim.Nvim, buf nvim.Buffer) (err error) {
 		titleCol            []string
 		urlCol              []string
 	)
+	for _, f := range mm.Filters {
+		var unreadCount int
+		for _, a := range f.Articles {
+			if a.Unread == 1 {
+				unreadCount++
+			}
+		}
+		unreadArticlesRatio = append(unreadArticlesRatio, makeUnreadRatio(unreadCount, len(f.Articles)))
+		titleCol = append(titleCol, f.Name)
+		urlCol = append(urlCol, f.ID)
+	}
 	for _, f := range mm.Feeds {
 		unreadArticlesRatio = append(unreadArticlesRatio, makeUnreadRatio(f.UnreadCount, f.ArticleCount))
 		titleCol = append(titleCol, f.Title)
@@ -71,7 +88,7 @@ func (mm *MainMenu) ChildIdx(p Page) (idx int, err error) {
 				searchRange = searchRange[:section/2]
 			} else if childTitle == searchRange[section/2].Feedurl {
 				idx += section / 2
-				return
+				return idx + len(mm.Filters), nil
 			}
 			section = len(searchRange)
 		}

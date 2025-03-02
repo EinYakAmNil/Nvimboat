@@ -2,6 +2,7 @@ package nvimboat
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/EinYakAmNil/Nvimboat/go/engine/rssdb"
 	"github.com/neovim/go-client/nvim"
@@ -117,14 +118,52 @@ func (nb *Nvimboat) ShowMain(nv *nvim.Nvim, args ...string) (err error) {
 		err = fmt.Errorf("ShowMain: %w", err)
 		return
 	}
-	mm.Feeds, err = dbh.Queries.QueryMainPage(dbh.Ctx)
+	mainPageFeeds, err := dbh.Queries.QueryMainPage(dbh.Ctx)
 	if err != nil {
 		err = fmt.Errorf("ShowMain: %w", err)
 		return
 	}
+	for _, feed := range mainPageFeeds {
+		tags := make(map[string]bool)
+		for _, tag := range nb.FeedConfig[feed.Feedurl] {
+			tags[tag] = true
+		}
+		mm.Feeds = append(mm.Feeds, MainPageFeed{
+			MainPageFeed: feed,
+			Tags:         tags,
+		})
+	}
 	mm.Filters = make(map[string]*Filter)
 	for _, filter := range nb.FilterConfig {
+		if filter.Name == "" {
+			err = fmt.Errorf(`nvimboat/Nvimboat.ShowMain: empty filter name "%s"`, filter.Name)
+			return
+		}
 		mm.Filters[filter.Name] = filter
+	}
+	for _, filter := range mm.Filters {
+		urls := []string{}
+	filterFeed:
+		for _, f := range mm.Feeds {
+			for excTag := range filter.ExcludeTags {
+				if f.Tags[excTag] == true {
+					continue filterFeed
+				}
+			}
+			for incTag := range filter.IncludeTags {
+				if f.Tags[incTag] == true {
+					urls = append(urls, f.Feedurl)
+					continue filterFeed
+				}
+			}
+		}
+		filterCondi := `feedurl in ('%s') AND %s`
+		filterCondi = fmt.Sprintf(filterCondi, strings.Join(urls, "', '"), filter.Query)
+		filter.Articles, err = dbh.Queries.QueryFilter(dbh.Ctx, filterCondi)
+		if err != nil {
+			err = fmt.Errorf("nvimboat/Nvimboat.ShowMain: %w\n", err)
+			return
+		}
 	}
 	err = nb.ResetPages()
 	if err != nil {

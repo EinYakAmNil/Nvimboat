@@ -61,6 +61,7 @@ func trimTrail(nv *nvim.Nvim, buffer nvim.Buffer) (err error) {
 func addColumn(nv *nvim.Nvim, buf nvim.Buffer, col []string) (err error) {
 	currentLines, err := nv.BufferLines(buf, 0, -1, false)
 	if err != nil {
+		err = fmt.Errorf("nvimboat/addColumn: %w\n", err)
 		return
 	}
 	var (
@@ -72,16 +73,20 @@ func addColumn(nv *nvim.Nvim, buf nvim.Buffer, col []string) (err error) {
 		currentLines = append(currentLines, []byte{})
 	}
 	for i, c := range col {
-		lines = append(lines, string(currentLines[i])+" │ "+c)
+		if len(currentLines[i]) == 0 {
+			lines = append(lines, c)
+		} else {
+			lines = append(lines, string(currentLines[i])+" │ "+c)
+		}
 	}
 	err = setLines(nv, buf, lines)
 	if err != nil {
-		err = fmt.Errorf("addColumn: %w", err)
+		err = fmt.Errorf("nvimboat/addColumn: %w\n", err)
 		return
 	}
 	vcl, err := virtColLens(nv)
 	if err != nil {
-		err = fmt.Errorf("addColumn: %w", err)
+		err = fmt.Errorf("nvimboat/addColumn: %w\n", err)
 		return
 	}
 	maxLineLen := slices.Max(vcl)
@@ -92,7 +97,7 @@ func addColumn(nv *nvim.Nvim, buf nvim.Buffer, col []string) (err error) {
 	}
 	err = setLines(nv, buf, lines)
 	if err != nil {
-		err = fmt.Errorf("addColumn: %w", err)
+		err = fmt.Errorf("nvimboat/addColumn: %w\n", err)
 		return
 	}
 	return err
@@ -122,7 +127,7 @@ func makeUnreadRatio(unreadCount, articleCount int) (prefix string) {
 		prefix = "N (" + strconv.Itoa(unreadCount) + "/" + strconv.Itoa(articleCount) + ")"
 		return
 	}
-	prefix = "(" + strconv.Itoa(unreadCount) + "/" + strconv.Itoa(articleCount) + ")"
+	prefix = "  (" + strconv.Itoa(unreadCount) + "/" + strconv.Itoa(articleCount) + ")"
 	return
 }
 

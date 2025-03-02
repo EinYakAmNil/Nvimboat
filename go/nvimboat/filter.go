@@ -7,10 +7,11 @@ import (
 
 type Filter struct {
 	Name        string
+	ID          string
 	Query       string
-	IncludeTags []string
-	ExcludeTags []string
-	Articles    []rssdb.GetFeedPageRow
+	IncludeTags map[string]bool
+	ExcludeTags map[string]bool
+	Articles    []rssdb.QueryFilterRow
 }
 
 func (f *Filter) Select(dbh rssdb.DbHandle, id string) (p Page, err error) {

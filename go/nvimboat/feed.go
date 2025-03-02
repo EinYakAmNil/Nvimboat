@@ -3,6 +3,7 @@ package nvimboat
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/EinYakAmNil/Nvimboat/go/engine/rssdb"
 	"github.com/neovim/go-client/nvim"
@@ -10,7 +11,7 @@ import (
 
 type Feed struct {
 	rssdb.RssFeed
-	Tags     []string
+	Tags     map[string]bool
 	Articles []rssdb.GetFeedPageRow
 }
 
@@ -128,10 +129,37 @@ func (f *Feed) Back(nb *Nvimboat) (cursor_x int, err error) {
 			dbErr = fmt.Errorf("nvimboat/Feed.Back: %w\n", dbErr)
 			return -1, dbErr
 		}
-		pp.Feeds, err = dbh.Queries.QueryMainPage(dbh.Ctx)
+		mainPageFeeds, err := dbh.Queries.QueryMainPage(dbh.Ctx)
 		if err != nil {
 			err = fmt.Errorf("nvimboat/Feed.Back: %w\n", err)
 			return -1, err
+		}
+		for idx, feed := range mainPageFeeds {
+			pp.Feeds[idx].MainPageFeed = feed
+		}
+		for _, filter := range pp.Filters {
+			urls := []string{}
+		filterFeed:
+			for _, f := range pp.Feeds {
+				for excTag := range filter.ExcludeTags {
+					if f.Tags[excTag] == true {
+						continue filterFeed
+					}
+				}
+				for incTag := range filter.IncludeTags {
+					if f.Tags[incTag] == true {
+						urls = append(urls, f.Feedurl)
+						continue filterFeed
+					}
+				}
+			}
+			filterCondi := `feedurl in ('%s') AND %s`
+			filterCondi = fmt.Sprintf(filterCondi, strings.Join(urls, "', '"), filter.Query)
+			filter.Articles, err = dbh.Queries.QueryFilter(dbh.Ctx, filterCondi)
+			if err != nil {
+				err = fmt.Errorf("nvimboat/Nvimboat.ShowMain: %w\n", err)
+				return -1, err
+			}
 		}
 		cursor_x, err = pp.ChildIdx(f)
 		if err != nil {
