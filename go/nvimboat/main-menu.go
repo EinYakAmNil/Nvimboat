@@ -2,6 +2,7 @@ package nvimboat
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/EinYakAmNil/Nvimboat/go/engine/rssdb"
 	"github.com/neovim/go-client/nvim"
@@ -13,8 +14,9 @@ type (
 		Tags map[string]bool
 	}
 	MainMenu struct {
-		Feeds   []MainPageFeed
-		Filters map[string]*Filter
+		Feeds []MainPageFeed
+		// Filters map[string]*Filter
+		Filters []*Filter
 	}
 )
 
@@ -33,8 +35,10 @@ func (mm *MainMenu) Select(dbh rssdb.DbHandle, id string) (p Page, err error) {
 		p = feed
 		return
 	}
-	if filter, ok := mm.Filters[id]; ok {
-		return filter, nil
+	for _, filter := range mm.Filters {
+		if filter.ID == id {
+			return filter, nil
+		}
 	}
 	err = fmt.Errorf(`nvimboat/MainMenu.Select: "%s" is not recognized as an URL or found as a filter name.`, id)
 	return
@@ -107,4 +111,32 @@ func (mm *MainMenu) ChildIdx(p Page) (idx int, err error) {
 
 func (mm *MainMenu) Back(*Nvimboat) (int, error) {
 	return 0, nil
+}
+
+func (mm *MainMenu) UpdateFilters(dbh rssdb.DbHandle) (err error) {
+	for _, filter := range mm.Filters {
+		urls := []string{}
+	filterFeed:
+		for _, feed := range mm.Feeds {
+			for excTag := range filter.ExcludeTags {
+				if feed.Tags[excTag] == true {
+					continue filterFeed
+				}
+			}
+			for incTag := range filter.IncludeTags {
+				if feed.Tags[incTag] == true {
+					urls = append(urls, feed.Feedurl)
+					continue filterFeed
+				}
+			}
+		}
+		filterCondi := `feedurl in ('%s') AND %s`
+		filterCondi = fmt.Sprintf(filterCondi, strings.Join(urls, "', '"), filter.Query)
+		filter.Articles, err = dbh.Queries.QueryFilter(dbh.Ctx, filterCondi)
+		if err != nil {
+			err = fmt.Errorf("nvimboat/MainMenu.UpdateFilters: %w\n", err)
+			return
+		}
+	}
+	return
 }

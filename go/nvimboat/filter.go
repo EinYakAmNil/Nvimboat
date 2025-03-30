@@ -1,6 +1,8 @@
 package nvimboat
 
 import (
+	"fmt"
+
 	"github.com/EinYakAmNil/Nvimboat/go/engine/rssdb"
 	"github.com/neovim/go-client/nvim"
 )
@@ -19,6 +21,14 @@ func (f *Filter) Select(dbh rssdb.DbHandle, id string) (p Page, err error) {
 }
 
 func (f *Filter) Render(nv *nvim.Nvim, buf nvim.Buffer) (err error) {
+	if len(f.Articles) == 0 {
+		err = setLines(nv, buf, []string{"No Articles found."})
+		if err != nil {
+			err = fmt.Errorf("nvimboat/Filter.Render: %w\n", err)
+			return
+		}
+		return
+	}
 	return
 }
 

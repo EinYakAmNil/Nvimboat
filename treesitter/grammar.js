@@ -33,7 +33,7 @@ module.exports = grammar({
 		read_article: $ => / \|   \| \d\d (?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec).*?/,
 
 		header: $ => seq($._header_line),
-		_header_line: $ => seq($._header_key, ': ', $._expression),
+		_header_line: $ => seq($._header_key, ':', $._expression),
 		_header_key: $ => choice('Feed', 'Title', 'Author', 'Date', 'Link'),
 
 		body: $ => seq(

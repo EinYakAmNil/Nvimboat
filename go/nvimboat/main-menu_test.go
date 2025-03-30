@@ -54,9 +54,11 @@ got:		%s
 }
 
 func TestMainMenuChildIdx(t *testing.T) {
-	dummyFilters := make(map[string]*Filter)
-	dummyFilters["a"] = new(Filter)
-	dummyFilters["b"] = new(Filter)
+	dummyFilters := []*Filter{
+		new(Filter),
+		new(Filter),
+		new(Filter),
+	}
 	mm := MainMenu{
 		Filters: dummyFilters,
 		Feeds: []MainPageFeed{
@@ -72,7 +74,6 @@ func TestMainMenuChildIdx(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		fmt.Println(idx)
 		if mm.Feeds[i].Feedurl != mm.Feeds[idx-len(mm.Filters)].Feedurl {
 			t.Fatal("expected:", mm.Feeds[i], "got:", mm.Feeds[idx-len(mm.Filters)])
 		}
