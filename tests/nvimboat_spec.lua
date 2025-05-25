@@ -1,30 +1,9 @@
-local api = vim.api
 local nvimboat = require("nvimboat")
+local utils = require("tests.utils")
+
 local eq = assert.are.equal
-
-local function print_buf()
-	print("\ncurrent buffer lines:\n")
-	buf_lines = api.nvim_buf_get_lines(0, 0, -1, false)
-	for _, l in ipairs(buf_lines) do
-		print(l)
-	end
-	print()
-	return buf_lines
-end
-
-local function eq_buf(expected_buf)
-	local rendered = api.nvim_buf_get_lines(0, 0, -1, false)
-	eq(#expected_buf, #rendered)
-	for idx, line in ipairs(rendered) do
-		eq(expected_buf[idx], line)
-	end
-end
-
-local function eq_cursor_row(expected_row)
-	cursor = api.nvim_win_get_cursor(0)
-	eq(expected_row, cursor[1])
-end
 local dbPath = os.getenv("HOME") .. "/.cache/nvimboat-test/lua-test.db"
+
 nvimboat.setup({
 	filters = { {
 		name = "new Linux articles",
@@ -135,21 +114,21 @@ describe("nvimboat", function()
 		vim.cmd.Nvimboat("enable")
 		-- vim.cmd.Nvimboat("reload")
 		vim.cmd.Nvimboat("show-main")
-		eq_buf(main_menu_buf_0)
+		utils.eq_buf(main_menu_buf_0)
 		eq("MainMenu", nvimboat.pages[1].type)
 		eq("", nvimboat.pages[1].id)
 	end)
 	it("can select a feed", function()
 		local url = "https://www.archlinux.org/feeds/news/"
 		vim.cmd.Nvimboat("select", url)
-		eq_buf(feed_buf_0)
+		utils.eq_buf(feed_buf_0)
 		eq("Feed", nvimboat.pages[2].type)
 		eq(url, nvimboat.pages[2].id)
 	end)
 	it("can select an article", function()
 		local url = "https://archlinux.org/news/critical-rsync-security-release-340/"
 		vim.cmd.Nvimboat("select", url)
-		eq_buf(article_buf)
+		utils.eq_buf(article_buf)
 		eq("Article", nvimboat.pages[3].type)
 		eq(url, nvimboat.pages[3].id)
 	end)
@@ -157,15 +136,15 @@ describe("nvimboat", function()
 		vim.cmd.Nvimboat("back")
 		eq(2, #nvimboat.pages)
 		eq("Feed", nvimboat.pages[#nvimboat.pages].type)
-		eq_buf(feed_buf_1)
-		eq_cursor_row(2)
+		utils.eq_buf(feed_buf_1)
+		utils.eq_cursor_row(2)
 	end)
 	it("can go back to the main menu with correct cursor position", function()
 		vim.cmd.Nvimboat("back")
 		eq(1, #nvimboat.pages)
 		eq("MainMenu", nvimboat.pages[#nvimboat.pages].type)
-		eq_buf(main_menu_buf_1)
-		eq_cursor_row(3)
+		utils.eq_buf(main_menu_buf_1)
+		utils.eq_cursor_row(3)
 	end)
 end)
 
