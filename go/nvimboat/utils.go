@@ -16,7 +16,9 @@ import (
 )
 
 func extracUrls(content string) (links []string) {
-	re := regexp.MustCompile(`\b((?:https?|ftp|file):\/\/[-a-zA-Z0-9+&@#\/%?=~_|!:,.;]*[-a-zA-Z0-9+&@#\/%=~_|])`)
+	re := regexp.MustCompile(
+		`\b((?:https?|ftp|file):\/\/[-a-zA-Z0-9+&@#\/%?=~_|!:,.;]*[-a-zA-Z0-9+&@#\/%=~_|])`,
+	)
 	matches := re.FindAll([]byte(content), -1)
 	for _, l := range matches {
 		links = append(links, string(l))
@@ -69,7 +71,7 @@ func addColumn(nv *nvim.Nvim, buf nvim.Buffer, col []string) (err error) {
 		lines = []string{}
 	)
 	diff = (len(col) - len(currentLines))
-	for i := 0; i < diff; i++ {
+	for range diff {
 		currentLines = append(currentLines, []byte{})
 	}
 	for i, c := range col {
@@ -138,7 +140,7 @@ func strings2bytes(stringSlice []string) (byteSlices [][]byte) {
 	return
 }
 
-func sortMapKeys(m interface{}) (keyList []string) {
+func sortMapKeys(m any) (keyList []string) {
 	keys := reflect.ValueOf(m).MapKeys()
 	for _, key := range keys {
 		keyList = append(keyList, key.Interface().(string))

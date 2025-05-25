@@ -8,19 +8,19 @@ import (
 )
 
 var Actions = map[string]NvimboatAction{
-	"enable":       (*Nvimboat).Enable,
+	"back":         (*Nvimboat).Back,
+	"delete":       (*Nvimboat).Delete,
 	"disable":      (*Nvimboat).Disable,
+	"enable":       (*Nvimboat).Enable,
+	"next-article": (*Nvimboat).NextArticle,
+	"next-unread":  (*Nvimboat).NextUnread,
+	"prev-article": (*Nvimboat).PrevArticle,
+	"prev-unread":  (*Nvimboat).PrevUnread,
 	"reload":       (*Nvimboat).Reload,
+	"select":       (*Nvimboat).Select,
 	"show-main":    (*Nvimboat).ShowMain,
 	"show-tags":    (*Nvimboat).ShowTags,
-	"select":       (*Nvimboat).Select,
-	"back":         (*Nvimboat).Back,
-	"next-unread":  (*Nvimboat).NextUnread,
-	"prev-unread":  (*Nvimboat).PrevUnread,
-	"next-article": (*Nvimboat).NextArticle,
-	"prev-article": (*Nvimboat).PrevArticle,
 	"toggle-read":  (*Nvimboat).ToggleRead,
-	"delete":       (*Nvimboat).Delete,
 }
 
 func (nb *Nvimboat) init(nv *nvim.Nvim) (err error) {
@@ -191,6 +191,31 @@ func (nb *Nvimboat) Select(nv *nvim.Nvim, args ...string) (err error) {
 }
 
 func (nb *Nvimboat) ShowTags(nv *nvim.Nvim, args ...string) (err error) {
+	for i, page := range nb.Pages {
+		switch page.(type) {
+		case *TagsPage:
+			nb.Pages = nb.Pages[:i+1]
+			nb.Show(page)
+			return
+		}
+	}
+	p := &TagsPage{}
+	p.Tags = make(map[string][]string)
+	for url, tags := range nb.FeedConfig {
+		for _, t := range tags {
+			p.Tags[t] = append(p.Tags[t], url)
+		}
+	}
+	err = nb.PushPage(p, "Tags")
+	if err != nil {
+		err = fmt.Errorf("nvimboat/Nvimboat.Select: %w\n", err)
+		return
+	}
+	err = nb.Show(p)
+	if err != nil {
+		err = fmt.Errorf("nvimboat/Nvimboat.Select: %w\n", err)
+		return
+	}
 	return
 }
 

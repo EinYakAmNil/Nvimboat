@@ -8,11 +8,11 @@ import (
 
 type (
 	Nvimboat struct {
-		FeedConfig   map[string][]string
 		Buffer       *nvim.Buffer
 		CachePath    string
 		CacheTime    time.Duration
 		DbPath       string
+		FeedConfig   map[string][]string
 		FilterConfig []*Filter
 		LinkHandler  string
 		LogPath      string
