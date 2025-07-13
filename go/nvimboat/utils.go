@@ -124,12 +124,14 @@ func virtColLens(nv *nvim.Nvim) (evalResult []int, err error) {
 	return
 }
 
-func makeUnreadRatio(unreadCount, articleCount int) (prefix string) {
+func makeUnreadRatio(unreadCount, articleCount int64) (prefix string) {
 	if unreadCount > 0 {
-		prefix = "N (" + strconv.Itoa(unreadCount) + "/" + strconv.Itoa(articleCount) + ")"
+		prefix = "N (" + strconv.FormatInt(unreadCount, 10) + "/" +
+			strconv.FormatInt(articleCount, 10) + ")"
 		return
 	}
-	prefix = "  (" + strconv.Itoa(unreadCount) + "/" + strconv.Itoa(articleCount) + ")"
+	prefix = "  (" + strconv.FormatInt(unreadCount, 10) + "/" +
+		strconv.FormatInt(articleCount, 10) + ")"
 	return
 }
 

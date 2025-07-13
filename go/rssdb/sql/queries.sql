@@ -49,4 +49,32 @@ DELETE FROM rss_item
 WHERE feedurl = ?;
 
 -- name: QueryMainPage :many
-SELECT * FROM main_page_feed;
+SELECT 
+	rss_feed.title,
+	feed_articles.*
+FROM rss_feed
+LEFT JOIN (
+	SELECT feedurl,
+		CAST(SUM(unread) AS INTEGER) AS unread_count,
+		COUNT(*) AS article_count
+	FROM rss_item WHERE deleted = 0
+	GROUP BY feedurl
+) feed_articles
+ON rss_feed.rssurl = feed_articles.feedurl
+ORDER BY rss_feed.title;
+
+-- name: QueryTagFeeds :many
+SELECT 
+	rss_feed.title,
+	feed_articles.*
+FROM rss_feed
+LEFT JOIN (
+	SELECT feedurl,
+		CAST(SUM(unread) AS INTEGER) AS unread_count,
+		COUNT(*) AS article_count
+	FROM rss_item WHERE deleted = 0 AND
+	feedurl IN (sqlc.slice('feedurls'))
+	GROUP BY feedurl
+) feed_articles
+ON rss_feed.rssurl = feed_articles.feedurl
+ORDER BY rss_feed.title;

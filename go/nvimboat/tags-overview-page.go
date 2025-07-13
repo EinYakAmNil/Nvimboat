@@ -11,15 +11,16 @@ import (
 // The attribute "Tags" maps the name of the tag to the corresponding feed URLs.
 // It will be initialized by Nvimboat.ShowTags().
 // Tag names are keys, URLs are values.
-type TagsPage struct {
+type TagsOverviewPage struct {
 	Tags map[string][]string
 }
 
-func (tp *TagsPage) Select(dbh rssdb.DbHandle, id string) (p Page, err error) {
+func (tp *TagsOverviewPage) Select(dbh rssdb.DbHandle, id string) (p Page, err error) {
+	_, err = dbh.Queries.QueryTagFeeds(dbh.Ctx, tp.Tags[id])
 	return
 }
 
-func (tp *TagsPage) Render(nv *nvim.Nvim, buf nvim.Buffer) (err error) {
+func (tp *TagsOverviewPage) Render(nv *nvim.Nvim, buf nvim.Buffer) (err error) {
 	if len(tp.Tags) == 0 {
 		err = setLines(nv, buf, []string{"No tags defined."})
 		if err != nil {
@@ -41,10 +42,10 @@ func (tp *TagsPage) Render(nv *nvim.Nvim, buf nvim.Buffer) (err error) {
 	return
 }
 
-func (tp *TagsPage) ChildIdx(p Page) (idx int, err error) {
+func (tp *TagsOverviewPage) ChildIdx(p Page) (idx int, err error) {
 	return
 }
 
-func (tp *TagsPage) Back(nb *Nvimboat) (cursor_x int, err error) {
+func (tp *TagsOverviewPage) Back(nb *Nvimboat) (cursor_x int, err error) {
 	return
 }

@@ -62,11 +62,11 @@ func TestMainMenuChildIdx(t *testing.T) {
 	mm := MainMenu{
 		Filters: dummyFilters,
 		Feeds: []MainPageFeed{
-			{MainPageFeed: rssdb.MainPageFeed{Feedurl: "Abc"}},
-			{MainPageFeed: rssdb.MainPageFeed{Feedurl: "Abd"}},
-			{MainPageFeed: rssdb.MainPageFeed{Feedurl: "Bbc"}},
-			{MainPageFeed: rssdb.MainPageFeed{Feedurl: "abc"}},
-			{MainPageFeed: rssdb.MainPageFeed{Feedurl: "bbc"}},
+			{QueryMainPageRow: rssdb.QueryMainPageRow{Feedurl: "Abc"}},
+			{QueryMainPageRow: rssdb.QueryMainPageRow{Feedurl: "Abd"}},
+			{QueryMainPageRow: rssdb.QueryMainPageRow{Feedurl: "Bbc"}},
+			{QueryMainPageRow: rssdb.QueryMainPageRow{Feedurl: "abc"}},
+			{QueryMainPageRow: rssdb.QueryMainPageRow{Feedurl: "bbc"}},
 		},
 	}
 	for i, f := range mm.Feeds {

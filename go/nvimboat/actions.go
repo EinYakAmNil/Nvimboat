@@ -128,8 +128,8 @@ func (nb *Nvimboat) ShowMain(nv *nvim.Nvim, args ...string) (err error) {
 			tags[tag] = true
 		}
 		mm.Feeds = append(mm.Feeds, MainPageFeed{
-			MainPageFeed: feed,
-			Tags:         tags,
+			QueryMainPageRow: feed,
+			Tags:             tags,
 		})
 	}
 	for _, filter := range nb.FilterConfig {
@@ -193,13 +193,13 @@ func (nb *Nvimboat) Select(nv *nvim.Nvim, args ...string) (err error) {
 func (nb *Nvimboat) ShowTags(nv *nvim.Nvim, args ...string) (err error) {
 	for i, page := range nb.Pages {
 		switch page.(type) {
-		case *TagsPage:
+		case *TagsOverviewPage:
 			nb.Pages = nb.Pages[:i+1]
 			nb.Show(page)
 			return
 		}
 	}
-	p := &TagsPage{}
+	p := &TagsOverviewPage{}
 	p.Tags = make(map[string][]string)
 	for url, tags := range nb.FeedConfig {
 		for _, t := range tags {

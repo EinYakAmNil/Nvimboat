@@ -3,6 +3,7 @@ package nvimboat
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 
 	"github.com/EinYakAmNil/Nvimboat/go/engine/rssdb"
 	"github.com/neovim/go-client/nvim"
@@ -53,17 +54,19 @@ func (f *Feed) Render(nv *nvim.Nvim, buf nvim.Buffer) (err error) {
 		urlCol        []string
 	)
 	for _, a := range f.Articles {
-		if a.Unread == 0 {
+		log.Println(a.Author)
+		switch a.Unread {
+		case 0:
 			readStatusCol = append(readStatusCol, " ")
-		} else if a.Unread == 1 {
+		case 1:
 			readStatusCol = append(readStatusCol, "N")
-
-		} else {
+		default:
 			err = fmt.Errorf(`nvimboat/Feed.Render: Bad unread number for "%s" in feed %s: %d\n`,
 				a.Url,
 				f.Rssurl,
 				a.Unread,
 			)
+			log.Println(err)
 			return
 		}
 		parsedTime, err = unixToDate(a.Pubdate)
@@ -134,7 +137,7 @@ func (f *Feed) Back(nb *Nvimboat) (cursor_x int, err error) {
 			return -1, err
 		}
 		for idx, feed := range mainPageFeeds {
-			pp.Feeds[idx].MainPageFeed = feed
+			pp.Feeds[idx].QueryMainPageRow = feed
 		}
 		err = pp.UpdateFilters(dbh)
 		if err != nil {
@@ -147,7 +150,7 @@ func (f *Feed) Back(nb *Nvimboat) (cursor_x int, err error) {
 			return -1, err
 		}
 		return cursor_x + 1, nil
-	case *TagsPage:
+	case *TagsOverviewPage:
 		return
 	default:
 		pageType := fmt.Sprintf("%T", parentPage)

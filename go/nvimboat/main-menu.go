@@ -10,12 +10,11 @@ import (
 
 type (
 	MainPageFeed struct {
-		rssdb.MainPageFeed
+		rssdb.QueryMainPageRow
 		Tags map[string]bool
 	}
 	MainMenu struct {
 		Feeds []MainPageFeed
-		// Filters map[string]*Filter
 		Filters []*Filter
 	}
 )
@@ -51,13 +50,13 @@ func (mm *MainMenu) Render(nv *nvim.Nvim, buf nvim.Buffer) (err error) {
 		urlCol              []string
 	)
 	for _, f := range mm.Filters {
-		var unreadCount int
+		var unreadCount int64
 		for _, a := range f.Articles {
 			if a.Unread == 1 {
 				unreadCount++
 			}
 		}
-		unreadArticlesRatio = append(unreadArticlesRatio, makeUnreadRatio(unreadCount, len(f.Articles)))
+		unreadArticlesRatio = append(unreadArticlesRatio, makeUnreadRatio(unreadCount, int64(len(f.Articles))))
 		titleCol = append(titleCol, f.Name)
 		urlCol = append(urlCol, f.ID)
 	}

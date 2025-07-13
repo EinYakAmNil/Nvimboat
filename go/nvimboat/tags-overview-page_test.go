@@ -6,7 +6,7 @@ import (
 )
 
 func TestConstructPage(t *testing.T) {
-	tp := TagsPage{
+	tp := TagsOverviewPage{
 		Tags: map[string][]string{
 			"Tag A": {"a", "b", "c"},
 			"Tag B": {"x", "y", "z"},
