@@ -134,7 +134,10 @@ func (nb *Nvimboat) ShowMain(nv *nvim.Nvim, args ...string) (err error) {
 	}
 	for _, filter := range nb.FilterConfig {
 		if filter.Name == "" {
-			err = fmt.Errorf(`nvimboat/Nvimboat.ShowMain: empty filter name "%s"`, filter.Name)
+			err = fmt.Errorf(
+				`nvimboat/Nvimboat.ShowMain: empty filter name "%s"`,
+				filter.Name,
+			)
 			return
 		}
 		mm.Filters = append(mm.Filters, filter)
