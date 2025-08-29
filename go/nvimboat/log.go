@@ -1,7 +1,6 @@
 package nvimboat
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"log"
@@ -33,8 +32,7 @@ func (nb *Nvimboat) Log(val ...any) {
 			w = v
 		}
 		if reflect.ValueOf(w).Kind() == reflect.Struct {
-			prettyVal, _ := json.MarshalIndent(w, "", "	")
-			msg += fmt.Sprintf("%+v\n", string(prettyVal))
+			msg += fmt.Sprintf("%+v\n", prettyStruct(w))
 		} else {
 			msg += fmt.Sprintf("%+v\n", w)
 		}

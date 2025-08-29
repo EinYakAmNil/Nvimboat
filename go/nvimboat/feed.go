@@ -1,7 +1,6 @@
 package nvimboat
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
 
@@ -54,7 +53,6 @@ func (f *Feed) Render(nv *nvim.Nvim, buf nvim.Buffer) (err error) {
 		urlCol        []string
 	)
 	for _, a := range f.Articles {
-		log.Println(a.Author)
 		switch a.Unread {
 		case 0:
 			readStatusCol = append(readStatusCol, " ")
@@ -107,9 +105,11 @@ func (f *Feed) ChildIdx(p Page) (idx int, err error) {
 		}
 		section = len(searchRange)
 	}
-	feedStruct, _ := json.MarshalIndent(f, "", "	")
-	pageStruct, _ := json.MarshalIndent(p, "", "	")
-	return -1, fmt.Errorf(`"%v" doesn't contain: "%+v"`, string(feedStruct), string(pageStruct))
+	return -1, fmt.Errorf(
+		`"%v" doesn't contain: "%+v"`,
+		prettyStruct(f),
+		prettyStruct(p),
+	)
 }
 
 // TODO: This is very buggy.
@@ -150,8 +150,13 @@ func (f *Feed) Back(nb *Nvimboat) (cursor_x int, err error) {
 			return -1, err
 		}
 		return cursor_x + 1, nil
-	case *TagsOverviewPage:
-		return
+	case *TagFeeds:
+		cursor_x, err = pp.ChildIdx(f)
+		if err != nil {
+			err = fmt.Errorf("nvimboat/Feed.Back: %w\n", err)
+			return
+		}
+		return cursor_x + 1, nil
 	default:
 		pageType := fmt.Sprintf("%T", parentPage)
 		err = fmt.Errorf("parent page type is unaccounted for: %s", pageType)
