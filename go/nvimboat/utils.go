@@ -11,9 +11,28 @@ import (
 	"strings"
 	"time"
 
+	"github.com/EinYakAmNil/Nvimboat/go/engine/rssdb"
 	md "github.com/JohannesKaufmann/html-to-markdown"
 	"github.com/neovim/go-client/nvim"
 )
+
+func selectFeed(dbh rssdb.DbHandle, feedurl string) (p Page, err error) {
+	feed := new(Feed)
+	feed.Articles, err = dbh.Queries.GetFeedPage(dbh.Ctx, feedurl)
+	feed.Rssurl = feedurl
+	if err != nil {
+		err = fmt.Errorf("selectFeed: %w", err)
+		return
+	}
+	feedInfo, err := dbh.Queries.GetFeed(dbh.Ctx, feedurl)
+	if err != nil {
+		err = fmt.Errorf("nvimboat/selectFeed: %w\n", err)
+		return
+	}
+	feed.Title = feedInfo.Title
+	p = feed
+	return
+}
 
 func extracUrls(content string) (links []string) {
 	re := regexp.MustCompile(

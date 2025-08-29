@@ -86,7 +86,7 @@ describe("nvimboat", function()
 		utils.eq_buf(main_menu)
 	end)
 	it("can show select the tags page from another page", function()
-		local url = "https://archlinux.org/news/critical-rsync-security-release-340/"
+		local url = "https://www.archlinux.org/feeds/news/"
 		vim.cmd.Nvimboat("select", url)
 		vim.cmd.Nvimboat("show-tags")
 	end)
@@ -94,5 +94,14 @@ describe("nvimboat", function()
 		local tag = "Gaming"
 		vim.cmd.Nvimboat("select", tag)
 		utils.eq_buf(gaming)
+	end)
+	it("can select a feed", function ()
+		-- local url = "https://www.pathofexile.com/news/rss"
+		local url = "https://fractalsoftworks.com/feed/"
+		vim.cmd.Nvimboat("select", url)
+		print(vim.inspect(nvimboat.pages))
+		vim.cmd.Nvimboat("back")
+		utils.print_buf()
+		print(vim.inspect(nvimboat.pages))
 	end)
 end)

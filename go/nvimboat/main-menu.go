@@ -14,7 +14,7 @@ type (
 		Tags map[string]bool
 	}
 	MainMenu struct {
-		Feeds []MainPageFeed
+		Feeds   []MainPageFeed
 		Filters []*Filter
 	}
 )
@@ -24,14 +24,11 @@ type (
 // Errors if no matching filter is found.
 func (mm *MainMenu) Select(dbh rssdb.DbHandle, id string) (p Page, err error) {
 	if len(extracUrls(id)) > 0 {
-		feed := new(Feed)
-		feed.Articles, err = dbh.Queries.GetFeedPage(dbh.Ctx, id)
-		feed.Rssurl = id
+		p, err = selectFeed(dbh, id)
 		if err != nil {
-			err = fmt.Errorf("Select: %w", err)
+			err = fmt.Errorf("nvimboat/MainMenu.Select: %w\n", err)
 			return
 		}
-		p = feed
 		return
 	}
 	for _, filter := range mm.Filters {
@@ -78,22 +75,22 @@ func (mm *MainMenu) Render(nv *nvim.Nvim, buf nvim.Buffer) (err error) {
 func (mm *MainMenu) ChildIdx(p Page) (idx int, err error) {
 	switch f := p.(type) {
 	case *Feed:
-		childTitle := f.Rssurl
+		childTitle := f.Title
 		var (
-			section     = len(mm.Feeds)
+			section     = len(mm.Feeds) / 2
 			searchRange = mm.Feeds
 		)
-		for range mm.Feeds {
-			if childTitle > searchRange[section/2].Feedurl {
-				idx += section / 2
-				searchRange = searchRange[section/2:]
-			} else if childTitle < searchRange[section/2].Feedurl {
-				searchRange = searchRange[:section/2]
-			} else if childTitle == searchRange[section/2].Feedurl {
-				idx += section / 2
-				return idx + len(mm.Filters), nil
+		for range len(mm.Feeds) {
+			if childTitle > searchRange[section].Title {
+				idx += section
+				searchRange = searchRange[section:]
+			} else if childTitle < searchRange[section].Title {
+				searchRange = searchRange[:section]
+			} else if childTitle == searchRange[section].Title {
+				idx += section
+				return idx, nil
 			}
-			section = len(searchRange)
+			section = len(searchRange) / 2
 		}
 		err = fmt.Errorf(
 			`nvimboat/MainMenu.ChildIdx: max iterations. "%s" not found in %v`,

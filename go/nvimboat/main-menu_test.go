@@ -62,20 +62,20 @@ func TestMainMenuChildIdx(t *testing.T) {
 	mm := MainMenu{
 		Filters: dummyFilters,
 		Feeds: []MainPageFeed{
-			{QueryMainPageRow: rssdb.QueryMainPageRow{Feedurl: "Abc"}},
-			{QueryMainPageRow: rssdb.QueryMainPageRow{Feedurl: "Abd"}},
-			{QueryMainPageRow: rssdb.QueryMainPageRow{Feedurl: "Bbc"}},
-			{QueryMainPageRow: rssdb.QueryMainPageRow{Feedurl: "abc"}},
-			{QueryMainPageRow: rssdb.QueryMainPageRow{Feedurl: "bbc"}},
+			{QueryMainPageRow: rssdb.QueryMainPageRow{Title: "Abc"}},
+			{QueryMainPageRow: rssdb.QueryMainPageRow{Title: "Abd"}},
+			{QueryMainPageRow: rssdb.QueryMainPageRow{Title: "Bbc"}},
+			{QueryMainPageRow: rssdb.QueryMainPageRow{Title: "abc"}},
+			{QueryMainPageRow: rssdb.QueryMainPageRow{Title: "bbc"}},
 		},
 	}
 	for i, f := range mm.Feeds {
-		idx, err := mm.ChildIdx(&Feed{RssFeed: rssdb.RssFeed{Rssurl: f.Feedurl}})
+		idx, err := mm.ChildIdx(&Feed{RssFeed: rssdb.RssFeed{Title: f.Title}})
 		if err != nil {
 			t.Fatal(err)
 		}
-		if mm.Feeds[i].Feedurl != mm.Feeds[idx-len(mm.Filters)].Feedurl {
-			t.Fatal("expected:", mm.Feeds[i], "got:", mm.Feeds[idx-len(mm.Filters)])
+		if mm.Feeds[i].Title != mm.Feeds[idx].Title {
+			t.Fatal("expected:", mm.Feeds[i], "got:", mm.Feeds[idx])
 		}
 	}
 }

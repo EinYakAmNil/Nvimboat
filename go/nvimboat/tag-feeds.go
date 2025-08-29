@@ -8,17 +8,16 @@ import (
 )
 
 type TagFeeds struct {
-	Name string
-	Feeds   []rssdb.QueryTagFeedsRow
+	Name  string
+	Feeds []rssdb.QueryTagFeedsRow
 }
 
 func (tf *TagFeeds) Select(dbh rssdb.DbHandle, id string) (p Page, err error) {
-	feed, err := dbh.Queries.GetFeed(dbh.Ctx, id)
+	p, err = selectFeed(dbh, id)
 	if err != nil {
 		err = fmt.Errorf("nvimboat/TagFeeds.Select: %w\n", err)
 		return
 	}
-	_ = feed
 	return
 }
 
@@ -44,9 +43,46 @@ func (tf *TagFeeds) Render(nv *nvim.Nvim, buf nvim.Buffer) (err error) {
 }
 
 func (tf *TagFeeds) ChildIdx(p Page) (idx int, err error) {
+	switch f := p.(type) {
+	case *Feed:
+		childTitle := f.Title
+		var (
+			section     = len(tf.Feeds) / 2
+			searchRange = tf.Feeds
+		)
+		for range len(tf.Feeds) {
+			if childTitle > searchRange[section].Title {
+				idx += section
+				searchRange = searchRange[section:]
+			} else if childTitle < searchRange[section].Title {
+				searchRange = searchRange[:section]
+			} else if childTitle == searchRange[section].Title {
+				idx += section
+				return idx, nil
+			}
+			section = len(searchRange) / 2
+		}
+		err = fmt.Errorf(
+			`nvimboat/TagFeeds.ChildIdx: max iterations. "%s" not found in %v`,
+			childTitle,
+			prettyStruct(tf.Feeds),
+		)
+	}
 	return
 }
 
 func (tf *TagFeeds) Back(nb *Nvimboat) (cursor_x int, err error) {
-	return
+	var parentPage Page
+	if len(nb.Pages) >= 2 {
+		parentPage = nb.Pages[len(nb.Pages)-2]
+	} else {
+		err = fmt.Errorf("nvimboat/Article.Back: page stack is less than 2.\nNo parent page possible.\n")
+		return
+	}
+	cursor_x, err = parentPage.ChildIdx(tf)
+	if err != nil {
+		err = fmt.Errorf("nvimboat/Article.Back: %w\n", err)
+		return
+	}
+	return cursor_x + 1, nil
 }
