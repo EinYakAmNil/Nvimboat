@@ -64,17 +64,14 @@ ON rss_feed.rssurl = feed_articles.feedurl
 ORDER BY rss_feed.title;
 
 -- name: QueryTagFeeds :many
-SELECT 
-	rss_feed.title,
-	feed_articles.*
-FROM rss_feed
-LEFT JOIN (
-	SELECT feedurl,
-		CAST(SUM(unread) AS INTEGER) AS unread_count,
-		COUNT(*) AS article_count
-	FROM rss_item WHERE deleted = 0 AND
-	feedurl IN (sqlc.slice('feedurls'))
-	GROUP BY feedurl
-) feed_articles
-ON rss_feed.rssurl = feed_articles.feedurl
-ORDER BY rss_feed.title;
+SELECT
+	f.title,
+	f.rssurl AS feedurl,
+	CAST(SUM(i.unread) AS INTEGER) AS unread_count,
+	COUNT(*) AS article_count
+FROM rss_feed f
+LEFT JOIN rss_item i
+ON f.rssurl = i.feedurl AND i.deleted = 0
+WHERE f.rssurl IN (sqlc.slice('feedurls'))
+GROUP BY f.title, f.rssurl
+ORDER BY f.title;

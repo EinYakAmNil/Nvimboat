@@ -194,6 +194,11 @@ func (nb *Nvimboat) Select(nv *nvim.Nvim, args ...string) (err error) {
 }
 
 func (nb *Nvimboat) ShowTags(nv *nvim.Nvim, args ...string) (err error) {
+	cursorPosition, err := nv.WindowCursor(*nb.Window)
+	if err != nil {
+		err = fmt.Errorf("nvimboat/Nvimboat.ShowTags: %w\n", err)
+		return
+	}
 	for i, page := range nb.Pages {
 		switch page.(type) {
 		case *TagsOverviewPage:
@@ -202,7 +207,8 @@ func (nb *Nvimboat) ShowTags(nv *nvim.Nvim, args ...string) (err error) {
 			return
 		}
 	}
-	p := &TagsOverviewPage{}
+	p := new(TagsOverviewPage)
+	p.PrevCursorPosition = cursorPosition
 	p.Tags = make(map[string][]string)
 	for url, tags := range nb.FeedConfig {
 		for _, t := range tags {

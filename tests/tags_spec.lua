@@ -65,6 +65,11 @@ local main_menu = {
 	"N (12/12) │ 依云's Blog                       │ https://blog.lilydjwg.me/feed",
 }
 
+local gaming = {
+	"N (30/30) │ Path of Exile News │ https://www.pathofexile.com/news/rss",
+	"N (10/10) │ Starsector         │ https://fractalsoftworks.com/feed/",
+}
+
 describe("nvimboat", function()
 	it("can select the tags page from the main menu", function()
 		vim.cmd.Nvimboat("enable")
@@ -84,5 +89,10 @@ describe("nvimboat", function()
 		local url = "https://archlinux.org/news/critical-rsync-security-release-340/"
 		vim.cmd.Nvimboat("select", url)
 		vim.cmd.Nvimboat("show-tags")
+	end)
+	it("can select a tag", function()
+		local tag = "Gaming"
+		vim.cmd.Nvimboat("select", tag)
+		utils.eq_buf(gaming)
 	end)
 end)

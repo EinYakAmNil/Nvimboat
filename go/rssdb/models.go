@@ -31,8 +31,8 @@ type RssFeed struct {
 	Rssurl       string
 	Url          string
 	Title        string
-	Lastmodified interface{}
-	IsRtl        interface{}
+	Lastmodified int
+	IsRtl        int
 	Etag         string
 }
 
@@ -48,9 +48,9 @@ type RssItem struct {
 	Unread                       int
 	EnclosureUrl                 sql.NullString
 	EnclosureType                sql.NullString
-	Enqueued                     interface{}
+	Enqueued                     int
 	Flags                        sql.NullString
-	Deleted                      interface{}
+	Deleted                      int
 	Base                         string
 	ContentMimeType              string
 	EnclosureDescription         string
