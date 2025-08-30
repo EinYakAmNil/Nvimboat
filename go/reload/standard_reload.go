@@ -91,7 +91,7 @@ func (sr *StandardReloader) GetRss(url string,
 	cachePath := path.Join(cacheDir, hashUrl(url))
 	fileStats, err := os.Stat(cachePath)
 	// Check if file exists and if the modification time is within cache duration.
-	if err != nil || time.Now().Sub(fileStats.ModTime()) > cacheTime {
+	if err != nil || time.Since(fileStats.ModTime()) > cacheTime {
 		err = fmt.Errorf("%s is not cached", url)
 		content, reqErr = requestUrl(url, header)
 		if reqErr != nil {

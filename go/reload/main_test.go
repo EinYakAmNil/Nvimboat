@@ -54,10 +54,10 @@ func TestGetRss(t *testing.T) {
 func TestUpdateFeeds(t *testing.T) {
 	reloader := new(StandardReloader)
 	dbh, err := rssdb.ConnectDb(dbPath)
-	defer dbh.DB.Close()
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer dbh.DB.Close()
 	knownFeeds, err := dbh.Queries.MapFeedUrls(dbh.Ctx)
 	if err != nil {
 		t.Fatal(err)
@@ -94,10 +94,10 @@ func TestUpdateFeeds(t *testing.T) {
 
 func TestGetFeed(t *testing.T) {
 	dbh, err := rssdb.ConnectDb(dbPath)
-	defer dbh.DB.Close()
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer dbh.DB.Close()
 	for title, url := range testFeeds {
 		feed, err := dbh.Queries.GetFeed(dbh.Ctx, url)
 		if err != nil {
