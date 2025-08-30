@@ -86,3 +86,7 @@ func (tf *TagFeeds) Back(nb *Nvimboat) (cursor_x int, err error) {
 	}
 	return cursor_x + 1, nil
 }
+
+func (tf *TagFeeds) ToggleRead(dbh rssdb.DbHandle, id string) (err error) {
+	return
+}

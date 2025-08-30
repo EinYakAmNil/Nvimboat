@@ -112,10 +112,6 @@ func (f *Feed) ChildIdx(p Page) (idx int, err error) {
 	)
 }
 
-// TODO: This is very buggy.
-// Feeds have to handle going back to either the main menu
-// or the tags page where they came from.
-// The current implementation is just there to pass the tests
 func (f *Feed) Back(nb *Nvimboat) (cursor_x int, err error) {
 	var parentPage Page
 	if len(nb.Pages) >= 2 {
@@ -162,4 +158,8 @@ func (f *Feed) Back(nb *Nvimboat) (cursor_x int, err error) {
 		err = fmt.Errorf("parent page type is unaccounted for: %s", pageType)
 		return -1, err
 	}
+}
+
+func (f *Feed) ToggleRead(dbh rssdb.DbHandle, id string) (err error) {
+	return
 }

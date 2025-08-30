@@ -88,7 +88,7 @@ func (mm *MainMenu) ChildIdx(p Page) (idx int, err error) {
 				searchRange = searchRange[:section]
 			} else if childTitle == searchRange[section].Title {
 				idx += section
-				return idx, nil
+				return idx + len(mm.Filters), nil
 			}
 			section = len(searchRange) / 2
 		}
@@ -107,6 +107,10 @@ func (mm *MainMenu) ChildIdx(p Page) (idx int, err error) {
 
 func (mm *MainMenu) Back(*Nvimboat) (int, error) {
 	return 0, nil
+}
+
+func (mm *MainMenu) ToggleRead(dbh rssdb.DbHandle, id string) (err error) {
+	return
 }
 
 func (mm *MainMenu) UpdateFilters(dbh rssdb.DbHandle) (err error) {
@@ -128,7 +132,7 @@ func (mm *MainMenu) UpdateFilters(dbh rssdb.DbHandle) (err error) {
 		}
 		filterCondi := `feedurl in ('%s') AND %s`
 		filterCondi = fmt.Sprintf(filterCondi, strings.Join(urls, "', '"), filter.Query)
-		filter.Articles, err = dbh.Queries.QueryFilter(dbh.Ctx, filterCondi)
+		filter.Articles, err = dbh.Queries.QueryFilterOld(dbh.Ctx, filterCondi)
 		if err != nil {
 			err = fmt.Errorf("nvimboat/MainMenu.UpdateFilters: %w\n", err)
 			return

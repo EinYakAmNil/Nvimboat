@@ -8,10 +8,12 @@ nvimboat.setup({
 	filters = { {
 		name = "new Linux articles",
 		query = "unread = 1",
+		unread = 1,
 		tags = { "Linux" }
 	}, {
 		name = "new non political videos",
 		query = "unread = 1",
+		unread = 1,
 		tags = { "Video", "!Politics" }
 	} },
 	feeds = {

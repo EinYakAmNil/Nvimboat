@@ -203,6 +203,93 @@ func (q *Queries) GetFeedPage(ctx context.Context, feedurl string) ([]GetFeedPag
 	return items, nil
 }
 
+const queryFilter = `-- name: QueryFilter :many
+SELECT guid, title, author, url, feedurl, pubDate, content, unread FROM rss_item WHERE
+guid LIKE ? AND
+title LIKE ? AND
+author LIKE ? AND
+url LIKE ? AND
+feedurl LIKE ? AND
+pubDate LIKE ? AND
+content LIKE ? AND
+unread IN (/*SLICE:unread_states*/?) AND
+content_mime_type LIKE ?
+ORDER BY pubDate DESC
+`
+
+type QueryFilterParams struct {
+	Guid            string
+	Title           string
+	Author          string
+	Url             string
+	Feedurl         string
+	Pubdate         int64
+	Content         string
+	UnreadStates    []int
+	ContentMimeType string
+}
+
+type QueryFilterRow struct {
+	Guid    string
+	Title   string
+	Author  string
+	Url     string
+	Feedurl string
+	Pubdate int64
+	Content string
+	Unread  int
+}
+
+func (q *Queries) QueryFilter(ctx context.Context, arg QueryFilterParams) ([]QueryFilterRow, error) {
+	query := queryFilter
+	var queryParams []interface{}
+	queryParams = append(queryParams, arg.Guid)
+	queryParams = append(queryParams, arg.Title)
+	queryParams = append(queryParams, arg.Author)
+	queryParams = append(queryParams, arg.Url)
+	queryParams = append(queryParams, arg.Feedurl)
+	queryParams = append(queryParams, arg.Pubdate)
+	queryParams = append(queryParams, arg.Content)
+	if len(arg.UnreadStates) > 0 {
+		for _, v := range arg.UnreadStates {
+			queryParams = append(queryParams, v)
+		}
+		query = strings.Replace(query, "/*SLICE:unread_states*/?", strings.Repeat(",?", len(arg.UnreadStates))[1:], 1)
+	} else {
+		query = strings.Replace(query, "/*SLICE:unread_states*/?", "NULL", 1)
+	}
+	queryParams = append(queryParams, arg.ContentMimeType)
+	rows, err := q.db.QueryContext(ctx, query, queryParams...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []QueryFilterRow
+	for rows.Next() {
+		var i QueryFilterRow
+		if err := rows.Scan(
+			&i.Guid,
+			&i.Title,
+			&i.Author,
+			&i.Url,
+			&i.Feedurl,
+			&i.Pubdate,
+			&i.Content,
+			&i.Unread,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const queryMainPage = `-- name: QueryMainPage :many
 SELECT 
 	rss_feed.title,

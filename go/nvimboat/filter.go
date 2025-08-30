@@ -16,6 +16,9 @@ type Filter struct {
 	Articles    []rssdb.QueryFilterRow
 }
 
+// TODO: Create a SQL-Query, that does not rely on injection anymore.
+// Lua filter config won't have "query".
+// Instead the keys will be the rss_item column names.
 func (f *Filter) Select(dbh rssdb.DbHandle, id string) (p Page, err error) {
 	return
 }
@@ -37,5 +40,9 @@ func (f *Filter) ChildIdx(p Page) (idx int, err error) {
 }
 
 func (f *Filter) Back(nb *Nvimboat) (cursor_x int, err error) {
+	return
+}
+
+func (f *Filter) ToggleRead(dbh rssdb.DbHandle, id string) (err error) {
 	return
 }

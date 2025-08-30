@@ -80,3 +80,7 @@ func (tp *TagsOverviewPage) ChildIdx(p Page) (idx int, err error) {
 func (tp *TagsOverviewPage) Back(nb *Nvimboat) (cursor_x int, err error) {
 	return tp.PrevCursorPosition[0], nil
 }
+
+func (tp *TagsOverviewPage) ToggleRead(dbh rssdb.DbHandle, id string) (err error) {
+	return
+}

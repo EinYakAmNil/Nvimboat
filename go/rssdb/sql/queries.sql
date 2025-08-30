@@ -75,3 +75,16 @@ ON f.rssurl = i.feedurl AND i.deleted = 0
 WHERE f.rssurl IN (sqlc.slice('feedurls'))
 GROUP BY f.title, f.rssurl
 ORDER BY f.title;
+
+-- name: QueryFilter :many
+SELECT guid, title, author, url, feedurl, pubDate, content, unread FROM rss_item WHERE
+guid LIKE ? AND
+title LIKE ? AND
+author LIKE ? AND
+url LIKE ? AND
+feedurl LIKE ? AND
+pubDate LIKE ? AND
+content LIKE ? AND
+unread IN (sqlc.slice('unread_states')) AND
+content_mime_type LIKE ?
+ORDER BY pubDate DESC;

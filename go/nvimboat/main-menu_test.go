@@ -74,8 +74,8 @@ func TestMainMenuChildIdx(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if mm.Feeds[i].Title != mm.Feeds[idx].Title {
-			t.Fatal("expected:", mm.Feeds[i], "got:", mm.Feeds[idx])
+		if mm.Feeds[i].Title != mm.Feeds[idx-len(mm.Filters)].Title {
+			t.Fatal("expected:", mm.Feeds[i], "got:", mm.Feeds[idx-len(mm.Filters)])
 		}
 	}
 }

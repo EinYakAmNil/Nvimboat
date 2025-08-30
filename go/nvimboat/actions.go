@@ -267,6 +267,20 @@ func (nb *Nvimboat) PrevArticle(nv *nvim.Nvim, args ...string) (err error) {
 }
 
 func (nb *Nvimboat) ToggleRead(nv *nvim.Nvim, args ...string) (err error) {
+	if len(args) < 2 {
+		err = fmt.Errorf("nvimboat/Nvimboat.ToggleRead: no arguments")
+		return
+	}
+	dbh, err := rssdb.ConnectDb(nb.DbPath)
+	if err != nil {
+		err = fmt.Errorf("nvimboat/Nvimboat.ToggleRead: %w\n", err)
+		return
+	}
+	err = nb.Top().ToggleRead(dbh, args[1])
+	if err != nil {
+		err = fmt.Errorf("nvimboat/Nvimboat.ToggleRead: %w\n", err)
+		return
+	}
 	return
 }
 

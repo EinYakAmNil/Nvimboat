@@ -13,6 +13,7 @@ type Page interface {
 	Render(nv *nvim.Nvim, buf nvim.Buffer) (err error)
 	ChildIdx(p Page) (idx int, err error)
 	Back(nb *Nvimboat) (cursor_x int, err error)
+	ToggleRead(dbh rssdb.DbHandle, id string) (err error)
 }
 
 func (nb *Nvimboat) Show(p Page) (err error) {

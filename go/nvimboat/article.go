@@ -11,6 +11,7 @@ type Article struct {
 	rssdb.GetArticleRow
 }
 
+// TODO: Call link handler
 func (a *Article) Select(dbh rssdb.DbHandle, id string) (p Page, err error) {
 	return
 }
@@ -64,4 +65,8 @@ func (a *Article) Back(nb *Nvimboat) (cursor_x int, err error) {
 		return
 	}
 	return cursor_x + 1, nil
+}
+
+func (a *Article) ToggleRead(dbh rssdb.DbHandle, id string) (err error) {
+	return
 }

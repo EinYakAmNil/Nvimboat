@@ -19,7 +19,7 @@ type QueryFilterRow struct {
 	Url     string
 }
 
-func (q *Queries) QueryFilter(ctx context.Context, query string) ([]QueryFilterRow, error) {
+func (q *Queries) QueryFilterOld(ctx context.Context, query string) ([]QueryFilterRow, error) {
 	rows, err := q.db.QueryContext(ctx, fmt.Sprintf(queryFilter, query))
 	if err != nil {
 		return nil, err
