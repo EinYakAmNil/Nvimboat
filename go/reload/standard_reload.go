@@ -75,18 +75,18 @@ func (sr *StandardReloader) UpdateFeed(
 // Requests the URL if not found in cacheDir or if the modification time of the cache file is too old.
 // The request will be cached in cacheDir.
 // Indicates with the return value fromCache if cache was used.
-func (sr *StandardReloader) GetRss(url string,
+func (sr *StandardReloader) GetRss(
+	url string,
 	cacheTime time.Duration,
 	cacheDir string,
-) (
-	feed *rssdb.RssFeed, items map[string]*rssdb.RssItem, fromCache bool, err error,
-) {
+) (feed *rssdb.RssFeed, items map[string]*rssdb.RssItem, fromCache bool, err error) {
 	var (
 		content []byte
 		reqErr  error
 	)
+	const userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36"
 	header := http.Header{
-		"User-Agent": {"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36"},
+		"User-Agent": {userAgent},
 	}
 	cachePath := path.Join(cacheDir, hashUrl(url))
 	fileStats, err := os.Stat(cachePath)
