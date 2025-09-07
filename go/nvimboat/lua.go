@@ -2,7 +2,6 @@ package nvimboat
 
 import (
 	"fmt"
-	"strings"
 	"time"
 )
 
@@ -14,9 +13,9 @@ const (
 	luaFeeds      = luaPackage + ".feeds"
 	luaFilters    = luaPackage + ".filters"
 	luaPages      = luaPackage + ".pages"
-	luaPushPage   = luaPackage + ".pages:push(...)"
-	luaPopPage    = luaPackage + ".pages:pop()"
-	luaResetPages = luaPackage + ".pages:reset()"
+	luaPushPage   = luaPages + ":push(...)"
+	luaPopPage    = luaPages + ":pop()"
+	luaResetPages = luaPages + ":reset()"
 )
 
 func parseConfig(nb *Nvimboat, rawConfig map[string]any) (err error) {
@@ -84,52 +83,6 @@ func parseFeeds(rawFeeds []map[string]any) (feedConfig map[string][]string, err 
 			err = fmt.Errorf(`nvimboat/parseFeeds: tag "%v" is not of type string`, feed["rssurl"])
 			return
 		}
-	}
-	return
-}
-
-func parseFilters(rawFilters []map[string]any) (filterConfig []*Filter, err error) {
-	for _, filter := range rawFilters {
-		f := new(Filter)
-		f.ID = `query: `
-		f.ExcludeTags = make(map[string]bool)
-		f.IncludeTags = make(map[string]bool)
-		if name, okName := filter["name"].(string); okName {
-			f.Name = name
-		} else {
-			err = fmt.Errorf("nvimboat/parseFilters: cannot parse %+v\n", filter)
-			return
-		}
-		if query, okQuery := filter["query"].(string); okQuery {
-			f.Query = query
-			f.ID += query
-		} else {
-			err = fmt.Errorf("nvimboat/parseFilters: cannot parse %+v\n", filter)
-			return
-		}
-		var idTags []string
-		if tags, okTags := filter["tags"].([]any); okTags {
-			f.ID += ", tags: "
-			for _, tag := range tags {
-				if t, ok := tag.(string); ok {
-					if len(t) == 0 {
-						err = fmt.Errorf("nvimboat/parseFilters: cannot parse %+v\n", filter)
-						return
-					} else if t[0] == '!' {
-						f.ExcludeTags[t[1:]] = true
-						idTags = append(idTags, t)
-					} else {
-						f.IncludeTags[t] = true
-						idTags = append(idTags, t)
-					}
-				}
-			}
-		} else {
-			err = fmt.Errorf("nvimboat/parseFilters: cannot parse %+v\n", filter)
-			return
-		}
-		f.ID += strings.Join(idTags, ", ")
-		filterConfig = append(filterConfig, f)
 	}
 	return
 }

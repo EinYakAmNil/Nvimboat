@@ -82,8 +82,7 @@ guid LIKE ? AND
 title LIKE ? AND
 author LIKE ? AND
 url LIKE ? AND
-feedurl LIKE ? AND
-pubDate LIKE ? AND
+feedurl IN (sqlc.slice('feedurls')) AND
 content LIKE ? AND
 unread IN (sqlc.slice('unread_states')) AND
 content_mime_type LIKE ?

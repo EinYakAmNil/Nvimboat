@@ -209,8 +209,7 @@ guid LIKE ? AND
 title LIKE ? AND
 author LIKE ? AND
 url LIKE ? AND
-feedurl LIKE ? AND
-pubDate LIKE ? AND
+feedurl IN (/*SLICE:feedurls*/?) AND
 content LIKE ? AND
 unread IN (/*SLICE:unread_states*/?) AND
 content_mime_type LIKE ?
@@ -222,8 +221,7 @@ type QueryFilterParams struct {
 	Title           string
 	Author          string
 	Url             string
-	Feedurl         string
-	Pubdate         int64
+	Feedurls        []string
 	Content         string
 	UnreadStates    []int
 	ContentMimeType string
@@ -247,8 +245,14 @@ func (q *Queries) QueryFilter(ctx context.Context, arg QueryFilterParams) ([]Que
 	queryParams = append(queryParams, arg.Title)
 	queryParams = append(queryParams, arg.Author)
 	queryParams = append(queryParams, arg.Url)
-	queryParams = append(queryParams, arg.Feedurl)
-	queryParams = append(queryParams, arg.Pubdate)
+	if len(arg.Feedurls) > 0 {
+		for _, v := range arg.Feedurls {
+			queryParams = append(queryParams, v)
+		}
+		query = strings.Replace(query, "/*SLICE:feedurls*/?", strings.Repeat(",?", len(arg.Feedurls))[1:], 1)
+	} else {
+		query = strings.Replace(query, "/*SLICE:feedurls*/?", "NULL", 1)
+	}
 	queryParams = append(queryParams, arg.Content)
 	if len(arg.UnreadStates) > 0 {
 		for _, v := range arg.UnreadStates {

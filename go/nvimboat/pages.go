@@ -17,18 +17,18 @@ type Page interface {
 }
 
 func (nb *Nvimboat) Show(p Page) (err error) {
-	err = setLines(nb.Nvim, *nb.Buffer, []string{""})
+	err = setLines(nb.Nvim, *NbBuffer, []string{""})
 	if err != nil {
 		err = fmt.Errorf("nvimboat/Nvimboat.Show: %w\n", err)
 		return
 	}
-	defer trimTrail(nb.Nvim, *nb.Buffer)
+	defer trimTrail(nb.Nvim, *NbBuffer)
 	defer nb.Nvim.SetWindowCursor(*nb.Window, [2]int{0, 1})
 	if err != nil {
 		err = fmt.Errorf("nvimboat/Nvimboat.Show: %w\n", err)
 		return
 	}
-	p.Render(nb.Nvim, *nb.Buffer)
+	p.Render(nb.Nvim, *NbBuffer)
 	if err != nil {
 		err = fmt.Errorf("nvimboat/Nvimboat.Show: %w\n", err)
 		return

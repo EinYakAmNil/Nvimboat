@@ -5,13 +5,13 @@ import (
 	"fmt"
 )
 
-const queryFilter = `-- name: QueryFilter :many
+const queryFilterOld = `-- name: QueryFilter :many
 SELECT unread, pubDate, author, title, url FROM rss_item
 WHERE %s
 ORDER BY pubDate DESC
 `
 
-type QueryFilterRow struct {
+type QueryFilterRowOld struct {
 	Unread  int
 	Pubdate int64
 	Author  string
@@ -19,15 +19,15 @@ type QueryFilterRow struct {
 	Url     string
 }
 
-func (q *Queries) QueryFilterOld(ctx context.Context, query string) ([]QueryFilterRow, error) {
-	rows, err := q.db.QueryContext(ctx, fmt.Sprintf(queryFilter, query))
+func (q *Queries) QueryFilterOld(ctx context.Context, query string) ([]QueryFilterRowOld, error) {
+	rows, err := q.db.QueryContext(ctx, fmt.Sprintf(queryFilterOld, query))
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []QueryFilterRow
+	var items []QueryFilterRowOld
 	for rows.Next() {
-		var i QueryFilterRow
+		var i QueryFilterRowOld
 		if err := rows.Scan(
 			&i.Unread,
 			&i.Pubdate,

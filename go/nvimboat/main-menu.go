@@ -2,7 +2,6 @@ package nvimboat
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/EinYakAmNil/Nvimboat/go/engine/rssdb"
 	"github.com/neovim/go-client/nvim"
@@ -32,7 +31,7 @@ func (mm *MainMenu) Select(dbh rssdb.DbHandle, id string) (p Page, err error) {
 		return
 	}
 	for _, filter := range mm.Filters {
-		if filter.ID == id {
+		if filter.Name == id {
 			return filter, nil
 		}
 	}
@@ -55,7 +54,7 @@ func (mm *MainMenu) Render(nv *nvim.Nvim, buf nvim.Buffer) (err error) {
 		}
 		unreadArticlesRatio = append(unreadArticlesRatio, makeUnreadRatio(unreadCount, int64(len(f.Articles))))
 		titleCol = append(titleCol, f.Name)
-		urlCol = append(urlCol, f.ID)
+		urlCol = append(urlCol, f.FilterDescription)
 	}
 	for _, f := range mm.Feeds {
 		unreadArticlesRatio = append(unreadArticlesRatio, makeUnreadRatio(f.UnreadCount, f.ArticleCount))
@@ -130,9 +129,7 @@ func (mm *MainMenu) UpdateFilters(dbh rssdb.DbHandle) (err error) {
 				}
 			}
 		}
-		filterCondi := `feedurl in ('%s') AND %s`
-		filterCondi = fmt.Sprintf(filterCondi, strings.Join(urls, "', '"), filter.Query)
-		filter.Articles, err = dbh.Queries.QueryFilterOld(dbh.Ctx, filterCondi)
+		filter.Articles, err = dbh.Queries.QueryFilter(dbh.Ctx, filter.QueryFilterParams)
 		if err != nil {
 			err = fmt.Errorf("nvimboat/MainMenu.UpdateFilters: %w\n", err)
 			return

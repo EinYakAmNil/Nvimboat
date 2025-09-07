@@ -28,11 +28,11 @@ func (nb *Nvimboat) init(nv *nvim.Nvim) (err error) {
 	rawFeeds := new([]map[string]any)
 	rawFilters := new([]map[string]any)
 	nb.Nvim = nv
-	nb.Buffer = new(nvim.Buffer)
+	NbBuffer = new(nvim.Buffer)
 	nb.Window = new(nvim.Window)
 	execBatch := nv.NewBatch()
 	execBatch.CurrentWindow(nb.Window)
-	execBatch.CurrentBuffer(nb.Buffer)
+	execBatch.CurrentBuffer(NbBuffer)
 	execBatch.ExecLua(luaConfig, &rawConfig)
 	execBatch.ExecLua(luaFeeds, rawFeeds)
 	execBatch.ExecLua(luaFilters, rawFilters)
@@ -50,6 +50,21 @@ func (nb *Nvimboat) init(nv *nvim.Nvim) (err error) {
 	if err != nil {
 		err = fmt.Errorf("nvimboat/Nvimboat.init: %w\n", err)
 		return
+	}
+	feedConfig, err := parseFeeds(*rawFeeds)
+	if err != nil {
+		err = fmt.Errorf("nvimboat/Nvimboat.init: %w\n", err)
+		return
+	}
+	for feedurl, tags := range feedConfig {
+		f := new(Feed)
+		t := make(map[string]bool)
+		for _, tag := range tags {
+			t[tag] = true
+		}
+		f.Rssurl = feedurl
+		f.Tags = t
+		Feeds = append(Feeds, f)
 	}
 	nb.FilterConfig, err = parseFilters(*rawFilters)
 	if err != nil {

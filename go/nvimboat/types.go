@@ -8,7 +8,6 @@ import (
 
 type (
 	Nvimboat struct {
-		Buffer       *nvim.Buffer
 		CachePath    string
 		CacheTime    time.Duration
 		DbPath       string
