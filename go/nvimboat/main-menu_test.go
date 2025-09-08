@@ -51,13 +51,7 @@ filterFeed:
 }
 
 func TestMainMenuChildIdx(t *testing.T) {
-	dummyFilters := []*Filter{
-		new(Filter),
-		new(Filter),
-		new(Filter),
-	}
 	mm := MainMenu{
-		Filters: dummyFilters,
 		Feeds: []MainPageFeed{
 			{QueryMainPageRow: rssdb.QueryMainPageRow{Title: "Abc"}},
 			{QueryMainPageRow: rssdb.QueryMainPageRow{Title: "Abd"}},
@@ -71,8 +65,8 @@ func TestMainMenuChildIdx(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if mm.Feeds[i].Title != mm.Feeds[idx-len(mm.Filters)].Title {
-			t.Fatal("expected:", mm.Feeds[i], "got:", mm.Feeds[idx-len(mm.Filters)])
+		if mm.Feeds[i].Title != mm.Feeds[idx-len(Filters)].Title {
+			t.Fatal("expected:", mm.Feeds[i], "got:", mm.Feeds[idx-len(Filters)])
 		}
 	}
 }

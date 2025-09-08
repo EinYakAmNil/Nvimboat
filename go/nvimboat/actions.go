@@ -23,62 +23,6 @@ var Actions = map[string]NvimboatAction{
 	"toggle-read":  (*Nvimboat).ToggleRead,
 }
 
-func (nb *Nvimboat) init(nv *nvim.Nvim) (err error) {
-	rawConfig := make(map[string]any)
-	rawFeeds := new([]map[string]any)
-	rawFilters := new([]map[string]any)
-	nb.Nvim = nv
-	NbBuffer = new(nvim.Buffer)
-	nb.Window = new(nvim.Window)
-	execBatch := nv.NewBatch()
-	execBatch.CurrentWindow(nb.Window)
-	execBatch.CurrentBuffer(NbBuffer)
-	execBatch.ExecLua(luaConfig, &rawConfig)
-	execBatch.ExecLua(luaFeeds, rawFeeds)
-	execBatch.ExecLua(luaFilters, rawFilters)
-	err = execBatch.Execute()
-	if err != nil {
-		err = fmt.Errorf("nvimboat/Nvimboat.init: %w", err)
-		return
-	}
-	err = parseConfig(nb, rawConfig)
-	if err != nil {
-		err = fmt.Errorf("nvimboat/Nvimboat.init parse lua config: %w", err)
-		return
-	}
-	nb.FeedConfig, err = parseFeeds(*rawFeeds)
-	if err != nil {
-		err = fmt.Errorf("nvimboat/Nvimboat.init: %w\n", err)
-		return
-	}
-	feedConfig, err := parseFeeds(*rawFeeds)
-	if err != nil {
-		err = fmt.Errorf("nvimboat/Nvimboat.init: %w\n", err)
-		return
-	}
-	for feedurl, tags := range feedConfig {
-		f := new(Feed)
-		t := make(map[string]bool)
-		for _, tag := range tags {
-			t[tag] = true
-		}
-		f.Rssurl = feedurl
-		f.Tags = t
-		Feeds = append(Feeds, f)
-	}
-	nb.FilterConfig, err = parseFilters(*rawFilters)
-	if err != nil {
-		err = fmt.Errorf("nvimboat/Nvimboat.init: %w\n", err)
-		return
-	}
-	err = SetupLogging(nb.LogPath)
-	if err != nil {
-		err = fmt.Errorf("Nvimboat init logging: %w", err)
-		return
-	}
-	return
-}
-
 func (nb *Nvimboat) Enable(nv *nvim.Nvim, args ...string) (err error) {
 	err = nb.init(nv)
 	if err != nil {
@@ -147,17 +91,7 @@ func (nb *Nvimboat) ShowMain(nv *nvim.Nvim, args ...string) (err error) {
 			Tags:             tags,
 		})
 	}
-	for _, filter := range nb.FilterConfig {
-		if filter.Name == "" {
-			err = fmt.Errorf(
-				`nvimboat/Nvimboat.ShowMain: empty filter name "%s"`,
-				filter.Name,
-			)
-			return
-		}
-		mm.Filters = append(mm.Filters, filter)
-	}
-	err = mm.UpdateFilters(dbh)
+	err = updateFilters(dbh)
 	if err != nil {
 		err = fmt.Errorf("nvimboat/Nvimboat.ShowMain: %w\n", err)
 		return

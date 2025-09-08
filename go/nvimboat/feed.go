@@ -135,7 +135,7 @@ func (f *Feed) Back(nb *Nvimboat) (cursor_x int, err error) {
 		for idx, feed := range mainPageFeeds {
 			pp.Feeds[idx].QueryMainPageRow = feed
 		}
-		err = pp.UpdateFilters(dbh)
+		err = updateFilters(dbh)
 		if err != nil {
 			err = fmt.Errorf("nvimboat/Feed.Back: %w\n", err)
 			return -1, err

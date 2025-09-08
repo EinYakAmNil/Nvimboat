@@ -7,14 +7,15 @@ local dbPath = os.getenv("HOME") .. "/.cache/nvimboat-test/lua-test.db"
 nvimboat.setup({
 	filters = { {
 		name = "new Linux articles",
-		query = "unread = 1",
 		unread = 1,
 		tags = { "Linux" }
 	}, {
 		name = "new non political videos",
-		query = "unread = 1",
 		unread = 1,
 		tags = { "Video", "!Politics" }
+	}, {
+		name = "gaming articles",
+		tags = { "Gaming" }
 	} },
 	feeds = {
 		{ rssurl = "https://www.youtube.com/feeds/videos.xml?user=CaravanPalace", tags = { "Video", "YouTube", "Music" } },
@@ -41,8 +42,9 @@ if go_build.stderr ~= "" then
 end
 
 local main_menu_buf_0 = {
-	"N (22/22) │ new Linux articles                │ filter: unread = 1, tags: Linux",
-	"N (15/15) │ new non political videos          │ filter: unread = 1, tags: Video, !Politics",
+	"N (40/40) │ gaming articles                   │ filter: tags: Gaming",
+	"N (22/22) │ new Linux articles                │ filter: unread: 1, tags: Linux",
+	"N (15/15) │ new non political videos          │ filter: unread: 1, tags: Video, !Politics",
 	"N (10/10) │ Arch Linux: Recent news updates   │ https://www.archlinux.org/feeds/news/",
 	"N (15/15) │ CaravanPalace                     │ https://www.youtube.com/feeds/videos.xml?user=CaravanPalace",
 	"N (17/17) │ Not Related! A Big-Braned Podcast │ https://notrelated.xyz/rss",
@@ -52,8 +54,9 @@ local main_menu_buf_0 = {
 	"N (12/12) │ 依云's Blog                       │ https://blog.lilydjwg.me/feed",
 }
 local main_menu_buf_1 = {
-	"N (21/21) │ new Linux articles                │ query: unread = 1, tags: Linux",
-	"N (15/15) │ new non political videos          │ query: unread = 1, tags: Video, !Politics",
+	"N (40/40) │ gaming articles                   │ filter: tags: Gaming",
+	"N (21/21) │ new Linux articles                │ filter: unread: 1, tags: Linux",
+	"N (15/15) │ new non political videos          │ filter: unread: 1, tags: Video, !Politics",
 	"N (9/10)  │ Arch Linux: Recent news updates   │ https://www.archlinux.org/feeds/news/",
 	"N (15/15) │ CaravanPalace                     │ https://www.youtube.com/feeds/videos.xml?user=CaravanPalace",
 	"N (17/17) │ Not Related! A Big-Braned Podcast │ https://notrelated.xyz/rss",
@@ -121,7 +124,6 @@ describe("nvimboat", function()
 	end)
 	it("can select a feed", function()
 		local url = "https://www.archlinux.org/feeds/news/"
-		utils.print_buf()
 		vim.cmd.Nvimboat("select", url)
 		utils.eq_buf(feed_buf_0)
 		eq("Feed", nvimboat.pages[2].type)
@@ -146,7 +148,8 @@ describe("nvimboat", function()
 		eq(1, #nvimboat.pages)
 		eq("MainMenu", nvimboat.pages[#nvimboat.pages].type)
 		utils.eq_buf(main_menu_buf_1)
-		utils.eq_cursor_row(3)
+		utils.print_buf()
+		utils.eq_cursor_row(4)
 	end)
 end)
 

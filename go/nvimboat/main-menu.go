@@ -2,6 +2,7 @@ package nvimboat
 
 import (
 	"fmt"
+	"slices"
 
 	"github.com/EinYakAmNil/Nvimboat/go/engine/rssdb"
 	"github.com/neovim/go-client/nvim"
@@ -14,7 +15,7 @@ type (
 	}
 	MainMenu struct {
 		Feeds   []MainPageFeed
-		Filters []*Filter
+		// Filters []*Filter
 	}
 )
 
@@ -30,10 +31,8 @@ func (mm *MainMenu) Select(dbh rssdb.DbHandle, id string) (p Page, err error) {
 		}
 		return
 	}
-	for _, filter := range mm.Filters {
-		if filter.Name == id {
-			return filter, nil
-		}
+	if filter, okFilter := Filters[id]; okFilter {
+		return filter, nil
 	}
 	err = fmt.Errorf(`nvimboat/MainMenu.Select: "%s" is not recognized as an URL or found as a filter name.`, id)
 	return
@@ -45,8 +44,17 @@ func (mm *MainMenu) Render(nv *nvim.Nvim, buf nvim.Buffer) (err error) {
 		titleCol            []string
 		urlCol              []string
 	)
-	for _, f := range mm.Filters {
-		var unreadCount int64
+	filterNames := make([]string, 0, len(Filters))
+	for name := range Filters {
+		filterNames = append(filterNames, name)
+	}
+	slices.Sort(filterNames)
+	var (
+		unreadCount int64
+		f *Filter
+	)
+	for _, filterName := range filterNames {
+		f = Filters[filterName]
 		for _, a := range f.Articles {
 			if a.Unread == 1 {
 				unreadCount++
@@ -55,6 +63,7 @@ func (mm *MainMenu) Render(nv *nvim.Nvim, buf nvim.Buffer) (err error) {
 		unreadArticlesRatio = append(unreadArticlesRatio, makeUnreadRatio(unreadCount, int64(len(f.Articles))))
 		titleCol = append(titleCol, f.Name)
 		urlCol = append(urlCol, f.FilterDescription)
+		unreadCount = 0
 	}
 	for _, f := range mm.Feeds {
 		unreadArticlesRatio = append(unreadArticlesRatio, makeUnreadRatio(f.UnreadCount, f.ArticleCount))
@@ -87,7 +96,7 @@ func (mm *MainMenu) ChildIdx(p Page) (idx int, err error) {
 				searchRange = searchRange[:section]
 			} else if childTitle == searchRange[section].Title {
 				idx += section
-				return idx + len(mm.Filters), nil
+				return idx + len(Filters), nil
 			}
 			section = len(searchRange) / 2
 		}
@@ -112,28 +121,28 @@ func (mm *MainMenu) ToggleRead(dbh rssdb.DbHandle, id string) (err error) {
 	return
 }
 
-func (mm *MainMenu) UpdateFilters(dbh rssdb.DbHandle) (err error) {
-	for _, filter := range mm.Filters {
-		urls := []string{}
-	filterFeed:
-		for _, feed := range mm.Feeds {
-			for excTag := range filter.ExcludeTags {
-				if feed.Tags[excTag] == true {
-					continue filterFeed
-				}
-			}
-			for incTag := range filter.IncludeTags {
-				if feed.Tags[incTag] == true {
-					urls = append(urls, feed.Feedurl)
-					continue filterFeed
-				}
-			}
-		}
-		filter.Articles, err = dbh.Queries.QueryFilter(dbh.Ctx, filter.QueryFilterParams)
-		if err != nil {
-			err = fmt.Errorf("nvimboat/MainMenu.UpdateFilters: %w\n", err)
-			return
-		}
-	}
-	return
-}
+// func (mm *MainMenu) UpdateFilters(dbh rssdb.DbHandle) (err error) {
+// 	for _, filter := range Filters {
+// 		urls := []string{}
+// 	filterFeed:
+// 		for _, feed := range mm.Feeds {
+// 			for excTag := range filter.ExcludeTags {
+// 				if feed.Tags[excTag] == true {
+// 					continue filterFeed
+// 				}
+// 			}
+// 			for incTag := range filter.IncludeTags {
+// 				if feed.Tags[incTag] == true {
+// 					urls = append(urls, feed.Feedurl)
+// 					continue filterFeed
+// 				}
+// 			}
+// 		}
+// 		filter.Articles, err = dbh.Queries.QueryFilter(dbh.Ctx, filter.QueryFilterParams)
+// 		if err != nil {
+// 			err = fmt.Errorf("nvimboat/MainMenu.UpdateFilters: %w\n", err)
+// 			return
+// 		}
+// 	}
+// 	return
+// }

@@ -2,6 +2,8 @@ package nvimboat
 
 import (
 	"fmt"
+	"strconv"
+	"strings"
 
 	"github.com/EinYakAmNil/Nvimboat/go/engine/rssdb"
 	"github.com/neovim/go-client/nvim"
@@ -47,80 +49,101 @@ func (f *Filter) ToggleRead(dbh rssdb.DbHandle, id string) (err error) {
 	return
 }
 
-func parseFilters(rawFilters []map[string]any) (filterConfig []*Filter, err error) {
-	for _, filter := range rawFilters {
-		f := new(Filter)
-		configMapping := map[string]*string{
-			"name":              &f.Name,
-			"guid":              &f.Guid,
-			"title":             &f.Title,
-			"author":            &f.Author,
-			"url":               &f.Url,
-			"content":           &f.Content,
-			"content_mime_type": &f.ContentMimeType,
-		}
-		for luaValue, filterAttr := range configMapping {
-			assignFilterVarcharAttr(filterAttr, filter[luaValue])
-		}
-		if f.Name == "" {
-			err = fmt.Errorf(
-				"nvimboat/parseFilters: no name for filter in: %+v\n",
-				prettyStruct(filter),
-			)
+func updateFilters(dbh rssdb.DbHandle) (err error) {
+	for _, filter := range Filters {
+		filter.Articles, err = dbh.Queries.QueryFilter(dbh.Ctx, filter.QueryFilterParams)
+		if err != nil {
+			err = fmt.Errorf("nvimboat/MainMenu.UpdateFilters: %w\n", err)
 			return
 		}
-		if value, ok := filter["unread"].(int); ok {
-			f.UnreadStates = []int{value}
-		} else {
-			f.UnreadStates = []int{0, 1}
+	}
+	return
+}
+
+func parseFilters(rawFilter map[string]any) (filter Filter, err error) {
+	var (
+		descriptionTags []string
+		descriptionSql  []string
+		descriptions    []string
+	)
+	configMapping := map[string]*string{
+		"name":              &filter.Name,
+		"guid":              &filter.Guid,
+		"title":             &filter.Title,
+		"author":            &filter.Author,
+		"url":               &filter.Url,
+		"content":           &filter.Content,
+		"content_mime_type": &filter.ContentMimeType,
+	}
+	for luaValue, filterAttr := range configMapping {
+		if ok := assignFilterVarcharAttr(filterAttr, rawFilter[luaValue]); ok && filterAttr != &filter.Name {
+			descriptionSql = append(descriptionSql, luaValue+": "+*filterAttr)
 		}
-		f.ExcludeTags = make(map[string]bool)
-		f.IncludeTags = make(map[string]bool)
-		var descriptionTags []string
-		if tags, okTags := filter["tags"].([]any); okTags {
-			f.FilterDescription += ", tags: "
-			for _, tag := range tags {
-				if t, ok := tag.(string); ok {
-					if len(t) == 0 {
-						err = fmt.Errorf("nvimboat/parseFilters: cannot parse %+v\n", filter)
-						return
-					} else if t[0] == '!' {
-						f.ExcludeTags[t[1:]] = true
-						descriptionTags = append(descriptionTags, t)
-					} else {
-						f.IncludeTags[t] = true
-						descriptionTags = append(descriptionTags, t)
-					}
+	}
+	if filter.Name == "" {
+		err = fmt.Errorf(
+			"nvimboat/parseFilters: no name for filter in: %+v\n",
+			prettyStruct(filter),
+		)
+		return
+	}
+	if value, ok := rawFilter["unread"].(int64); ok {
+		filter.UnreadStates = []int{int(value)}
+		descriptionSql = append(descriptionSql, "unread: "+strconv.Itoa(int(value)))
+	} else {
+		filter.UnreadStates = []int{0, 1}
+	}
+	filter.ExcludeTags = make(map[string]bool)
+	filter.IncludeTags = make(map[string]bool)
+	if tags, okTags := rawFilter["tags"].([]any); okTags {
+		for _, tag := range tags {
+			if t, ok := tag.(string); ok {
+				if len(t) == 0 {
+					err = fmt.Errorf("nvimboat/parseFilters: cannot parse %+v\n", filter)
+					return
+				} else if t[0] == '!' {
+					filter.ExcludeTags[t[1:]] = true
+				} else {
+					filter.IncludeTags[t] = true
 				}
+				descriptionTags = append(descriptionTags, t)
 			}
-		} else {
-			fmt.Println(tags, filter["tags"])
-			err = fmt.Errorf("nvimboat/parseFilters: cannot parse %+v\n", filter)
-			return
 		}
-		filterConfig = append(filterConfig, f)
-	filterFeed:
-		for _, feed := range Feeds {
-			for excTag := range f.ExcludeTags {
-				if feed.Tags[excTag] == true {
-					continue filterFeed
-				}
+	} else {
+		fmt.Println(tags, rawFilter["tags"])
+		err = fmt.Errorf("nvimboat/parseFilters: cannot parse %+v\n", filter)
+		return
+	}
+	if len(descriptionSql) > 0 {
+		descriptions = append(descriptions, descriptionSql...)
+	}
+	if len(descriptionTags) > 0 {
+		descriptions = append(descriptions, "tags: "+strings.Join(descriptionTags, ", "))
+	}
+	filter.FilterDescription = "filter: " + strings.Join(descriptions, ", ")
+filterFeed:
+	for _, feed := range Feeds {
+		for excTag := range filter.ExcludeTags {
+			if feed.Tags[excTag] == true {
+				continue filterFeed
 			}
-			for incTag := range f.IncludeTags {
-				if feed.Tags[incTag] == true {
-					f.Feedurls = append(f.Feedurls, feed.Rssurl)
-					continue filterFeed
-				}
+		}
+		for incTag := range filter.IncludeTags {
+			if feed.Tags[incTag] == true {
+				filter.Feedurls = append(filter.Feedurls, feed.Rssurl)
+				continue filterFeed
 			}
 		}
 	}
 	return
 }
 
-func assignFilterVarcharAttr(attribute *string, luaValue any) {
+func assignFilterVarcharAttr(attribute *string, luaValue any) (replaced bool) {
 	if value, ok := luaValue.(string); ok {
 		*attribute = value
+		return true
 	} else {
 		*attribute = "%"
+		return false
 	}
 }
