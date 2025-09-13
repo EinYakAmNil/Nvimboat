@@ -42,3 +42,26 @@ func (nb *Nvimboat) Log(val ...any) {
 		nb.Nvim.Command(`echo "` + msg + `"`)
 	}
 }
+
+func  Log(val ...any) {
+	var (
+		msg string
+		w   any
+	)
+	for _, v := range val {
+		if reflect.ValueOf(v).Kind() == reflect.Pointer {
+			w = reflect.ValueOf(v).Elem().Interface()
+		} else {
+			w = v
+		}
+		if reflect.ValueOf(w).Kind() == reflect.Struct {
+			msg += fmt.Sprintf("%+v\n", prettyStruct(w))
+		} else {
+			msg += fmt.Sprintf("%+v\n", prettyStruct(w))
+		}
+	}
+	log.Println(msg)
+	if NbNvim != nil {
+		NbNvim.Command(`echo "` + msg + `"`)
+	}
+}

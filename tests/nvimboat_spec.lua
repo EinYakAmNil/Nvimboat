@@ -110,6 +110,48 @@ local article_buf = {
 	"# Links",
 	"https://security.archlinux.org/ASA-202501-1",
 }
+local filter_buf = {
+	"N │ 11 Feb 25 │            │ The Legacy of Phrecia FAQ                                                        │ https://www.pathofexile.com/forum/view-thread/3721171",
+	"N │ 10 Feb 25 │            │ Legacy of Phrecia Endgame Specialisation System                                  │ https://www.pathofexile.com/forum/view-thread/3720737",
+	"N │ 07 Feb 25 │            │ The Legacy of Phrecia Teasers                                                    │ https://www.pathofexile.com/forum/view-thread/3718913",
+	"N │ 05 Feb 25 │            │ More Information About the Legacy of Phrecia Event                               │ https://www.pathofexile.com/forum/view-thread/3717515",
+	"N │ 04 Feb 25 │            │ Path of Exile 2 - Patch 0.1.1c Preview                                           │ https://www.pathofexile.com/forum/view-thread/3716846",
+	"N │ 03 Feb 25 │            │ Update on Path of Exile 1                                                        │ https://www.pathofexile.com/forum/view-thread/3716196",
+	"N │ 30 Jan 25 │            │ A Message to Path of Exile 1 Players                                             │ https://www.pathofexile.com/forum/view-thread/3713258",
+	"N │ 24 Jan 25 │            │ Weekend Stash Tab Sale                                                           │ https://www.pathofexile.com/forum/view-thread/3707790",
+	"N │ 20 Jan 25 │            │ Customer Support Update                                                          │ https://www.pathofexile.com/forum/view-thread/3703227",
+	"N │ 16 Jan 25 │            │ Path of Exile 2 - Patch 0.1.1 Patch Note Preview                                 │ https://www.pathofexile.com/forum/view-thread/3695606",
+	"N │ 15 Jan 25 │            │ Patch 0.1.1 Q&A VOD                                                              │ https://www.pathofexile.com/forum/view-thread/3694287",
+	"N │ 12 Jan 25 │            │ Upcoming Changes in Path of Exile 2 0.1.1                                        │ https://www.pathofexile.com/forum/view-thread/3691520",
+	"N │ 10 Jan 25 │            │ Find Out about Patch 0.1.1 on January 12th PST                                   │ https://www.pathofexile.com/forum/view-thread/3687933",
+	"N │ 20 Dec 24 │ Alex       │ Anubis-class Cruiser                                                             │ https://fractalsoftworks.com/2024/12/20/anubis-class-cruiser/",
+	"N │ 16 Dec 24 │            │ Path of Exile 2: Upcoming Changes and Improvements                               │ https://www.pathofexile.com/forum/view-thread/3642235",
+	"N │ 13 Dec 24 │            │ Weekend Stash Tab Sale                                                           │ https://www.pathofexile.com/forum/view-thread/3626462",
+	"N │ 11 Dec 24 │            │ Support Email Response Delays                                                    │ https://www.pathofexile.com/forum/view-thread/3616595",
+	"N │ 10 Dec 24 │            │ Addressing your Early Access Post-launch Feedback                                │ https://www.pathofexile.com/forum/view-thread/3611705",
+	"N │ 06 Dec 24 │            │ Path of Exile 2 Early Access Launch - Live Updates 🔴                            │ https://www.pathofexile.com/forum/view-thread/3594080",
+	"N │ 06 Dec 24 │            │ Path of Exile 2 Launches in Early Access Soon - What You Need to Know            │ https://www.pathofexile.com/forum/view-thread/3592995",
+	"N │ 04 Dec 24 │            │ Path of Exile 2 - Ascendancy Classes in Early Access                             │ https://www.pathofexile.com/forum/view-thread/3592012",
+	"N │ 03 Dec 24 │            │ Path of Exile 2 Early Access Twitch Drops                                        │ https://www.pathofexile.com/forum/view-thread/3591907",
+	"N │ 03 Dec 24 │            │ Path of Exile 2 Early Access Pre-Download Information                            │ https://www.pathofexile.com/forum/view-thread/3591631",
+	"N │ 22 Nov 24 │            │ Path of Exile 2 Early Access FAQ                                                 │ https://www.pathofexile.com/forum/view-thread/3587981",
+	"N │ 21 Nov 24 │            │ Announcing Path of Exile 2 in Early Access                                       │ https://www.pathofexile.com/forum/view-thread/3587754",
+	"N │ 20 Nov 24 │            │ GGG Live Twitch Drops                                                            │ https://www.pathofexile.com/forum/view-thread/3587517",
+	"N │ 19 Nov 24 │            │ Core Supporter Packs End Soon - An Update About Shipping Physical Items          │ https://www.pathofexile.com/forum/view-thread/3587332",
+	"N │ 14 Nov 24 │            │ Watch GGG Live on November 21st - Everything You Need to Know about Early Access │ https://www.pathofexile.com/forum/view-thread/3586621",
+	"N │ 14 Nov 24 │            │ Incident Report for Today's Deploy                                               │ https://www.pathofexile.com/forum/view-thread/3586510",
+	"N │ 13 Nov 24 │            │ Changes to Path of Exile's Account System                                        │ https://www.pathofexile.com/forum/view-thread/3586288",
+	"N │ 04 Nov 24 │            │ Tokyo Game Show ft. Koji Igarashi and Shuhei Yoshida                             │ https://www.pathofexile.com/forum/view-thread/3584989",
+	"N │ 13 Jul 24 │ Alex       │ Planet Search Overhaul                                                           │ https://fractalsoftworks.com/2024/07/13/planet-search-overhaul/",
+	"N │ 12 Jun 24 │ Stian      │ New music for Galatia Academy                                                    │ https://fractalsoftworks.com/2024/06/12/new-music-for-galatia-academy/",
+	"N │ 11 May 24 │ Alex       │ Codex Overhaul                                                                   │ https://fractalsoftworks.com/2024/05/11/codex-overhaul/",
+	"N │ 10 Apr 24 │ Alex       │ Save/Load UI, Autosave, Intel Map Markers, and More                              │ https://fractalsoftworks.com/2024/04/10/save-load-ui-autosave-intel-map-markers-and-more/",
+	"N │ 13 Mar 24 │ Alex       │ Simulator Enhancements                                                           │ https://fractalsoftworks.com/2024/03/13/simulator-enhancements/",
+	"N │ 02 Feb 24 │ Alex       │ Starsector 0.97a Release                                                         │ https://fractalsoftworks.com/2024/02/02/starsector-0-97a-release/",
+	"N │ 13 Dec 23 │ Alex       │ Skill Tweaks                                                                     │ https://fractalsoftworks.com/2023/12/12/skill-tweaks/",
+	"N │ 24 Nov 23 │ Alex       │ Colony Crises                                                                    │ https://fractalsoftworks.com/2023/11/24/colony-crises/",
+	"N │ 13 Nov 23 │ dgbaumgart │ You Merely Adopted Rules.csv, I Was Born Into It                                 │ https://fractalsoftworks.com/2023/11/13/you-merely-adopted-rules-csv-i-was-born-into-it/",
+}
 
 describe("nvimboat", function()
 	it("can be configured", function()
@@ -148,8 +190,11 @@ describe("nvimboat", function()
 		eq(1, #nvimboat.pages)
 		eq("MainMenu", nvimboat.pages[#nvimboat.pages].type)
 		utils.eq_buf(main_menu_buf_1)
-		utils.print_buf()
 		utils.eq_cursor_row(4)
+	end)
+	it("can select a filter", function()
+		vim.cmd.Nvimboat("select", "gaming articles")
+		utils.eq_buf(filter_buf)
 	end)
 end)
 

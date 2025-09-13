@@ -34,7 +34,7 @@ func (nb *Nvimboat) Enable(nv *nvim.Nvim, args ...string) (err error) {
 		err = fmt.Errorf("Nvimboat enable: %w", err)
 		return
 	}
-	nb.Log("enabled Nvimboat")
+	Log("enabled Nvimboat")
 	return
 }
 

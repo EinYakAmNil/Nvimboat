@@ -14,8 +14,7 @@ type (
 		Tags map[string]bool
 	}
 	MainMenu struct {
-		Feeds   []MainPageFeed
-		// Filters []*Filter
+		Feeds []MainPageFeed
 	}
 )
 
@@ -51,7 +50,7 @@ func (mm *MainMenu) Render(nv *nvim.Nvim, buf nvim.Buffer) (err error) {
 	slices.Sort(filterNames)
 	var (
 		unreadCount int64
-		f *Filter
+		f           *Filter
 	)
 	for _, filterName := range filterNames {
 		f = Filters[filterName]
@@ -120,29 +119,3 @@ func (mm *MainMenu) Back(*Nvimboat) (int, error) {
 func (mm *MainMenu) ToggleRead(dbh rssdb.DbHandle, id string) (err error) {
 	return
 }
-
-// func (mm *MainMenu) UpdateFilters(dbh rssdb.DbHandle) (err error) {
-// 	for _, filter := range Filters {
-// 		urls := []string{}
-// 	filterFeed:
-// 		for _, feed := range mm.Feeds {
-// 			for excTag := range filter.ExcludeTags {
-// 				if feed.Tags[excTag] == true {
-// 					continue filterFeed
-// 				}
-// 			}
-// 			for incTag := range filter.IncludeTags {
-// 				if feed.Tags[incTag] == true {
-// 					urls = append(urls, feed.Feedurl)
-// 					continue filterFeed
-// 				}
-// 			}
-// 		}
-// 		filter.Articles, err = dbh.Queries.QueryFilter(dbh.Ctx, filter.QueryFilterParams)
-// 		if err != nil {
-// 			err = fmt.Errorf("nvimboat/MainMenu.UpdateFilters: %w\n", err)
-// 			return
-// 		}
-// 	}
-// 	return
-// }

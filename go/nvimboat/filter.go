@@ -18,9 +18,6 @@ type Filter struct {
 	Articles          []rssdb.QueryFilterRow
 }
 
-// TODO: Create a SQL-Query, that does not rely on injection anymore.
-// Lua filter config won't have "query".
-// Instead the keys will be the rss_item column names.
 func (f *Filter) Select(dbh rssdb.DbHandle, id string) (p Page, err error) {
 	return
 }
@@ -34,11 +31,72 @@ func (f *Filter) Render(nv *nvim.Nvim, buf nvim.Buffer) (err error) {
 		}
 		return
 	}
+	var (
+		readStatusCol []string
+		parsedTime    string
+		pubDateCol    []string
+		authorCol     []string
+		titleCol      []string
+		urlCol        []string
+	)
+	for _, a := range f.Articles {
+		switch a.Unread {
+		case 0:
+			readStatusCol = append(readStatusCol, " ")
+		case 1:
+			readStatusCol = append(readStatusCol, "N")
+		default:
+			err = fmt.Errorf(`nvimboat/Feed.Render: Bad unread number for "%s" in feed %s: %d\n`,
+				a.Url,
+				f.Name,
+				a.Unread,
+			)
+			Log(err)
+			return
+		}
+		parsedTime, err = unixToDate(a.Pubdate)
+		if err != nil {
+			err = fmt.Errorf("nvimboat/Feed.Render: %w\n", err)
+			return
+		}
+		pubDateCol = append(pubDateCol, parsedTime)
+		authorCol = append(authorCol, a.Author)
+		titleCol = append(titleCol, a.Title)
+		urlCol = append(urlCol, a.Url)
+	}
+	for _, c := range [][]string{readStatusCol, pubDateCol, authorCol, titleCol, urlCol} {
+		err = addColumn(nv, buf, c)
+		if err != nil {
+			err = fmt.Errorf("nvimboat/Feed.Render: %w\n", err)
+			return
+		}
+	}
 	return
 }
 
 func (f *Filter) ChildIdx(p Page) (idx int, err error) {
-	return
+	childDate := p.(*Article).Pubdate
+	var (
+		section     = len(f.Articles)
+		searchRange = f.Articles
+	)
+	for range f.Articles {
+		if childDate > searchRange[section/2].Pubdate {
+			searchRange = searchRange[:section/2]
+		} else if childDate < searchRange[section/2].Pubdate {
+			idx += section / 2
+			searchRange = searchRange[section/2:]
+		} else if childDate == searchRange[section/2].Pubdate {
+			idx += section / 2
+			return
+		}
+		section = len(searchRange)
+	}
+	return -1, fmt.Errorf(
+		`"%v" doesn't contain: "%+v"`,
+		prettyStruct(f),
+		prettyStruct(p),
+	)
 }
 
 func (f *Filter) Back(nb *Nvimboat) (cursor_x int, err error) {

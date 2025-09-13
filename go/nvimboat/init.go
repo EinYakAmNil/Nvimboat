@@ -19,6 +19,7 @@ func (nb *Nvimboat) init(nv *nvim.Nvim) (err error) {
 	rawFilters := new([]map[string]any)
 	Filters = make(map[string]*Filter)
 	nb.Nvim = nv
+	NbNvim = nv
 	NbBuffer = new(nvim.Buffer)
 	nb.Window = new(nvim.Window)
 	execBatch := nv.NewBatch()
