@@ -26,7 +26,7 @@ func (nb *Nvimboat) init(nv *nvim.Nvim) (err error) {
 	NvBuffer = new(nvim.Buffer)
 	NvWindow = new(nvim.Window)
 	execBatch := nv.NewBatch()
-	execBatch.CurrentWindow(nb.Window)
+	execBatch.CurrentWindow(NvWindow)
 	execBatch.CurrentBuffer(NvBuffer)
 	execBatch.ExecLua(luaConfig, &rawConfig)
 	execBatch.ExecLua(luaFeeds, rawFeeds)

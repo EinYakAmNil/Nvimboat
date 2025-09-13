@@ -29,7 +29,7 @@ func (nb *Nvimboat) Enable(nv *nvim.Nvim, args ...string) (err error) {
 		err = fmt.Errorf("Nvimboat enable: %w", err)
 		return
 	}
-	err = nb.Nvim.ExecLua(luaEnable, new(any))
+	err = Nvim.ExecLua(luaEnable, new(any))
 	if err != nil {
 		err = fmt.Errorf("Nvimboat enable: %w", err)
 		return
@@ -39,7 +39,7 @@ func (nb *Nvimboat) Enable(nv *nvim.Nvim, args ...string) (err error) {
 }
 
 func (nb *Nvimboat) Disable(nv *nvim.Nvim, args ...string) (err error) {
-	err = nb.Nvim.ExecLua(luaDisable, new(any))
+	err = Nvim.ExecLua(luaDisable, new(any))
 	if err != nil {
 		err = fmt.Errorf("Nvimboat disable: %w", err)
 		return
@@ -143,7 +143,7 @@ func (nb *Nvimboat) Select(nv *nvim.Nvim, args ...string) (err error) {
 }
 
 func (nb *Nvimboat) ShowTags(nv *nvim.Nvim, args ...string) (err error) {
-	cursorPosition, err := nv.WindowCursor(*nb.Window)
+	cursorPosition, err := nv.WindowCursor(*NvWindow)
 	if err != nil {
 		err = fmt.Errorf("nvimboat/Nvimboat.ShowTags: %w\n", err)
 		return
@@ -186,7 +186,7 @@ func (nb *Nvimboat) Back(nv *nvim.Nvim, args ...string) error {
 		if err != nil {
 			return fmt.Errorf("nvimboat/Nvimboat.Back: %w\n", err)
 		}
-		defer nb.Nvim.SetWindowCursor(*nb.Window, [2]int{cursor_x, 0})
+		defer Nvim.SetWindowCursor(*NvWindow, [2]int{cursor_x, 0})
 		_, err = Pages.Pop()
 		if err != nil {
 			return fmt.Errorf("nvimboat/Nvimboat.Back: %w\n", err)

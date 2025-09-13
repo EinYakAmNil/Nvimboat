@@ -16,7 +16,6 @@ type (
 		LinkHandler  string
 		LogPath      string
 		Nvim         *nvim.Nvim
-		Window       *nvim.Window
 	}
 	NvimboatAction func(*Nvimboat, *nvim.Nvim, ...string) error
 	Page           interface {
