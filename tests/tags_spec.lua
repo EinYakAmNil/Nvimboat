@@ -18,11 +18,11 @@ end
 nvimboat.setup({
 	filters = { {
 		name = "new Linux articles",
-		query = "unread = 1",
+		unread = 1,
 		tags = { "Linux" }
 	}, {
 		name = "new non political videos",
-		query = "unread = 1",
+		unread = 1,
 		tags = { "Video", "!Politics" }
 	} },
 	feeds = {
@@ -54,8 +54,8 @@ local tags_page_buf = {
 }
 
 local main_menu = {
-	"N (22/22) │ new Linux articles                │ query: unread = 1, tags: Linux",
-	"N (15/15) │ new non political videos          │ query: unread = 1, tags: Video, !Politics",
+	"N (22/22) │ new Linux articles                │ filter: unread: 1, tags: Linux",
+	"N (15/15) │ new non political videos          │ filter: unread: 1, tags: Video, !Politics",
 	"N (10/10) │ Arch Linux: Recent news updates   │ https://www.archlinux.org/feeds/news/",
 	"N (15/15) │ CaravanPalace                     │ https://www.youtube.com/feeds/videos.xml?user=CaravanPalace",
 	"N (17/17) │ Not Related! A Big-Braned Podcast │ https://notrelated.xyz/rss",
