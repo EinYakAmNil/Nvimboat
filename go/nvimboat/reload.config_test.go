@@ -30,7 +30,7 @@ func TestReloadFeeds(t *testing.T) {
 	nb := new(Nvimboat)
 	nb.CacheTime = cacheTime
 	nb.CachePath = cachePath
-	nb.DbPath = dbPath
+	DbPath = dbPath
 	err := ReloadFeeds(nb, testFeeds)
 	if err != nil {
 		t.Fatal(err)

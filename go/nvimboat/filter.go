@@ -2,6 +2,7 @@ package nvimboat
 
 import (
 	"fmt"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -99,11 +100,26 @@ func (f *Filter) ChildIdx(p Page) (idx int, err error) {
 	)
 }
 
-func (f *Filter) Back(nb *Nvimboat) (cursor_x int, err error) {
-	return
+func (f *Filter) Back() (cursor_x int, err error) {
+	filterNames := make([]string, 0, len(Filters))
+	for name := range Filters {
+		filterNames = append(filterNames, name)
+	}
+	slices.Sort(filterNames)
+	for idx, filterName := range filterNames {
+		if f.Name == filterName {
+			cursor_x = idx + 1
+			return
+		}
+	}
+	err = fmt.Errorf(
+		"nvimboat/Filter.Back: cannot find index for %s\n",
+		prettyStruct(f),
+	)
+	return -1, err
 }
 
-func (f *Filter) ToggleRead(dbh rssdb.DbHandle, id string) (err error) {
+func (f *Filter) ToggleRead(dbh rssdb.DbHandle, ids []string) (err error) {
 	return
 }
 
@@ -118,7 +134,7 @@ func updateFilters(dbh rssdb.DbHandle) (err error) {
 	return
 }
 
-func parseFilters(rawFilter map[string]any) (filter Filter, err error) {
+func parseFilter(rawFilter map[string]any) (filter Filter, err error) {
 	var (
 		descriptionTags []string
 		descriptionSql  []string
@@ -157,7 +173,7 @@ func parseFilters(rawFilter map[string]any) (filter Filter, err error) {
 		for _, tag := range tags {
 			if t, ok := tag.(string); ok {
 				if len(t) == 0 {
-					err = fmt.Errorf("nvimboat/parseFilters: cannot parse %+v\n", filter)
+					err = fmt.Errorf("nvimboat/parseFilters: string length 0. cannot parse %+v\n", rawFilter)
 					return
 				} else if t[0] == '!' {
 					filter.ExcludeTags[t[1:]] = true
@@ -168,8 +184,7 @@ func parseFilters(rawFilter map[string]any) (filter Filter, err error) {
 			}
 		}
 	} else {
-		fmt.Println(tags, rawFilter["tags"])
-		err = fmt.Errorf("nvimboat/parseFilters: cannot parse %+v\n", filter)
+		err = fmt.Errorf("nvimboat/parseFilters: cannot parse %+v\n", rawFilter)
 		return
 	}
 	if len(descriptionSql) > 0 {

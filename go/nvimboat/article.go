@@ -51,10 +51,10 @@ func (a *Article) ChildIdx(Page) (int, error) {
 	return -1, fmt.Errorf(`"nvimboat/Article.ChildIdx" should never be called`)
 }
 
-func (a *Article) Back(nb *Nvimboat) (cursor_x int, err error) {
+func (a *Article) Back() (cursor_x int, err error) {
 	var parentPage Page
-	if len(nb.Pages) >= 2 {
-		parentPage = nb.Pages[len(nb.Pages)-2]
+	if len(Pages) >= 2 {
+		parentPage = Pages[len(Pages)-2]
 	} else {
 		err = fmt.Errorf("nvimboat/Article.Back: page stack is less than 2.\nNo parent page possible.\n")
 		return
@@ -67,6 +67,12 @@ func (a *Article) Back(nb *Nvimboat) (cursor_x int, err error) {
 	return cursor_x + 1, nil
 }
 
-func (a *Article) ToggleRead(dbh rssdb.DbHandle, id string) (err error) {
+func (a *Article) ToggleRead(dbh rssdb.DbHandle, ids []string) (err error) {
+	Pages.Top()
+	err = dbh.Queries.SetArticlesRead(dbh.Ctx, []string{a.Url})
+	if err != nil {
+		err = fmt.Errorf("nvimboat/Feed.Select: %w\n", err)
+		return
+	}
 	return
 }

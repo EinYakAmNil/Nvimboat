@@ -7,10 +7,13 @@ import (
 )
 
 var (
-	NbNvim   *nvim.Nvim
-	NbBuffer *nvim.Buffer
+	DbPath   string
 	Feeds    []*Feed
 	Filters  map[string]*Filter
+	NvBuffer *nvim.Buffer
+	Nvim     *nvim.Nvim
+	NvWindow *nvim.Window
+	Pages    PageStack
 )
 
 func (nb *Nvimboat) init(nv *nvim.Nvim) (err error) {
@@ -19,12 +22,12 @@ func (nb *Nvimboat) init(nv *nvim.Nvim) (err error) {
 	rawFilters := new([]map[string]any)
 	Filters = make(map[string]*Filter)
 	nb.Nvim = nv
-	NbNvim = nv
-	NbBuffer = new(nvim.Buffer)
-	nb.Window = new(nvim.Window)
+	Nvim = nv
+	NvBuffer = new(nvim.Buffer)
+	NvWindow = new(nvim.Window)
 	execBatch := nv.NewBatch()
 	execBatch.CurrentWindow(nb.Window)
-	execBatch.CurrentBuffer(NbBuffer)
+	execBatch.CurrentBuffer(NvBuffer)
 	execBatch.ExecLua(luaConfig, &rawConfig)
 	execBatch.ExecLua(luaFeeds, rawFeeds)
 	execBatch.ExecLua(luaFilters, rawFilters)
@@ -65,7 +68,7 @@ func (nb *Nvimboat) init(nv *nvim.Nvim) (err error) {
 	}
 	for _, rawFilter := range *rawFilters {
 		filter := new(Filter)
-		*filter, err = parseFilters(rawFilter)
+		*filter, err = parseFilter(rawFilter)
 		if err != nil {
 			err = fmt.Errorf("nvimboat/Nvimboat.init: %w\n", err)
 			return

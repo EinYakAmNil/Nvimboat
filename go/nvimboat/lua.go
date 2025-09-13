@@ -50,7 +50,7 @@ func parseConfig(nb *Nvimboat, rawConfig map[string]any) (err error) {
 		err = fmt.Errorf("parseConfig: database path must be a string, got: %v\n", rawConfig["dbPath"])
 		return
 	}
-	nb.DbPath = dbPath
+	DbPath = dbPath
 
 	linkHandler, ok := rawConfig["linkHandler"].(string)
 	if !ok {

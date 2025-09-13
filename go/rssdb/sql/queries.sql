@@ -18,15 +18,15 @@ WHERE rssurl = ?;
 SELECT guid, title, author, url, feedurl, pubDate, content, unread FROM rss_item
 WHERE url = ? LIMIT 1;
 
--- name: SetArticleRead :exec
+-- name: SetArticlesRead :exec
 UPDATE rss_item
 SET unread = 0
-WHERE url = ?;
+WHERE url IN (sqlc.slice('url'));
 
--- name: SetArticleUnread :exec
+-- name: SetArticlesUnread :exec
 UPDATE rss_item
 SET unread = 1
-WHERE url = ?;
+WHERE url IN (sqlc.slice('url'));
 
 -- name: GetFeedPage :many
 SELECT unread, pubDate, author, title, url FROM rss_item
@@ -87,3 +87,13 @@ content LIKE ? AND
 unread IN (sqlc.slice('unread_states')) AND
 content_mime_type LIKE ?
 ORDER BY pubDate DESC;
+
+-- name: SetFeedsRead :exec
+UPDATE rss_item
+SET unread = 0
+WHERE feedurl in (sqlc.slice('feedurl'));
+
+-- name: SetFeedsUnread :exec
+UPDATE rss_item
+SET unread = 1
+WHERE feedurl in (sqlc.slice('feedurl'));

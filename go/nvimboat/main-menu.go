@@ -112,10 +112,10 @@ func (mm *MainMenu) ChildIdx(p Page) (idx int, err error) {
 	}
 }
 
-func (mm *MainMenu) Back(*Nvimboat) (int, error) {
+func (mm *MainMenu) Back() (int, error) {
 	return 0, nil
 }
 
-func (mm *MainMenu) ToggleRead(dbh rssdb.DbHandle, id string) (err error) {
+func (mm *MainMenu) ToggleRead(dbh rssdb.DbHandle, ids []string) (err error) {
 	return
 }

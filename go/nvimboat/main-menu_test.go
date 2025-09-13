@@ -43,10 +43,10 @@ filterFeed:
 	filterQuery := `SELECT * FROM rss_item WHERE feedurl in ('%s') AND %s`
 	expected := `SELECT * FROM rss_item WHERE feedurl in ('https://example0.com/rss', 'https://example1.com/rss') AND unread = 1`
 	if filterQuery != expected {
-// 		t.Fatalf(`
-// expected:	%s
-// got:		%s
-// 		`, expected, filterQuery)
+		// 		t.Fatalf(`
+		// expected:	%s
+		// got:		%s
+		// 		`, expected, filterQuery)
 	}
 }
 
@@ -86,11 +86,12 @@ func TestParseFilter(t *testing.T) {
 			"tags":  []any{"!A", "C"},
 		},
 	}
-	parsedFilters, err := parseFilters(rawFilters)
-	if err != nil {
-		t.Fatalf("nvimboat/TestParseFilter: %v\n", err)
-	}
-	for _, i := range parsedFilters {
-		fmt.Println(prettyStruct(i))
+	for _, raw := range rawFilters {
+
+		parsedFilter, err := parseFilter(raw)
+		if err != nil {
+			t.Fatalf("nvimboat/TestParseFilter: %v\n", err)
+		}
+		fmt.Println(prettyStruct(parsedFilter))
 	}
 }

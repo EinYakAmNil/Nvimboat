@@ -71,10 +71,10 @@ func (tf *TagFeeds) ChildIdx(p Page) (idx int, err error) {
 	return
 }
 
-func (tf *TagFeeds) Back(nb *Nvimboat) (cursor_x int, err error) {
+func (tf *TagFeeds) Back() (cursor_x int, err error) {
 	var parentPage Page
-	if len(nb.Pages) >= 2 {
-		parentPage = nb.Pages[len(nb.Pages)-2]
+	if len(Pages) >= 2 {
+		parentPage = Pages[len(Pages)-2]
 	} else {
 		err = fmt.Errorf("nvimboat/Article.Back: page stack is less than 2.\nNo parent page possible.\n")
 		return
@@ -87,6 +87,6 @@ func (tf *TagFeeds) Back(nb *Nvimboat) (cursor_x int, err error) {
 	return cursor_x + 1, nil
 }
 
-func (tf *TagFeeds) ToggleRead(dbh rssdb.DbHandle, id string) (err error) {
+func (tf *TagFeeds) ToggleRead(dbh rssdb.DbHandle, ids []string) (err error) {
 	return
 }

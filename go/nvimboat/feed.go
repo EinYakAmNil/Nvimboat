@@ -20,7 +20,7 @@ func (f *Feed) Select(dbh rssdb.DbHandle, id string) (p Page, err error) {
 		err = fmt.Errorf("nvimboat/Feed.Select: %w\n", err)
 		return
 	}
-	err = dbh.Queries.SetArticleRead(dbh.Ctx, id)
+	err = dbh.Queries.SetArticlesRead(dbh.Ctx, []string{id})
 	if err != nil {
 		err = fmt.Errorf("nvimboat/Feed.Select: %w\n", err)
 		return
@@ -112,17 +112,17 @@ func (f *Feed) ChildIdx(p Page) (idx int, err error) {
 	)
 }
 
-func (f *Feed) Back(nb *Nvimboat) (cursor_x int, err error) {
+func (f *Feed) Back() (cursor_x int, err error) {
 	var parentPage Page
-	if len(nb.Pages) >= 2 {
-		parentPage = nb.Pages[len(nb.Pages)-2]
+	if len(Pages) >= 2 {
+		parentPage = Pages[len(Pages)-2]
 	} else {
 		err = fmt.Errorf("nvimboat/Feed.Back: page stack is less than 2.\nNo parent page possible.\n")
 		return -1, err
 	}
 	switch pp := parentPage.(type) {
 	case *MainMenu:
-		dbh, dbErr := rssdb.ConnectDb(nb.DbPath)
+		dbh, dbErr := rssdb.ConnectDb(DbPath)
 		if dbErr != nil {
 			dbErr = fmt.Errorf("nvimboat/Feed.Back: %w\n", dbErr)
 			return -1, dbErr
@@ -160,6 +160,11 @@ func (f *Feed) Back(nb *Nvimboat) (cursor_x int, err error) {
 	}
 }
 
-func (f *Feed) ToggleRead(dbh rssdb.DbHandle, id string) (err error) {
+func (f *Feed) ToggleRead(dbh rssdb.DbHandle, ids []string) (err error) {
+	err = dbh.Queries.SetArticlesRead(dbh.Ctx, ids)
+	if err != nil {
+		err = fmt.Errorf("nvimboat/Feed.Select: %w\n", err)
+		return
+	}
 	return
 }

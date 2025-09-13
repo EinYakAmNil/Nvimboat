@@ -61,7 +61,7 @@ func  Log(val ...any) {
 		}
 	}
 	log.Println(msg)
-	if NbNvim != nil {
-		NbNvim.Command(`echo "` + msg + `"`)
+	if Nvim != nil {
+		Nvim.Command(`echo "` + msg + `"`)
 	}
 }
