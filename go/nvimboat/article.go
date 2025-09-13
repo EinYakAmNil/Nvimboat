@@ -67,12 +67,39 @@ func (a *Article) Back() (cursor_x int, err error) {
 	return cursor_x + 1, nil
 }
 
+// Assumption: the article is always in the "read" state.
+// It will only ever be made unread by this function.
 func (a *Article) ToggleRead(dbh rssdb.DbHandle, ids []string) (err error) {
-	Pages.Top()
-	err = dbh.Queries.SetArticlesRead(dbh.Ctx, []string{a.Url})
+	err = dbh.Queries.SetArticlesUnread(dbh.Ctx, []string{a.Url})
 	if err != nil {
-		err = fmt.Errorf("nvimboat/Feed.Select: %w\n", err)
+		err = fmt.Errorf("nvimboat/Article.ToggleRead: %w\n", err)
 		return
+	}
+	// Update parent page on the state change
+	parentPage, err := Pages.Pop()
+	if err != nil {
+		err = fmt.Errorf("nvimboat/Article.ToggleRead: %w\n", err)
+		return
+	}
+	idx, err := parentPage.ChildIdx(a)
+	if err != nil {
+		err = fmt.Errorf("nvimboat/Article.Back: %w\n", err)
+		return
+	}
+	defer Nvim.SetWindowCursor(*NvWindow, [2]int{idx + 1, 0})
+	switch p := parentPage.(type) {
+	case *Feed:
+		p.Articles[idx].Unread = 1
+	case *Filter:
+		p.Articles[idx].Unread = 1
+	default:
+		err = fmt.Errorf("nvimboat/Article.ToggleRead: Unknown parent page type: %T\n", p)
+		return
+	}
+	// Go back
+	err = Pages.Show()
+	if err != nil {
+		return fmt.Errorf("nvimboat/Nvimboat.Back: %w\n", err)
 	}
 	return
 }

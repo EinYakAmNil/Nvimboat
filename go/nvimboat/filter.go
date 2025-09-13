@@ -20,6 +20,23 @@ type Filter struct {
 }
 
 func (f *Filter) Select(dbh rssdb.DbHandle, id string) (p Page, err error) {
+	articleInfo, err := dbh.Queries.GetArticle(dbh.Ctx, id)
+	if err != nil {
+		err = fmt.Errorf("nvimboat/Feed.Select: %w\n", err)
+		return
+	}
+	err = dbh.Queries.SetArticlesRead(dbh.Ctx, []string{id})
+	if err != nil {
+		err = fmt.Errorf("nvimboat/Feed.Select: %w\n", err)
+		return
+	}
+	p = &Article{articleInfo}
+	idx, err := f.ChildIdx(p)
+	if err != nil {
+		err = fmt.Errorf("nvimboat/Feed.Select: %w\n", err)
+		return
+	}
+	f.Articles[idx].Unread = 0
 	return
 }
 

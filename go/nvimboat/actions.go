@@ -8,7 +8,7 @@ import (
 )
 
 var Actions = map[string]NvimboatAction{
-	"back":         (*Nvimboat).Back,
+	"back":         Back,
 	"delete":       (*Nvimboat).Delete,
 	"disable":      (*Nvimboat).Disable,
 	"enable":       (*Nvimboat).Enable,
@@ -177,7 +177,7 @@ func (nb *Nvimboat) ShowTags(nv *nvim.Nvim, args ...string) (err error) {
 	return
 }
 
-func (nb *Nvimboat) Back(nv *nvim.Nvim, args ...string) error {
+func Back(nb *Nvimboat, nv *nvim.Nvim, args ...string) error {
 	switch Pages.Top().(type) {
 	case *MainMenu:
 		return nil
