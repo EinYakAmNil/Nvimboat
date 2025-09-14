@@ -160,10 +160,41 @@ func (f *Feed) Back() (cursor_x int, err error) {
 	}
 }
 
+// If any selected articles are unread, then they will be set to read.
+// Set all to unread if all selected articles are read.
 func (f *Feed) ToggleRead(dbh rssdb.DbHandle, ids []string) (err error) {
-	err = dbh.Queries.SetArticlesRead(dbh.Ctx, ids)
+	setArticlesRead := false
+checkAnyUnread:
+	for _, a := range f.Articles {
+		for _, id := range ids {
+			if a.Url == id && a.Unread == 1 {
+				setArticlesRead = true
+				break checkAnyUnread
+			}
+		}
+	}
+	if setArticlesRead {
+		err = dbh.Queries.SetArticlesRead(dbh.Ctx, ids)
+		if err != nil {
+			err = fmt.Errorf("nvimboat/Feed.ToggleRead: %w\n", err)
+			return
+		}
+
+	} else {
+		err = dbh.Queries.SetArticlesUnread(dbh.Ctx, ids)
+		if err != nil {
+			err = fmt.Errorf("nvimboat/Feed.ToggleRead: %w\n", err)
+			return
+		}
+	}
+	f.Articles, err = dbh.Queries.GetFeedPage(dbh.Ctx, f.Rssurl)
 	if err != nil {
-		err = fmt.Errorf("nvimboat/Feed.Select: %w\n", err)
+		err = fmt.Errorf("nvimboat/Feed.ToggleRead: %w\n", err)
+		return
+	}
+	err = Pages.Show()
+	if err != nil {
+		err = fmt.Errorf("nvimboat/Feed.ToggleRead: %w\n", err)
 		return
 	}
 	return

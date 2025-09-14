@@ -137,6 +137,30 @@ func (f *Filter) Back() (cursor_x int, err error) {
 }
 
 func (f *Filter) ToggleRead(dbh rssdb.DbHandle, ids []string) (err error) {
+	setArticlesRead := false
+checkAnyUnread:
+	for _, a := range f.Articles {
+		for _, id := range ids {
+			if a.Url == id && a.Unread == 1 {
+				setArticlesRead = true
+				break checkAnyUnread
+			}
+		}
+	}
+	if setArticlesRead {
+		err = dbh.Queries.SetArticlesRead(dbh.Ctx, ids)
+		if err != nil {
+			err = fmt.Errorf("nvimboat/Feed.ToggleRead: %w\n", err)
+			return
+		}
+
+	} else {
+		err = dbh.Queries.SetArticlesUnread(dbh.Ctx, ids)
+		if err != nil {
+			err = fmt.Errorf("nvimboat/Feed.ToggleRead: %w\n", err)
+			return
+		}
+	}
 	return
 }
 
