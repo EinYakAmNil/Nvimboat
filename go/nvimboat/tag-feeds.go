@@ -88,5 +88,42 @@ func (tf *TagFeeds) Back() (cursor_x int, err error) {
 }
 
 func (tf *TagFeeds) ToggleRead(dbh rssdb.DbHandle, ids []string) (err error) {
+	setFeedsRead := false
+	urls := []string{}
+checkAnyUnread:
+	for _, feed := range tf.Feeds {
+		for _, id := range ids {
+			if feed.Feedurl == id {
+				urls = append(urls, feed.Feedurl)
+				if feed.UnreadCount > 0 {
+					setFeedsRead = true
+				}
+				continue checkAnyUnread
+			}
+		}
+	}
+	if setFeedsRead {
+		err = dbh.Queries.SetFeedsRead(dbh.Ctx, ids)
+		if err != nil {
+			err = fmt.Errorf("nvimboat/TagFeeds.ToggleRead: %w\n", err)
+			return
+		}
+	} else {
+		err = dbh.Queries.SetFeedsUnread(dbh.Ctx, ids)
+		if err != nil {
+			err = fmt.Errorf("nvimboat/TagFeeds.ToggleRead: %w\n", err)
+			return
+		}
+	}
+	tf.Feeds, err = dbh.Queries.QueryTagFeeds(dbh.Ctx, urls)
+	if err != nil {
+		err = fmt.Errorf("nvimboat/TagFeeds.ToggleRead: %w\n", err)
+		return
+	}
+	err = Pages.Show()
+	if err != nil {
+		err = fmt.Errorf("nvimboat/TagFeeds.ToggleRead: %w\n", err)
+		return
+	}
 	return
 }

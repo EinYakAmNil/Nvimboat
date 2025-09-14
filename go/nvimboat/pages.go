@@ -56,7 +56,7 @@ func (ps *PageStack) Pop() (p Page, err error) {
 	return ps.Top(), nil
 }
 
-func (ps *PageStack) ResetPages() (err error) {
+func (ps *PageStack) Reset() (err error) {
 	currentPages := *ps // Save current state in case of error
 	*ps = []Page{}
 	err = Nvim.ExecLua(luaResetPages, new(any))

@@ -117,5 +117,47 @@ func (mm *MainMenu) Back() (int, error) {
 }
 
 func (mm *MainMenu) ToggleRead(dbh rssdb.DbHandle, ids []string) (err error) {
+	setFeedsRead := false
+	for _, id := range ids {
+		if len(extracUrls(id)) == 0 {
+			err = fmt.Errorf("nvimboat/MainMenu.ToggleRead: Can't toggle read for %s\n", id)
+			return
+		}
+	}
+checkAnyUnread:
+	for _, f := range mm.Feeds {
+		for _, id := range ids {
+			if f.Feedurl == id && f.UnreadCount > 0 {
+				setFeedsRead = true
+				break checkAnyUnread
+			}
+		}
+	}
+	if setFeedsRead {
+		err = dbh.Queries.SetFeedsRead(dbh.Ctx, ids)
+		if err != nil {
+			err = fmt.Errorf("nvimboat/MainMenu.ToggleRead: %w\n", err)
+			return
+		}
+	} else {
+		err = dbh.Queries.SetFeedsUnread(dbh.Ctx, ids)
+		if err != nil {
+			err = fmt.Errorf("nvimboat/MainMenu.ToggleRead: %w\n", err)
+			return
+		}
+	}
+	feeds, err := dbh.Queries.QueryMainPage(dbh.Ctx)
+	if err != nil {
+		err = fmt.Errorf("nvimboat/MainMenu.ToggleRead: %w\n", err)
+		return
+	}
+	for i, f := range feeds {
+		mm.Feeds[i].QueryMainPageRow = f
+	}
+	err = Pages.Show()
+	if err != nil {
+		err = fmt.Errorf("nvimboat/MainMenu.ToggleRead: %w\n", err)
+		return
+	}
 	return
 }

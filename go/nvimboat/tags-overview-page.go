@@ -82,5 +82,6 @@ func (tp *TagsOverviewPage) Back() (cursor_x int, err error) {
 }
 
 func (tp *TagsOverviewPage) ToggleRead(dbh rssdb.DbHandle, ids []string) (err error) {
+	Log("Toggle read status is not implemented for this page.")
 	return
 }

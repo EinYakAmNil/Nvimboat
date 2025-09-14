@@ -22,18 +22,18 @@ type Filter struct {
 func (f *Filter) Select(dbh rssdb.DbHandle, id string) (p Page, err error) {
 	articleInfo, err := dbh.Queries.GetArticle(dbh.Ctx, id)
 	if err != nil {
-		err = fmt.Errorf("nvimboat/Feed.Select: %w\n", err)
+		err = fmt.Errorf("nvimboat/Filter.Select: %w\n", err)
 		return
 	}
 	err = dbh.Queries.SetArticlesRead(dbh.Ctx, []string{id})
 	if err != nil {
-		err = fmt.Errorf("nvimboat/Feed.Select: %w\n", err)
+		err = fmt.Errorf("nvimboat/Filter.Select: %w\n", err)
 		return
 	}
 	p = &Article{articleInfo}
 	idx, err := f.ChildIdx(p)
 	if err != nil {
-		err = fmt.Errorf("nvimboat/Feed.Select: %w\n", err)
+		err = fmt.Errorf("nvimboat/Filter.Select: %w\n", err)
 		return
 	}
 	f.Articles[idx].Unread = 0
@@ -64,17 +64,16 @@ func (f *Filter) Render(nv *nvim.Nvim, buf nvim.Buffer) (err error) {
 		case 1:
 			readStatusCol = append(readStatusCol, "N")
 		default:
-			err = fmt.Errorf(`nvimboat/Feed.Render: Bad unread number for "%s" in feed %s: %d\n`,
+			err = fmt.Errorf(`nvimboat/Filter.Render: Bad unread number for "%s" in feed %s: %d\n`,
 				a.Url,
 				f.Name,
 				a.Unread,
 			)
-			Log(err)
 			return
 		}
 		parsedTime, err = unixToDate(a.Pubdate)
 		if err != nil {
-			err = fmt.Errorf("nvimboat/Feed.Render: %w\n", err)
+			err = fmt.Errorf("nvimboat/Filter.Render: %w\n", err)
 			return
 		}
 		pubDateCol = append(pubDateCol, parsedTime)
@@ -85,7 +84,7 @@ func (f *Filter) Render(nv *nvim.Nvim, buf nvim.Buffer) (err error) {
 	for _, c := range [][]string{readStatusCol, pubDateCol, authorCol, titleCol, urlCol} {
 		err = addColumn(nv, buf, c)
 		if err != nil {
-			err = fmt.Errorf("nvimboat/Feed.Render: %w\n", err)
+			err = fmt.Errorf("nvimboat/Filter.Render: %w\n", err)
 			return
 		}
 	}
@@ -150,16 +149,38 @@ checkAnyUnread:
 	if setArticlesRead {
 		err = dbh.Queries.SetArticlesRead(dbh.Ctx, ids)
 		if err != nil {
-			err = fmt.Errorf("nvimboat/Feed.ToggleRead: %w\n", err)
+			err = fmt.Errorf("nvimboat/Filter.ToggleRead: %w\n", err)
 			return
 		}
-
+	outer1:
+		for i, a := range f.Articles {
+			for _, id := range ids {
+				if a.Url == id && a.Unread == 1 {
+					f.Articles[i].Unread = 0
+					continue outer1
+				}
+			}
+		}
 	} else {
 		err = dbh.Queries.SetArticlesUnread(dbh.Ctx, ids)
 		if err != nil {
-			err = fmt.Errorf("nvimboat/Feed.ToggleRead: %w\n", err)
+			err = fmt.Errorf("nvimboat/Filter.ToggleRead: %w\n", err)
 			return
 		}
+	outer2:
+		for i, a := range f.Articles {
+			for _, id := range ids {
+				if a.Url == id && a.Unread == 0 {
+					f.Articles[i].Unread = 1
+					continue outer2
+				}
+			}
+		}
+	}
+	err = Pages.Show()
+	if err != nil {
+		err = fmt.Errorf("nvimboat/Filter.ToggleRead: %w\n", err)
+		return
 	}
 	return
 }

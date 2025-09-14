@@ -96,7 +96,7 @@ func (nb *Nvimboat) ShowMain(nv *nvim.Nvim, args ...string) (err error) {
 		err = fmt.Errorf("nvimboat/Nvimboat.ShowMain: %w\n", err)
 		return
 	}
-	err = Pages.ResetPages()
+	err = Pages.Reset()
 	if err != nil {
 		err = fmt.Errorf("nvimboat/Nvimboat.ShowMain: %w\n", err)
 		return

@@ -29,7 +29,7 @@ func selectFeed(dbh rssdb.DbHandle, feedurl string) (p Page, err error) {
 		err = fmt.Errorf("nvimboat/selectFeed: %w\n", err)
 		return
 	}
-	feed.Title = feedInfo.Title
+	feed.RssFeed = feedInfo
 	p = feed
 	return
 }
