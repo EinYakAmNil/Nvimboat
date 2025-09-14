@@ -2,26 +2,32 @@ package nvimboat
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/neovim/go-client/nvim"
 )
 
 var (
-	DbPath   string
-	Feeds    []*Feed
-	Filters  map[string]*Filter
-	NvBuffer *nvim.Buffer
-	Nvim     *nvim.Nvim
-	NvWindow *nvim.Window
-	Pages    PageStack
+	CachePath    string
+	CacheTime    time.Duration
+	DbPath       string
+	FeedConfig   map[string][]string
+	Feeds        []*Feed
+	FilterConfig []*Filter
+	Filters      map[string]*Filter
+	LinkHandler  string
+	LogPath      string
+	NvBuffer     *nvim.Buffer
+	NvWindow     *nvim.Window
+	Nvim         *nvim.Nvim
+	Pages        PageStack
 )
 
-func (nb *Nvimboat) init(nv *nvim.Nvim) (err error) {
+func initNvimboat(nv *nvim.Nvim) (err error) {
 	rawConfig := make(map[string]any)
 	rawFeeds := new([]map[string]any)
 	rawFilters := new([]map[string]any)
 	Filters = make(map[string]*Filter)
-	nb.Nvim = nv
 	Nvim = nv
 	NvBuffer = new(nvim.Buffer)
 	NvWindow = new(nvim.Window)
@@ -36,17 +42,17 @@ func (nb *Nvimboat) init(nv *nvim.Nvim) (err error) {
 		err = fmt.Errorf("nvimboat/Nvimboat.init: %w", err)
 		return
 	}
-	err = parseConfig(nb, rawConfig)
+	err = parseConfig(rawConfig)
 	if err != nil {
 		err = fmt.Errorf("nvimboat/Nvimboat.init parse lua config: %w", err)
 		return
 	}
-	err = SetupLogging(nb.LogPath)
+	err = SetupLogging(LogPath)
 	if err != nil {
 		err = fmt.Errorf("Nvimboat init logging: %w", err)
 		return
 	}
-	nb.FeedConfig, err = parseFeeds(*rawFeeds)
+	FeedConfig, err = parseFeeds(*rawFeeds)
 	if err != nil {
 		err = fmt.Errorf("nvimboat/Nvimboat.init: %w\n", err)
 		return

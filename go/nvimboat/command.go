@@ -6,15 +6,15 @@ import (
 	"github.com/neovim/go-client/nvim"
 )
 
-func (nb *Nvimboat) HandleAction(nv *nvim.Nvim, args []string) (err error) {
+func HandleAction(nv *nvim.Nvim, args []string) (err error) {
 	if len(args) == 0 {
 		return fmt.Errorf("no arguments supplied")
 	}
 	action, ok := Actions[args[0]]
 	if ok {
-		err = action(nb, nv, args...)
+		err = action(nv, args...)
 		if err != nil {
-			nb.Log(err)
+			Log(err)
 		}
 		return
 	} else {

@@ -36,9 +36,7 @@ local go_build = vim.system(
 ):wait()
 
 if go_build.stderr ~= "" then
-	for _, l in ipairs(go_build.stderr) do
-		print(l)
-	end
+	print(go_build.stderr)
 end
 
 local main_menu_buf_0 = {

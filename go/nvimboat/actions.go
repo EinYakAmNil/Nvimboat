@@ -7,24 +7,26 @@ import (
 	"github.com/neovim/go-client/nvim"
 )
 
+type NvimboatAction func(*nvim.Nvim, ...string) error
+
 var Actions = map[string]NvimboatAction{
 	"back":         Back,
-	"delete":       (*Nvimboat).Delete,
-	"disable":      (*Nvimboat).Disable,
-	"enable":       (*Nvimboat).Enable,
-	"next-article": (*Nvimboat).NextArticle,
-	"next-unread":  (*Nvimboat).NextUnread,
-	"prev-article": (*Nvimboat).PrevArticle,
-	"prev-unread":  (*Nvimboat).PrevUnread,
-	"reload":       (*Nvimboat).Reload,
-	"select":       (*Nvimboat).Select,
-	"show-main":    (*Nvimboat).ShowMain,
-	"show-tags":    (*Nvimboat).ShowTags,
-	"toggle-read":  (*Nvimboat).ToggleRead,
+	"delete":       Delete,
+	"disable":      Disable,
+	"enable":       Enable,
+	"next-article": NextArticle,
+	"next-unread":  NextUnread,
+	"prev-article": PrevArticle,
+	"prev-unread":  PrevUnread,
+	"reload":       Reload,
+	"select":       Select,
+	"show-main":    ShowMain,
+	"show-tags":    ShowTags,
+	"toggle-read":  ToggleRead,
 }
 
-func (nb *Nvimboat) Enable(nv *nvim.Nvim, args ...string) (err error) {
-	err = nb.init(nv)
+func Enable(nv *nvim.Nvim, args ...string) (err error) {
+	err = initNvimboat(nv)
 	if err != nil {
 		err = fmt.Errorf("Nvimboat enable: %w", err)
 		return
@@ -38,7 +40,7 @@ func (nb *Nvimboat) Enable(nv *nvim.Nvim, args ...string) (err error) {
 	return
 }
 
-func (nb *Nvimboat) Disable(nv *nvim.Nvim, args ...string) (err error) {
+func Disable(nv *nvim.Nvim, args ...string) (err error) {
 	err = Nvim.ExecLua(luaDisable, new(any))
 	if err != nil {
 		err = fmt.Errorf("Nvimboat disable: %w", err)
@@ -47,7 +49,7 @@ func (nb *Nvimboat) Disable(nv *nvim.Nvim, args ...string) (err error) {
 	return
 }
 
-func (nb *Nvimboat) Reload(nv *nvim.Nvim, args ...string) (err error) {
+func Reload(nv *nvim.Nvim, args ...string) (err error) {
 	if len(args) < 1 {
 		err = fmt.Errorf("Reload: expected at least one argument")
 		return
@@ -55,13 +57,13 @@ func (nb *Nvimboat) Reload(nv *nvim.Nvim, args ...string) (err error) {
 	// reload all feeds if no arguments are given to the subcommand
 	var feedUrls []string
 	if len(args) == 1 {
-		for feedUrl := range nb.FeedConfig {
+		for feedUrl := range FeedConfig {
 			feedUrls = append(feedUrls, feedUrl)
 		}
 	} else {
 		feedUrls = args[1:]
 	}
-	err = ReloadFeeds(nb, feedUrls)
+	err = ReloadFeeds(feedUrls)
 	if err != nil {
 		err = fmt.Errorf("Reload: %w", err)
 		return
@@ -69,7 +71,7 @@ func (nb *Nvimboat) Reload(nv *nvim.Nvim, args ...string) (err error) {
 	return
 }
 
-func (nb *Nvimboat) ShowMain(nv *nvim.Nvim, args ...string) (err error) {
+func ShowMain(nv *nvim.Nvim, args ...string) (err error) {
 	mm := new(MainMenu)
 	dbh, err := rssdb.ConnectDb(DbPath)
 	if err != nil {
@@ -83,7 +85,7 @@ func (nb *Nvimboat) ShowMain(nv *nvim.Nvim, args ...string) (err error) {
 	}
 	for _, feed := range mainPageFeeds {
 		tags := make(map[string]bool)
-		for _, tag := range nb.FeedConfig[feed.Feedurl] {
+		for _, tag := range FeedConfig[feed.Feedurl] {
 			tags[tag] = true
 		}
 		mm.Feeds = append(mm.Feeds, MainPageFeed{
@@ -114,7 +116,7 @@ func (nb *Nvimboat) ShowMain(nv *nvim.Nvim, args ...string) (err error) {
 	return
 }
 
-func (nb *Nvimboat) Select(nv *nvim.Nvim, args ...string) (err error) {
+func Select(nv *nvim.Nvim, args ...string) (err error) {
 	if len(args) < 2 {
 		err = fmt.Errorf("nvimboat/Nvimboat.Select: no arguments")
 		return
@@ -142,7 +144,7 @@ func (nb *Nvimboat) Select(nv *nvim.Nvim, args ...string) (err error) {
 	return
 }
 
-func (nb *Nvimboat) ShowTags(nv *nvim.Nvim, args ...string) (err error) {
+func ShowTags(nv *nvim.Nvim, args ...string) (err error) {
 	cursorPosition, err := nv.WindowCursor(*NvWindow)
 	if err != nil {
 		err = fmt.Errorf("nvimboat/Nvimboat.ShowTags: %w\n", err)
@@ -159,7 +161,7 @@ func (nb *Nvimboat) ShowTags(nv *nvim.Nvim, args ...string) (err error) {
 	p := new(TagsOverviewPage)
 	p.PrevCursorPosition = cursorPosition
 	p.Tags = make(map[string][]string)
-	for url, tags := range nb.FeedConfig {
+	for url, tags := range FeedConfig {
 		for _, t := range tags {
 			p.Tags[t] = append(p.Tags[t], url)
 		}
@@ -177,7 +179,7 @@ func (nb *Nvimboat) ShowTags(nv *nvim.Nvim, args ...string) (err error) {
 	return
 }
 
-func Back(nb *Nvimboat, nv *nvim.Nvim, args ...string) error {
+func Back(nv *nvim.Nvim, args ...string) error {
 	switch Pages.Top().(type) {
 	case *MainMenu:
 		return nil
@@ -199,23 +201,23 @@ func Back(nb *Nvimboat, nv *nvim.Nvim, args ...string) error {
 	}
 }
 
-func (nb *Nvimboat) NextUnread(nv *nvim.Nvim, args ...string) (err error) {
+func NextUnread(nv *nvim.Nvim, args ...string) (err error) {
 	return
 }
 
-func (nb *Nvimboat) PrevUnread(nv *nvim.Nvim, args ...string) (err error) {
+func PrevUnread(nv *nvim.Nvim, args ...string) (err error) {
 	return
 }
 
-func (nb *Nvimboat) NextArticle(nv *nvim.Nvim, args ...string) (err error) {
+func NextArticle(nv *nvim.Nvim, args ...string) (err error) {
 	return
 }
 
-func (nb *Nvimboat) PrevArticle(nv *nvim.Nvim, args ...string) (err error) {
+func PrevArticle(nv *nvim.Nvim, args ...string) (err error) {
 	return
 }
 
-func (nb *Nvimboat) ToggleRead(nv *nvim.Nvim, args ...string) (err error) {
+func ToggleRead(nv *nvim.Nvim, args ...string) (err error) {
 	if len(args) < 2 {
 		err = fmt.Errorf("nvimboat/Nvimboat.ToggleRead: no arguments")
 		return
@@ -233,6 +235,6 @@ func (nb *Nvimboat) ToggleRead(nv *nvim.Nvim, args ...string) (err error) {
 	return
 }
 
-func (nb *Nvimboat) Delete(nv *nvim.Nvim, args ...string) (err error) {
+func Delete(nv *nvim.Nvim, args ...string) (err error) {
 	return
 }

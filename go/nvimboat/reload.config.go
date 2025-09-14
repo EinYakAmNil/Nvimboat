@@ -15,7 +15,7 @@ var CustomReload = map[string]reload.Reloader{
 	"https://mangapill.com": new(mangapill.MangapillReloader),
 }
 
-func ReloadFeeds(nb *Nvimboat, feedUrls []string) (err error) {
+func ReloadFeeds(feedUrls []string) (err error) {
 	standardReloader := new(reload.StandardReloader)
 	dbh, err := rssdb.ConnectDb(DbPath)
 	if err != nil {
@@ -41,23 +41,23 @@ reloadFeed:
 				return err
 			}
 			if ok {
-				newFeed, reloadErr = reloader.UpdateFeed(dbh, feedUrl, nb.CacheTime, nb.CachePath, addFeed)
+				newFeed, reloadErr = reloader.UpdateFeed(dbh, feedUrl, CacheTime, CachePath, addFeed)
 				if reloadErr != nil {
-					nb.Log(reloadErr)
+					Log(reloadErr)
 				}
 				if addFeed {
-					nb.Log("Added feed:", newFeed.Url)
+					Log("Added feed:", newFeed.Url)
 				}
 				addFeed = false
 				continue reloadFeed
 			}
 		}
-		newFeed, reloadErr = standardReloader.UpdateFeed(dbh, feedUrl, nb.CacheTime, nb.CachePath, addFeed)
+		newFeed, reloadErr = standardReloader.UpdateFeed(dbh, feedUrl, CacheTime, CachePath, addFeed)
 		if reloadErr != nil {
-			nb.Log(reloadErr)
+			Log(reloadErr)
 		}
 		if addFeed {
-			nb.Log("Added feed:", newFeed.Url)
+			Log("Added feed:", newFeed.Url)
 		}
 		addFeed = false
 	}

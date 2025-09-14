@@ -3,6 +3,20 @@ package nvimboat
 import (
 	"fmt"
 	"strings"
+
+	"github.com/EinYakAmNil/Nvimboat/go/engine/rssdb"
+	"github.com/neovim/go-client/nvim"
+)
+
+type (
+	Page interface {
+		Select(dbh rssdb.DbHandle, id string) (p Page, err error)
+		Render(nv *nvim.Nvim, buf nvim.Buffer) (err error)
+		ChildIdx(p Page) (idx int, err error)
+		Back() (cursor_x int, err error)
+		ToggleRead(dbh rssdb.DbHandle, ids []string) (err error)
+	}
+	PageStack []Page
 )
 
 func (ps *PageStack) Show() (err error) {

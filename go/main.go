@@ -6,7 +6,6 @@ import (
 )
 
 func main() {
-	nb := new(nvimboat.Nvimboat)
 	nvimPlugin.Main(func(p *nvimPlugin.Plugin) (err error) {
 		p.HandleCommand(
 			&nvimPlugin.CommandOptions{
@@ -14,7 +13,7 @@ func main() {
 				NArgs:    "+",
 				Complete: "customlist, CompleteNvimboat",
 			},
-			nb.HandleAction,
+			nvimboat.HandleAction,
 		)
 		p.HandleFunction(
 			&nvimPlugin.FunctionOptions{Name: "CompleteNvimboat"},

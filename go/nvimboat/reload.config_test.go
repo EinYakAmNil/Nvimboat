@@ -27,11 +27,10 @@ func TestReloadFeeds(t *testing.T) {
 	if testing.Short() {
 		t.Skip()
 	}
-	nb := new(Nvimboat)
-	nb.CacheTime = cacheTime
-	nb.CachePath = cachePath
+	CacheTime = cacheTime
+	CachePath = cachePath
 	DbPath = dbPath
-	err := ReloadFeeds(nb, testFeeds)
+	err := ReloadFeeds(testFeeds)
 	if err != nil {
 		t.Fatal(err)
 	}

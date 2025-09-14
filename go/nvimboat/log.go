@@ -20,30 +20,7 @@ func SetupLogging(logPath string) (err error) {
 	return
 }
 
-func (nb *Nvimboat) Log(val ...any) {
-	var (
-		msg string
-		w   any
-	)
-	for _, v := range val {
-		if reflect.ValueOf(v).Kind() == reflect.Pointer {
-			w = reflect.ValueOf(v).Elem().Interface()
-		} else {
-			w = v
-		}
-		if reflect.ValueOf(w).Kind() == reflect.Struct {
-			msg += fmt.Sprintf("%+v\n", prettyStruct(w))
-		} else {
-			msg += fmt.Sprintf("%+v\n", w)
-		}
-	}
-	log.Println(msg)
-	if nb.Nvim != nil {
-		nb.Nvim.Command(`echo "` + msg + `"`)
-	}
-}
-
-func  Log(val ...any) {
+func Log(val ...any) {
 	var (
 		msg string
 		w   any
