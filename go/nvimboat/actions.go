@@ -7,24 +7,6 @@ import (
 	"github.com/neovim/go-client/nvim"
 )
 
-type NvimboatAction func(*nvim.Nvim, ...string) error
-
-var Actions = map[string]NvimboatAction{
-	"back":         Back,
-	"delete":       Delete,
-	"disable":      Disable,
-	"enable":       Enable,
-	"next-article": NextArticle,
-	"next-unread":  NextUnread,
-	"prev-article": PrevArticle,
-	"prev-unread":  PrevUnread,
-	"reload":       Reload,
-	"select":       Select,
-	"show-main":    ShowMain,
-	"show-tags":    ShowTags,
-	"toggle-read":  ToggleRead,
-}
-
 func Enable(nv *nvim.Nvim, args ...string) (err error) {
 	err = initNvimboat(nv)
 	if err != nil {
