@@ -282,3 +282,8 @@ func assignFilterVarcharAttr(attribute *string, luaValue any) (replaced bool) {
 		return false
 	}
 }
+func (f *Filter) NextUnread(dbh rssdb.DbHandle) (err error)           { return }
+func (f *Filter) PrevUnread(dbh rssdb.DbHandle) (err error)           { return }
+func (f *Filter) NextArticle(dbh rssdb.DbHandle) (err error)          { return }
+func (f *Filter) PrevArticle(dbh rssdb.DbHandle) (err error)          { return }
+func (f *Filter) Delete(dbh rssdb.DbHandle, ids []string) (err error) { return }

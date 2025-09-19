@@ -161,3 +161,9 @@ checkAnyUnread:
 	}
 	return
 }
+
+func (mm *MainMenu) NextUnread(dbh rssdb.DbHandle) (err error)           { return }
+func (mm *MainMenu) PrevUnread(dbh rssdb.DbHandle) (err error)           { return }
+func (mm *MainMenu) NextArticle(dbh rssdb.DbHandle) (err error)          { return }
+func (mm *MainMenu) PrevArticle(dbh rssdb.DbHandle) (err error)          { return }
+func (mm *MainMenu) Delete(dbh rssdb.DbHandle, ids []string) (err error) { return }

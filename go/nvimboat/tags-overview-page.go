@@ -85,3 +85,9 @@ func (tp *TagsOverviewPage) ToggleRead(dbh rssdb.DbHandle, ids []string) (err er
 	Log("Toggle read status is not implemented for this page.")
 	return
 }
+
+func (tp *TagsOverviewPage) NextUnread(dbh rssdb.DbHandle) (err error)           { return }
+func (tp *TagsOverviewPage) PrevUnread(dbh rssdb.DbHandle) (err error)           { return }
+func (tp *TagsOverviewPage) NextArticle(dbh rssdb.DbHandle) (err error)          { return }
+func (tp *TagsOverviewPage) PrevArticle(dbh rssdb.DbHandle) (err error)          { return }
+func (tp *TagsOverviewPage) Delete(dbh rssdb.DbHandle, ids []string) (err error) { return }
