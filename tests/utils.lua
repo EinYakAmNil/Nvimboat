@@ -3,7 +3,7 @@ local eq = assert.are.equal
 
 local M = {}
 
----print current buffer
+---Print current buffer.
 ---@return table buf_lines list of lines in buffer.
 function M.print_buf()
 	print("\ncurrent buffer lines:\n")
@@ -15,6 +15,9 @@ function M.print_buf()
 	return buf_lines
 end
 
+---Checks Nvimboat buffer lines against the expected buffer lines.
+---@param expected_buf string[] expeced lines of the buffer
+---@return nil
 function M.eq_buf(expected_buf)
 	local rendered = api.nvim_buf_get_lines(0, 0, -1, false)
 	eq(#expected_buf, #rendered)
@@ -23,6 +26,9 @@ function M.eq_buf(expected_buf)
 	end
 end
 
+---Checks if Nvimboat has the cursor in the expected row.
+---@param expected_row integer expeced row of the cursor
+---@return nil
 function M.eq_cursor_row(expected_row)
 	cursor = api.nvim_win_get_cursor(0)
 	eq(expected_row, cursor[1])

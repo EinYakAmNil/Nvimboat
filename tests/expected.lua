@@ -68,6 +68,17 @@ M.feed_buf = { {
 	"  │ 13 Dec 23 │ Alex       │ Skill Tweaks                                        │ https://fractalsoftworks.com/2023/12/12/skill-tweaks/",
 	"  │ 24 Nov 23 │ Alex       │ Colony Crises                                       │ https://fractalsoftworks.com/2023/11/24/colony-crises/",
 	"  │ 13 Nov 23 │ dgbaumgart │ You Merely Adopted Rules.csv, I Was Born Into It    │ https://fractalsoftworks.com/2023/11/13/you-merely-adopted-rules-csv-i-was-born-into-it/",
+}, {
+	"N │ 03 Feb 25 │ Frederik Schwan        │ Glibc 2.41 corrupting Discord installation                              │ https://archlinux.org/news/glibc-241-corrupting-discord-installation/",
+	"N │ 16 Jan 25 │ Robin Candau           │ Critical rsync security release 3.4.0                                   │ https://archlinux.org/news/critical-rsync-security-release-340/",
+	"  │ 19 Nov 24 │ Rafael Epplée          │ Providing a license for package sources                                 │ https://archlinux.org/news/providing-a-license-for-package-sources/",
+	"  │ 14 Sep 24 │ Morten Linderud        │ Manual intervention for pacman 7.0.0 and local repositories required    │ https://archlinux.org/news/manual-intervention-for-pacman-700-and-local-repositories-required/",
+	"N │ 01 Jul 24 │ Robin Candau           │ The sshd service needs to be restarted after upgrading to openssh-9.8p1 │ https://archlinux.org/news/the-sshd-service-needs-to-be-restarted-after-upgrading-to-openssh-98p1/",
+	"  │ 15 Apr 24 │ Christian Heusel       │ Arch Linux 2024 Leader Election Results                                 │ https://archlinux.org/news/arch-linux-2024-leader-election-results/",
+	"N │ 07 Apr 24 │ Robin Candau           │ Increasing the default vm.max_map_count value                           │ https://archlinux.org/news/increasing-the-default-vmmax_map_count-value/",
+	"N │ 29 Mar 24 │ David Runge            │ The xz package has been backdoored                                      │ https://archlinux.org/news/the-xz-package-has-been-backdoored/",
+	"N │ 04 Mar 24 │ Morten Linderud        │ mkinitcpio hook migration and early microcode                           │ https://archlinux.org/news/mkinitcpio-hook-migration-and-early-microcode/",
+	"N │ 09 Jan 24 │ Jan Alexander Steffens │ Making dbus-broker our default D-Bus daemon                             │ https://archlinux.org/news/making-dbus-broker-our-default-d-bus-daemon/",
 } }
 
 M.article_buf = { {

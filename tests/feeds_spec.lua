@@ -1,5 +1,6 @@
 local nvimboat = require("nvimboat")
 local utils = require("tests.utils")
+local expected = require("tests.expected")
 
 local eq = assert.are.equal
 local dbPath = os.getenv("HOME") .. "/.cache/nvimboat-test/lua-test.db"
@@ -65,7 +66,7 @@ describe("nvimboat", function()
 	end)
 	it("can toggle the read status", function ()
 		vim.cmd.Nvimboat("toggle-read", unpack(toggle_urls))
-		utils.print_buf()
+		utils.eq_buf(expected.feed_buf[4])
 	end)
 end)
 
