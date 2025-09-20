@@ -39,7 +39,7 @@ if go_build.stderr ~= "" then
 	print(go_build.stderr)
 end
 
-local main_menu_buf_0 = {
+local main_menu_buf = { {
 	"N (40/40) │ gaming articles                   │ filter: tags: Gaming",
 	"N (22/22) │ new Linux articles                │ filter: unread: 1, tags: Linux",
 	"N (15/15) │ new non political videos          │ filter: unread: 1, tags: Video, !Politics",
@@ -50,8 +50,7 @@ local main_menu_buf_0 = {
 	"N (50/50) │ ShortFatOtaku on Odysee           │ https://odysee.com/$/rss/@ShortFatOtaku:1",
 	"N (10/10) │ Starsector                        │ https://fractalsoftworks.com/feed/",
 	"N (12/12) │ 依云's Blog                       │ https://blog.lilydjwg.me/feed",
-}
-local main_menu_buf_1 = {
+}, {
 	"N (40/40) │ gaming articles                   │ filter: tags: Gaming",
 	"N (21/21) │ new Linux articles                │ filter: unread: 1, tags: Linux",
 	"N (15/15) │ new non political videos          │ filter: unread: 1, tags: Video, !Politics",
@@ -62,8 +61,19 @@ local main_menu_buf_1 = {
 	"N (50/50) │ ShortFatOtaku on Odysee           │ https://odysee.com/$/rss/@ShortFatOtaku:1",
 	"N (10/10) │ Starsector                        │ https://fractalsoftworks.com/feed/",
 	"N (12/12) │ 依云's Blog                       │ https://blog.lilydjwg.me/feed",
-}
-local feed_buf_0 = {
+}, {
+	"N (40/40) │ gaming articles                   │ filter: tags: Gaming",
+	"N (21/21) │ new Linux articles                │ filter: unread: 1, tags: Linux",
+	"N (15/15) │ new non political videos          │ filter: unread: 1, tags: Video, !Politics",
+	"N (9/10)  │ Arch Linux: Recent news updates   │ https://www.archlinux.org/feeds/news/",
+	"N (15/15) │ CaravanPalace                     │ https://www.youtube.com/feeds/videos.xml?user=CaravanPalace",
+	"N (17/17) │ Not Related! A Big-Braned Podcast │ https://notrelated.xyz/rss",
+	"N (30/30) │ Path of Exile News                │ https://www.pathofexile.com/news/rss",
+	"N (50/50) │ ShortFatOtaku on Odysee           │ https://odysee.com/$/rss/@ShortFatOtaku:1",
+	"  (0/10)  │ Starsector                        │ https://fractalsoftworks.com/feed/",
+	"N (12/12) │ 依云's Blog                       │ https://blog.lilydjwg.me/feed",
+} }
+local feed_buf = { {
 	"N │ 03 Feb 25 │ Frederik Schwan        │ Glibc 2.41 corrupting Discord installation                              │ https://archlinux.org/news/glibc-241-corrupting-discord-installation/",
 	"N │ 16 Jan 25 │ Robin Candau           │ Critical rsync security release 3.4.0                                   │ https://archlinux.org/news/critical-rsync-security-release-340/",
 	"N │ 19 Nov 24 │ Rafael Epplée          │ Providing a license for package sources                                 │ https://archlinux.org/news/providing-a-license-for-package-sources/",
@@ -74,8 +84,7 @@ local feed_buf_0 = {
 	"N │ 29 Mar 24 │ David Runge            │ The xz package has been backdoored                                      │ https://archlinux.org/news/the-xz-package-has-been-backdoored/",
 	"N │ 04 Mar 24 │ Morten Linderud        │ mkinitcpio hook migration and early microcode                           │ https://archlinux.org/news/mkinitcpio-hook-migration-and-early-microcode/",
 	"N │ 09 Jan 24 │ Jan Alexander Steffens │ Making dbus-broker our default D-Bus daemon                             │ https://archlinux.org/news/making-dbus-broker-our-default-d-bus-daemon/",
-}
-local feed_buf_1 = {
+}, {
 	"N │ 03 Feb 25 │ Frederik Schwan        │ Glibc 2.41 corrupting Discord installation                              │ https://archlinux.org/news/glibc-241-corrupting-discord-installation/",
 	"  │ 16 Jan 25 │ Robin Candau           │ Critical rsync security release 3.4.0                                   │ https://archlinux.org/news/critical-rsync-security-release-340/",
 	"N │ 19 Nov 24 │ Rafael Epplée          │ Providing a license for package sources                                 │ https://archlinux.org/news/providing-a-license-for-package-sources/",
@@ -86,7 +95,18 @@ local feed_buf_1 = {
 	"N │ 29 Mar 24 │ David Runge            │ The xz package has been backdoored                                      │ https://archlinux.org/news/the-xz-package-has-been-backdoored/",
 	"N │ 04 Mar 24 │ Morten Linderud        │ mkinitcpio hook migration and early microcode                           │ https://archlinux.org/news/mkinitcpio-hook-migration-and-early-microcode/",
 	"N │ 09 Jan 24 │ Jan Alexander Steffens │ Making dbus-broker our default D-Bus daemon                             │ https://archlinux.org/news/making-dbus-broker-our-default-d-bus-daemon/",
-}
+}, {
+	"  │ 20 Dec 24 │ Alex       │ Anubis-class Cruiser                                │ https://fractalsoftworks.com/2024/12/20/anubis-class-cruiser/",
+	"  │ 13 Jul 24 │ Alex       │ Planet Search Overhaul                              │ https://fractalsoftworks.com/2024/07/13/planet-search-overhaul/",
+	"  │ 12 Jun 24 │ Stian      │ New music for Galatia Academy                       │ https://fractalsoftworks.com/2024/06/12/new-music-for-galatia-academy/",
+	"  │ 11 May 24 │ Alex       │ Codex Overhaul                                      │ https://fractalsoftworks.com/2024/05/11/codex-overhaul/",
+	"  │ 10 Apr 24 │ Alex       │ Save/Load UI, Autosave, Intel Map Markers, and More │ https://fractalsoftworks.com/2024/04/10/save-load-ui-autosave-intel-map-markers-and-more/",
+	"  │ 13 Mar 24 │ Alex       │ Simulator Enhancements                              │ https://fractalsoftworks.com/2024/03/13/simulator-enhancements/",
+	"  │ 02 Feb 24 │ Alex       │ Starsector 0.97a Release                            │ https://fractalsoftworks.com/2024/02/02/starsector-0-97a-release/",
+	"  │ 13 Dec 23 │ Alex       │ Skill Tweaks                                        │ https://fractalsoftworks.com/2023/12/12/skill-tweaks/",
+	"  │ 24 Nov 23 │ Alex       │ Colony Crises                                       │ https://fractalsoftworks.com/2023/11/24/colony-crises/",
+	"  │ 13 Nov 23 │ dgbaumgart │ You Merely Adopted Rules.csv, I Was Born Into It    │ https://fractalsoftworks.com/2023/11/13/you-merely-adopted-rules-csv-i-was-born-into-it/",
+} }
 local article_buf = {
 	"Feed: https://www.archlinux.org/feeds/news/",
 	"Title: Critical rsync security release 3.4.0",
@@ -158,14 +178,14 @@ describe("nvimboat", function()
 	it("can show the main page", function()
 		vim.cmd.Nvimboat("enable")
 		vim.cmd.Nvimboat("show-main")
-		utils.eq_buf(main_menu_buf_0)
+		utils.eq_buf(main_menu_buf[1])
 		eq("MainMenu", nvimboat.pages[1].type)
 		eq("", nvimboat.pages[1].id)
 	end)
 	it("can select a feed", function()
 		local url = "https://www.archlinux.org/feeds/news/"
 		vim.cmd.Nvimboat("select", url)
-		utils.eq_buf(feed_buf_0)
+		utils.eq_buf(feed_buf[1])
 		eq("Feed", nvimboat.pages[2].type)
 		eq(url, nvimboat.pages[2].id)
 	end)
@@ -180,14 +200,14 @@ describe("nvimboat", function()
 		vim.cmd.Nvimboat("back")
 		eq(2, #nvimboat.pages)
 		eq("Feed", nvimboat.pages[#nvimboat.pages].type)
-		utils.eq_buf(feed_buf_1)
+		utils.eq_buf(feed_buf[2])
 		utils.eq_cursor_row(2)
 	end)
 	it("can go back to the main menu with correct cursor position", function()
 		vim.cmd.Nvimboat("back")
 		eq(1, #nvimboat.pages)
 		eq("MainMenu", nvimboat.pages[#nvimboat.pages].type)
-		utils.eq_buf(main_menu_buf_1)
+		utils.eq_buf(main_menu_buf[2])
 		utils.eq_cursor_row(4)
 	end)
 	it("can select a filter", function()
@@ -204,6 +224,12 @@ describe("nvimboat", function()
 	it("can go back to the main menu with correct cursor position", function()
 		vim.cmd.Nvimboat("back")
 		utils.eq_cursor_row(1)
+	end)
+	it("can toggle read of an entire feed", function()
+		vim.cmd.Nvimboat("toggle-read", "https://fractalsoftworks.com/feed/")
+		utils.eq_buf(main_menu_buf[3])
+		vim.cmd.Nvimboat("select", "https://fractalsoftworks.com/feed/")
+		utils.eq_buf(feed_buf[3])
 	end)
 end)
 
