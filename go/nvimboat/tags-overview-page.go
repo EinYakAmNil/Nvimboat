@@ -25,9 +25,8 @@ func (tp *TagsOverviewPage) Select(dbh rssdb.DbHandle, id string) (p Page, err e
 		err = errors.Join(err, errors.New("nvimboat/TagsOverviewPage.Select"))
 		return
 	}
-	for _, feed := range feeds {
-		tag.Feeds = append(tag.Feeds, feed)
-	}
+	tag.Feeds = feeds
+	tag.Urls = tp.Tags[id]
 	return tag, err
 }
 

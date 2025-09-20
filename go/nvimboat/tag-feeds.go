@@ -11,6 +11,7 @@ import (
 type TagFeeds struct {
 	Name  string
 	Feeds []rssdb.QueryTagFeedsRow
+	Urls  []string
 }
 
 func (tf *TagFeeds) Select(dbh rssdb.DbHandle, id string) (p Page, err error) {
@@ -118,7 +119,7 @@ checkAnyUnread:
 			return
 		}
 	}
-	tf.Feeds, err = dbh.Queries.QueryTagFeeds(dbh.Ctx, urls)
+	tf.Feeds, err = dbh.Queries.QueryTagFeeds(dbh.Ctx, tf.Urls)
 	if err != nil {
 		err = errors.Join(err, errors.New("nvimboat/TagFeeds.ToggleRead"))
 		return
