@@ -1,6 +1,7 @@
 package nvimboat
 
 import (
+	"errors"
 	"fmt"
 	"time"
 )
@@ -19,45 +20,38 @@ const (
 )
 
 func parseConfig(rawConfig map[string]any) (err error) {
-	logPath, ok := rawConfig["logPath"].(string)
-	if !ok {
-		err = fmt.Errorf("parseConfig: log path must be a string, got: %v\n", rawConfig["logPath"])
-		return
+	var (
+		ok        bool
+		cacheTime string
+	)
+	luaGoMap := map[string]*string{
+		"cachePath":   &CachePath,
+		"cacheTime":   &cacheTime,
+		"dbPath":      &DbPath,
+		"linkHandler": &LinkHandler,
+		"logPath":     &LogPath,
 	}
-	LogPath = logPath
-
-	cacheTime, ok := rawConfig["cacheTime"].(string)
-	if !ok {
-		err = fmt.Errorf("parseConfig: cache time must be a string, got: %v\n", rawConfig["cacheTime"])
-		return
+	for luaName, GoVar := range luaGoMap {
+		*GoVar, ok = rawConfig[luaName].(string)
+		if !ok {
+			err = errors.Join(err, fmt.Errorf(
+				`Lua variable %s must be a string, got: %v -> %T`,
+				luaName,
+				rawConfig[luaName],
+				rawConfig[luaName],
+			))
+		}
 	}
-	ct, err := time.ParseDuration(cacheTime)
 	if err != nil {
-		err = fmt.Errorf("parseConfig: %w, got: %v", err, cacheTime)
+		err = errors.Join(err, errors.New("nvimboat/parseConfig"))
 		return
 	}
-	CacheTime = ct
-
-	cachePath, ok := rawConfig["cachePath"].(string)
-	if !ok {
-		err = fmt.Errorf("parseConfig: cache path must be a string, got: %v\n", rawConfig["cachePath"])
+	CacheTime, err = time.ParseDuration(cacheTime)
+	if err != nil {
+		err = fmt.Errorf("%w, got: %v", err, cacheTime)
+		err = errors.Join(err, errors.New("nvimboat/parseConfig"))
 		return
 	}
-	CachePath = cachePath
-
-	dbPath, ok := rawConfig["dbPath"].(string)
-	if !ok {
-		err = fmt.Errorf("parseConfig: database path must be a string, got: %v\n", rawConfig["dbPath"])
-		return
-	}
-	DbPath = dbPath
-
-	linkHandler, ok := rawConfig["linkHandler"].(string)
-	if !ok {
-		err = fmt.Errorf("parseConfig: link handler must be a string, got: %v\n", rawConfig["linkHandler"])
-		return
-	}
-	LinkHandler = linkHandler
 	return
 }
 

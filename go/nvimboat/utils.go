@@ -2,6 +2,7 @@ package nvimboat
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"reflect"
 	"regexp"
@@ -20,7 +21,7 @@ func updateFilters(dbh rssdb.DbHandle) (err error) {
 	for _, filter := range Filters {
 		filter.Articles, err = dbh.Queries.QueryFilter(dbh.Ctx, filter.QueryFilterParams)
 		if err != nil {
-			err = fmt.Errorf("nvimboat/MainMenu.UpdateFilters: %w\n", err)
+			err = errors.Join(err, errors.New("nvimboat/updateFilters"))
 			return
 		}
 	}
@@ -49,9 +50,10 @@ func parseFilter(rawFilter map[string]any) (filter Filter, err error) {
 	}
 	if filter.Name == "" {
 		err = fmt.Errorf(
-			"nvimboat/parseFilters: no name for filter in: %+v\n",
+			"No name for filter in: %+v",
 			prettyStruct(filter),
 		)
+		err = errors.Join(err, errors.New("nvimboat/parseFilter"))
 		return
 	}
 	if value, ok := rawFilter["unread"].(int64); ok {
@@ -66,7 +68,8 @@ func parseFilter(rawFilter map[string]any) (filter Filter, err error) {
 		for _, tag := range tags {
 			if t, ok := tag.(string); ok {
 				if len(t) == 0 {
-					err = fmt.Errorf("nvimboat/parseFilters: string length 0. cannot parse %+v\n", rawFilter)
+					err = fmt.Errorf(`Length of string is 0. cannot parse %+v`, rawFilter)
+					err = errors.Join(err, errors.New("nvimboat/parseFilter"))
 					return
 				} else if t[0] == '!' {
 					filter.ExcludeTags[t[1:]] = true
@@ -77,7 +80,8 @@ func parseFilter(rawFilter map[string]any) (filter Filter, err error) {
 			}
 		}
 	} else {
-		err = fmt.Errorf("nvimboat/parseFilters: cannot parse %+v\n", rawFilter)
+		err = fmt.Errorf(`Can't parse %+v`, rawFilter)
+		err = errors.Join(err, errors.New("nvimboat/parseFilter"))
 		return
 	}
 	if len(descriptionSql) > 0 {
@@ -119,12 +123,12 @@ func selectFeed(dbh rssdb.DbHandle, feedurl string) (p Page, err error) {
 	feed.Articles, err = dbh.Queries.GetFeedPage(dbh.Ctx, feedurl)
 	feed.Rssurl = feedurl
 	if err != nil {
-		err = fmt.Errorf("selectFeed: %w", err)
+		err = errors.Join(err, errors.New("nvimboat/selectFeed"))
 		return
 	}
 	feedInfo, err := dbh.Queries.GetFeed(dbh.Ctx, feedurl)
 	if err != nil {
-		err = fmt.Errorf("nvimboat/selectFeed: %w\n", err)
+		err = errors.Join(err, errors.New("nvimboat/selectFeed"))
 		return
 	}
 	feed.RssFeed = feedInfo
@@ -147,15 +151,16 @@ func renderHTML(content string) ([]string, error) {
 	converter := md.NewConverter("", true, nil)
 	markdown, err := converter.ConvertString(content)
 	if err != nil {
+		err = errors.Join(err, errors.New("nvimboat/renderHTML"))
 		return nil, err
 	}
 	return strings.Split(markdown, "\n"), nil
 }
 
 func unixToDate(unixTime int64) (string, error) {
-
 	tz, err := time.LoadLocation("Local")
 	if err != nil {
+		err = errors.Join(err, errors.New("nvimboat/unixToDate"))
 		return "", err
 	}
 	ut := time.Unix(unixTime, 0)
@@ -167,6 +172,7 @@ func unixToDate(unixTime int64) (string, error) {
 func trimTrail(nv *nvim.Nvim, buffer nvim.Buffer) (err error) {
 	currentLines, err := nv.BufferLines(buffer, 0, -1, false)
 	if err != nil {
+		err = errors.Join(err, errors.New("nvimboat/trimTrail"))
 		return
 	}
 	var lines []string
@@ -174,13 +180,17 @@ func trimTrail(nv *nvim.Nvim, buffer nvim.Buffer) (err error) {
 		lines = append(lines, strings.TrimRight(string(l), " "))
 	}
 	err = setLines(nv, buffer, lines)
+	if err != nil {
+		err = errors.Join(err, errors.New("nvimboat/trimTrail"))
+		return
+	}
 	return
 }
 
 func addColumn(nv *nvim.Nvim, buf nvim.Buffer, col []string) (err error) {
 	currentLines, err := nv.BufferLines(buf, 0, -1, false)
 	if err != nil {
-		err = fmt.Errorf("nvimboat/addColumn: %w\n", err)
+		err = errors.Join(err, errors.New("nvimboat/addColumn"))
 		return
 	}
 	var (
@@ -200,12 +210,12 @@ func addColumn(nv *nvim.Nvim, buf nvim.Buffer, col []string) (err error) {
 	}
 	err = setLines(nv, buf, lines)
 	if err != nil {
-		err = fmt.Errorf("nvimboat/addColumn: %w\n", err)
+		err = errors.Join(err, errors.New("nvimboat/addColumn"))
 		return
 	}
 	vcl, err := virtColLens(nv)
 	if err != nil {
-		err = fmt.Errorf("nvimboat/addColumn: %w\n", err)
+		err = errors.Join(err, errors.New("nvimboat/addColumn"))
 		return
 	}
 	maxLineLen := slices.Max(vcl)
@@ -216,7 +226,7 @@ func addColumn(nv *nvim.Nvim, buf nvim.Buffer, col []string) (err error) {
 	}
 	err = setLines(nv, buf, lines)
 	if err != nil {
-		err = fmt.Errorf("nvimboat/addColumn: %w\n", err)
+		err = errors.Join(err, errors.New("nvimboat/addColumn"))
 		return
 	}
 	return err
@@ -225,7 +235,7 @@ func addColumn(nv *nvim.Nvim, buf nvim.Buffer, col []string) (err error) {
 func setLines(nv *nvim.Nvim, buffer nvim.Buffer, lines []string) (err error) {
 	err = nv.SetBufferLines(buffer, 0, -1, false, strings2bytes(lines))
 	if err != nil {
-		err = fmt.Errorf("setLines: %w", err)
+		err = errors.Join(err, errors.New("nvimboat/setLines"))
 		return
 	}
 	return
@@ -235,7 +245,7 @@ func virtColLens(nv *nvim.Nvim) (evalResult []int, err error) {
 	virtCols := "map(range(1, line('$')), \"virtcol([v:val, '$'])\")"
 	err = nv.Eval(virtCols, &evalResult)
 	if err != nil {
-		err = fmt.Errorf("virtCols: %w", err)
+		err = errors.Join(err, errors.New("nvimboat/virtColLens"))
 		return
 	}
 	return
@@ -268,7 +278,10 @@ func sortMapKeys(m any) (keyList []string) {
 	return
 }
 
-func prettyStruct(s any) (pretty string) {
+func prettyStruct(s any) string {
+	if err, ok := s.(error); ok {
+		return fmt.Sprintf("%+v", err)
+	}
 	marshal, _ := json.MarshalIndent(s, "", "	")
 	return string(marshal)
 }

@@ -2,7 +2,7 @@ package parser
 
 import (
 	"encoding/xml"
-	"fmt"
+	"errors"
 	"time"
 
 	"github.com/EinYakAmNil/Nvimboat/go/engine/rssdb"
@@ -45,7 +45,7 @@ func ParseYtFeed(xmlBytes []byte, url string) (feed Feed, err error) {
 	)
 	err = xml.Unmarshal(xmlBytes, &ytFeed)
 	if err != nil {
-		err = fmt.Errorf("ParseYtFeed: %v\n", err)
+		err = errors.Join(err, errors.New("parser/ParseYtFeed"))
 		return
 	}
 	feed.Title = ytFeed.Title
@@ -61,7 +61,8 @@ func ParseYtFeed(xmlBytes []byte, url string) (feed Feed, err error) {
 	for _, entry := range ytFeed.Entries {
 		pubDate, err = time.Parse(time.RFC3339, entry.Pubdate)
 		if err != nil {
-			err = fmt.Errorf("ParseYtFeed: bad pubDate\n%v: %v\n", err, entry.Pubdate)
+			err = errors.Join(err, errors.New("parser/ParseYtFeed"))
+			return
 		}
 		feedItem.Pubdate = pubDate.Unix()
 		feedItem.Author = entry.Author.Name

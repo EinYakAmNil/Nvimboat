@@ -2,6 +2,7 @@ package parser
 
 import (
 	"encoding/xml"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -115,7 +116,7 @@ func ParseDefaultFeed(raw []byte, url string) (feed Feed, err error) {
 	}
 	err = xml.Unmarshal(raw, &rss)
 	if err != nil {
-		err = fmt.Errorf("ParseDefaultFeed: %w", err)
+		err = errors.Join(err, errors.New("parser/ParseDefaultFeed"))
 		return
 	}
 	feed.Title = strings.Trim(rss.Channel.Title, "\n\t ")
@@ -140,7 +141,12 @@ findChannelUrl:
 			}
 		}
 		if timeParseErr != nil {
-			err = fmt.Errorf(`Could not parse "%s" in feed "%s" with available time formats`, item.Pubdate, url)
+			err = fmt.Errorf(
+				`Could not parse "%s" in feed "%s" with available time formats`,
+				item.Pubdate,
+				url,
+			)
+			err = errors.Join(err, errors.New("parser/ParseDefaultFeed"))
 			return
 		}
 		feedItem.Pubdate = pubDate.Unix()

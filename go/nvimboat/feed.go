@@ -1,8 +1,8 @@
 package nvimboat
 
 import (
+	"errors"
 	"fmt"
-	"log"
 
 	"github.com/EinYakAmNil/Nvimboat/go/engine/rssdb"
 	"github.com/neovim/go-client/nvim"
@@ -17,18 +17,18 @@ type Feed struct {
 func (f *Feed) Select(dbh rssdb.DbHandle, id string) (p Page, err error) {
 	articleInfo, err := dbh.Queries.GetArticle(dbh.Ctx, id)
 	if err != nil {
-		err = fmt.Errorf("nvimboat/Feed.Select: %w\n", err)
+		err = errors.Join(err, errors.New("nvimboat/Feed.Select"))
 		return
 	}
 	err = dbh.Queries.SetArticlesRead(dbh.Ctx, []string{id})
 	if err != nil {
-		err = fmt.Errorf("nvimboat/Feed.Select: %w\n", err)
+		err = errors.Join(err, errors.New("nvimboat/Feed.Select"))
 		return
 	}
 	p = &Article{articleInfo}
 	idx, err := f.ChildIdx(p)
 	if err != nil {
-		err = fmt.Errorf("nvimboat/Feed.Select: %w\n", err)
+		err = errors.Join(err, errors.New("nvimboat/Feed.Select"))
 		return
 	}
 	f.Articles[idx].Unread = 0
@@ -39,7 +39,7 @@ func (f *Feed) Render(nv *nvim.Nvim, buf nvim.Buffer) (err error) {
 	if len(f.Articles) == 0 {
 		err = setLines(nv, buf, []string{"No Articles found."})
 		if err != nil {
-			err = fmt.Errorf("nvimboat/Feed.Render: %w\n", err)
+			err = errors.Join(err, errors.New("nvimboat/Feed.Render"))
 			return
 		}
 		return
@@ -59,17 +59,17 @@ func (f *Feed) Render(nv *nvim.Nvim, buf nvim.Buffer) (err error) {
 		case 1:
 			readStatusCol = append(readStatusCol, "N")
 		default:
-			err = fmt.Errorf(`nvimboat/Feed.Render: Bad unread number for "%s" in feed %s: %d\n`,
+			err = fmt.Errorf(`Bad unread number for "%s" in feed %s: %d`,
 				a.Url,
 				f.Rssurl,
 				a.Unread,
 			)
-			log.Println(err)
+			err = errors.Join(err, errors.New("nvimboat/Feed.Render"))
 			return
 		}
 		parsedTime, err = unixToDate(a.Pubdate)
 		if err != nil {
-			err = fmt.Errorf("nvimboat/Feed.Render: %w\n", err)
+			err = errors.Join(err, errors.New("nvimboat/Feed.Render"))
 			return
 		}
 		pubDateCol = append(pubDateCol, parsedTime)
@@ -80,7 +80,7 @@ func (f *Feed) Render(nv *nvim.Nvim, buf nvim.Buffer) (err error) {
 	for _, c := range [][]string{readStatusCol, pubDateCol, authorCol, titleCol, urlCol} {
 		err = addColumn(nv, buf, c)
 		if err != nil {
-			err = fmt.Errorf("nvimboat/Feed.Render: %w\n", err)
+			err = errors.Join(err, errors.New("nvimboat/Feed.Render"))
 			return
 		}
 	}
@@ -105,11 +105,13 @@ func (f *Feed) ChildIdx(p Page) (idx int, err error) {
 		}
 		section = len(searchRange)
 	}
-	return -1, fmt.Errorf(
+	err = fmt.Errorf(
 		`"%v" doesn't contain: "%+v"`,
 		prettyStruct(f),
 		prettyStruct(p),
 	)
+	err = errors.Join(err, errors.New("nvimboat/Feed.ChildIdx"))
+	return -1, err
 }
 
 func (f *Feed) Back() (cursor_x int, err error) {
@@ -117,19 +119,20 @@ func (f *Feed) Back() (cursor_x int, err error) {
 	if len(Pages) >= 2 {
 		parentPage = Pages[len(Pages)-2]
 	} else {
-		err = fmt.Errorf("nvimboat/Feed.Back: page stack is less than 2.\nNo parent page possible.\n")
+		err = fmt.Errorf(`Page stack is less than 2. No parent page possible.`)
+		err = errors.Join(err, errors.New("nvimboat/Feed.Back"))
 		return -1, err
 	}
 	switch pp := parentPage.(type) {
 	case *MainMenu:
 		dbh, dbErr := rssdb.ConnectDb(DbPath)
 		if dbErr != nil {
-			dbErr = fmt.Errorf("nvimboat/Feed.Back: %w\n", dbErr)
+			dbErr = errors.Join(dbErr, errors.New("nvimboat/Feed.Back"))
 			return -1, dbErr
 		}
 		mainPageFeeds, err := dbh.Queries.QueryMainPage(dbh.Ctx)
 		if err != nil {
-			err = fmt.Errorf("nvimboat/Feed.Back: %w\n", err)
+			err = errors.Join(err, errors.New("nvimboat/Feed.Back"))
 			return -1, err
 		}
 		for idx, feed := range mainPageFeeds {
@@ -137,19 +140,19 @@ func (f *Feed) Back() (cursor_x int, err error) {
 		}
 		err = updateFilters(dbh)
 		if err != nil {
-			err = fmt.Errorf("nvimboat/Feed.Back: %w\n", err)
+			err = errors.Join(err, errors.New("nvimboat/Feed.Back"))
 			return -1, err
 		}
 		cursor_x, err = pp.ChildIdx(f)
 		if err != nil {
-			err = fmt.Errorf("nvimboat/Feed.Back: %w\n", err)
+			err = errors.Join(err, errors.New("nvimboat/Feed.Back"))
 			return -1, err
 		}
 		return cursor_x + 1, nil
 	case *TagFeeds:
 		cursor_x, err = pp.ChildIdx(f)
 		if err != nil {
-			err = fmt.Errorf("nvimboat/Feed.Back: %w\n", err)
+			err = errors.Join(err, errors.New("nvimboat/Feed.Back"))
 			return
 		}
 		return cursor_x + 1, nil
@@ -176,29 +179,30 @@ checkAnyUnread:
 	if setArticlesRead {
 		err = dbh.Queries.SetArticlesRead(dbh.Ctx, ids)
 		if err != nil {
-			err = fmt.Errorf("nvimboat/Feed.ToggleRead: %w\n", err)
+			err = errors.Join(err, errors.New("nvimboat/Feed.ToggleRead"))
 			return
 		}
 
 	} else {
 		err = dbh.Queries.SetArticlesUnread(dbh.Ctx, ids)
 		if err != nil {
-			err = fmt.Errorf("nvimboat/Feed.ToggleRead: %w\n", err)
+			err = errors.Join(err, errors.New("nvimboat/Feed.ToggleRead"))
 			return
 		}
 	}
 	f.Articles, err = dbh.Queries.GetFeedPage(dbh.Ctx, f.Rssurl)
 	if err != nil {
-		err = fmt.Errorf("nvimboat/Feed.ToggleRead: %w\n", err)
+		err = errors.Join(err, errors.New("nvimboat/Feed.ToggleRead"))
 		return
 	}
 	err = Pages.Show()
 	if err != nil {
-		err = fmt.Errorf("nvimboat/Feed.ToggleRead: %w\n", err)
+		err = errors.Join(err, errors.New("nvimboat/Feed.ToggleRead"))
 		return
 	}
 	return
 }
+
 func (f *Feed) NextUnread(dbh rssdb.DbHandle) (err error)           { return }
 func (f *Feed) PrevUnread(dbh rssdb.DbHandle) (err error)           { return }
 func (f *Feed) NextArticle(dbh rssdb.DbHandle) (err error)          { return }

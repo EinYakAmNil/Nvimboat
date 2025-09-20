@@ -1,6 +1,7 @@
 package nvimboat
 
 import (
+	"errors"
 	"fmt"
 	"slices"
 
@@ -20,18 +21,18 @@ type Filter struct {
 func (f *Filter) Select(dbh rssdb.DbHandle, id string) (p Page, err error) {
 	articleInfo, err := dbh.Queries.GetArticle(dbh.Ctx, id)
 	if err != nil {
-		err = fmt.Errorf("nvimboat/Filter.Select: %w\n", err)
+		err = errors.Join(err, errors.New("nvimboat/Filter.Select"))
 		return
 	}
 	err = dbh.Queries.SetArticlesRead(dbh.Ctx, []string{id})
 	if err != nil {
-		err = fmt.Errorf("nvimboat/Filter.Select: %w\n", err)
+		err = errors.Join(err, errors.New("nvimboat/Filter.Select"))
 		return
 	}
 	p = &Article{articleInfo}
 	idx, err := f.ChildIdx(p)
 	if err != nil {
-		err = fmt.Errorf("nvimboat/Filter.Select: %w\n", err)
+		err = errors.Join(err, errors.New("nvimboat/Filter.Select"))
 		return
 	}
 	f.Articles[idx].Unread = 0
@@ -42,7 +43,7 @@ func (f *Filter) Render(nv *nvim.Nvim, buf nvim.Buffer) (err error) {
 	if len(f.Articles) == 0 {
 		err = setLines(nv, buf, []string{"No Articles found."})
 		if err != nil {
-			err = fmt.Errorf("nvimboat/Filter.Render: %w\n", err)
+			err = errors.Join(err, errors.New("nvimboat/Filter.Render"))
 			return
 		}
 		return
@@ -62,16 +63,17 @@ func (f *Filter) Render(nv *nvim.Nvim, buf nvim.Buffer) (err error) {
 		case 1:
 			readStatusCol = append(readStatusCol, "N")
 		default:
-			err = fmt.Errorf(`nvimboat/Filter.Render: Bad unread number for "%s" in feed %s: %d\n`,
+			err = fmt.Errorf(`Bad unread number for "%s" in feed %s: %d`,
 				a.Url,
 				f.Name,
 				a.Unread,
 			)
+			err = errors.Join(err, errors.New("nvimboat/Filter.Render"))
 			return
 		}
 		parsedTime, err = unixToDate(a.Pubdate)
 		if err != nil {
-			err = fmt.Errorf("nvimboat/Filter.Render: %w\n", err)
+			err = errors.Join(err, errors.New("nvimboat/Filter.Render"))
 			return
 		}
 		pubDateCol = append(pubDateCol, parsedTime)
@@ -82,7 +84,7 @@ func (f *Filter) Render(nv *nvim.Nvim, buf nvim.Buffer) (err error) {
 	for _, c := range [][]string{readStatusCol, pubDateCol, authorCol, titleCol, urlCol} {
 		err = addColumn(nv, buf, c)
 		if err != nil {
-			err = fmt.Errorf("nvimboat/Filter.Render: %w\n", err)
+			err = errors.Join(err, errors.New("nvimboat/Filter.Render"))
 			return
 		}
 	}
@@ -107,11 +109,13 @@ func (f *Filter) ChildIdx(p Page) (idx int, err error) {
 		}
 		section = len(searchRange)
 	}
-	return -1, fmt.Errorf(
+	err = fmt.Errorf(
 		`"%v" doesn't contain: "%+v"`,
 		prettyStruct(f),
 		prettyStruct(p),
 	)
+	err = errors.Join(err, errors.New("nvimboat/Filter.ChildIdx"))
+	return -1, err
 }
 
 func (f *Filter) Back() (cursor_x int, err error) {
@@ -127,9 +131,10 @@ func (f *Filter) Back() (cursor_x int, err error) {
 		}
 	}
 	err = fmt.Errorf(
-		"nvimboat/Filter.Back: cannot find index for %s\n",
+		"Can't find index for %s",
 		prettyStruct(f),
 	)
+	err = errors.Join(err, errors.New("nvimboat/Filter.Back"))
 	return -1, err
 }
 
@@ -147,7 +152,7 @@ checkAnyUnread:
 	if setArticlesRead {
 		err = dbh.Queries.SetArticlesRead(dbh.Ctx, ids)
 		if err != nil {
-			err = fmt.Errorf("nvimboat/Filter.ToggleRead: %w\n", err)
+			err = errors.Join(err, errors.New("nvimboat/Filter.ToggleRead"))
 			return
 		}
 	outer1:
@@ -162,7 +167,7 @@ checkAnyUnread:
 	} else {
 		err = dbh.Queries.SetArticlesUnread(dbh.Ctx, ids)
 		if err != nil {
-			err = fmt.Errorf("nvimboat/Filter.ToggleRead: %w\n", err)
+			err = errors.Join(err, errors.New("nvimboat/Filter.ToggleRead"))
 			return
 		}
 	outer2:
@@ -177,7 +182,7 @@ checkAnyUnread:
 	}
 	err = Pages.Show()
 	if err != nil {
-		err = fmt.Errorf("nvimboat/Filter.ToggleRead: %w\n", err)
+		err = errors.Join(err, errors.New("nvimboat/Filter.ToggleRead"))
 		return
 	}
 	return

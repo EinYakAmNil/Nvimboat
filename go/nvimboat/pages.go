@@ -1,6 +1,7 @@
 package nvimboat
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -33,12 +34,12 @@ func (ps *PageStack) Show() (err error) {
 	defer trimTrail(Nvim, *NvBuffer)
 	defer Nvim.SetWindowCursor(*NvWindow, [2]int{0, 1})
 	if err != nil {
-		err = fmt.Errorf("nvimboat/Nvimboat.Show: %w\n", err)
+		err = errors.Join(err, errors.New("nvimboat/PageStack.Show"))
 		return
 	}
 	ps.Top().Render(Nvim, *NvBuffer)
 	if err != nil {
-		err = fmt.Errorf("nvimboat/Nvimboat.Show: %w\n", err)
+		err = errors.Join(err, errors.New("nvimboat/PageStack.Show"))
 		return
 	}
 	return
@@ -57,7 +58,7 @@ func (ps *PageStack) Push(p Page, id string) (err error) {
 	_, pageType, _ = strings.Cut(pageType, "nvimboat.")
 	err = Nvim.ExecLua(luaPushPage, new(any), pageType, id)
 	if err != nil {
-		err = fmt.Errorf("nvimboat/Nvimboat.ShowMain: %w\n", err)
+		err = errors.Join(err, errors.New("nvimboat/PageStack.Push"))
 		return
 	}
 	return
@@ -69,7 +70,7 @@ func (ps *PageStack) Pop() (p Page, err error) {
 	}
 	err = Nvim.ExecLua(luaPopPage, new(any))
 	if err != nil {
-		err = fmt.Errorf("nvimboat/Nvimboat.PopPage: %w\n", err)
+		err = errors.Join(err, errors.New("nvimboat/PageStack.Pop"))
 		return
 	}
 	return ps.Top(), nil
@@ -80,7 +81,7 @@ func (ps *PageStack) Reset() (err error) {
 	*ps = []Page{}
 	err = Nvim.ExecLua(luaResetPages, new(any))
 	if err != nil {
-		err = fmt.Errorf("nvimboat/Nvimboat.ResetPages: %w\n", err)
+		err = errors.Join(err, errors.New("nvimboat/PageStack.Reset"))
 		*ps = currentPages
 		return
 	}

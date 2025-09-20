@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"errors"
 	"fmt"
 	"log"
 
@@ -17,7 +18,7 @@ type Feed struct {
 func ParseFeed(raw []byte, url string) (feed Feed, err error) {
 	var (
 		parsedFeed Feed
-		parseErr error
+		parseErr   error
 	)
 
 	parsers := []func([]byte, string) (Feed, error){
@@ -35,7 +36,8 @@ func ParseFeed(raw []byte, url string) (feed Feed, err error) {
 		}
 	}
 	if len(feed.FeedItems) == 0 {
-		err = fmt.Errorf(`ParseFeed: couldn't parse "%s" with available parsers`, url)
+		err = fmt.Errorf(`Couldn't parse "%s" with available parsers`, url)
+		err = errors.Join(err, errors.New("parser/ParseFeed"))
 		return
 	}
 	return

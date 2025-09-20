@@ -1,6 +1,7 @@
 package nvimboat
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/EinYakAmNil/Nvimboat/go/engine/rssdb"
@@ -19,7 +20,7 @@ func (a *Article) Select(dbh rssdb.DbHandle, id string) (p Page, err error) {
 func (a *Article) Render(nv *nvim.Nvim, buf nvim.Buffer) (err error) {
 	date, err := unixToDate(a.Pubdate)
 	if err != nil {
-		err = fmt.Errorf("Article.Render: %w", err)
+		err = errors.Join(err, errors.New("nvimboat/Article.Render"))
 		return
 	}
 	lines := []string{
@@ -32,7 +33,7 @@ func (a *Article) Render(nv *nvim.Nvim, buf nvim.Buffer) (err error) {
 	}
 	content, err := renderHTML(a.Content)
 	if err != nil {
-		err = fmt.Errorf("Article.Render: %w", err)
+		err = errors.Join(err, errors.New("nvimboat/Article.Render"))
 		return
 	}
 	lines = append(lines, content...)
@@ -41,7 +42,7 @@ func (a *Article) Render(nv *nvim.Nvim, buf nvim.Buffer) (err error) {
 
 	err = setLines(nv, buf, lines)
 	if err != nil {
-		err = fmt.Errorf("Article.Render: %w", err)
+		err = errors.Join(err, errors.New("nvimboat/Article.Render"))
 		return
 	}
 	return
@@ -56,12 +57,13 @@ func (a *Article) Back() (cursor_x int, err error) {
 	if len(Pages) >= 2 {
 		parentPage = Pages[len(Pages)-2]
 	} else {
-		err = fmt.Errorf("nvimboat/Article.Back: page stack is less than 2.\nNo parent page possible.\n")
+		err = fmt.Errorf("Page stack is less than 2. No parent page possible.")
+		err = errors.Join(err, errors.New("nvimboat/Article.Back"))
 		return
 	}
 	cursor_x, err = parentPage.ChildIdx(a)
 	if err != nil {
-		err = fmt.Errorf("nvimboat/Article.Back: %w\n", err)
+		err = errors.Join(err, errors.New("nvimboat/Article.Back"))
 		return
 	}
 	return cursor_x + 1, nil
@@ -72,18 +74,18 @@ func (a *Article) Back() (cursor_x int, err error) {
 func (a *Article) ToggleRead(dbh rssdb.DbHandle, ids []string) (err error) {
 	err = dbh.Queries.SetArticlesUnread(dbh.Ctx, []string{a.Url})
 	if err != nil {
-		err = fmt.Errorf("nvimboat/Article.ToggleRead: %w\n", err)
+		err = errors.Join(err, errors.New("nvimboat/Article.ToggleRead"))
 		return
 	}
 	// Update parent page on the state change
 	parentPage, err := Pages.Pop()
 	if err != nil {
-		err = fmt.Errorf("nvimboat/Article.ToggleRead: %w\n", err)
+		err = errors.Join(err, errors.New("nvimboat/Article.ToggleRead"))
 		return
 	}
 	idx, err := parentPage.ChildIdx(a)
 	if err != nil {
-		err = fmt.Errorf("nvimboat/Article.Back: %w\n", err)
+		err = errors.Join(err, errors.New("nvimboat/Article.ToggleRead"))
 		return
 	}
 	defer Nvim.SetWindowCursor(*NvWindow, [2]int{idx + 1, 0})
@@ -93,13 +95,15 @@ func (a *Article) ToggleRead(dbh rssdb.DbHandle, ids []string) (err error) {
 	case *Filter:
 		p.Articles[idx].Unread = 1
 	default:
-		err = fmt.Errorf("nvimboat/Article.ToggleRead: Unknown parent page type: %T\n", p)
+		err = fmt.Errorf(`Unknown parent page type: %T`, p)
+		err = errors.Join(err, errors.New("nvimboat/Article.ToggleRead"))
 		return
 	}
 	// Go back
 	err = Pages.Show()
 	if err != nil {
-		return fmt.Errorf("nvimboat/Nvimboat.Back: %w\n", err)
+		err = errors.Join(err, errors.New("nvimboat/Article.ToggleRead"))
+		return
 	}
 	return
 }

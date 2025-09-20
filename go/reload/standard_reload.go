@@ -24,12 +24,12 @@ func (sr *StandardReloader) UpdateFeed(
 ) (newFeed rssdb.RssFeed, err error) {
 	knownArticles, err := dbh.Queries.AllArticles(dbh.Ctx)
 	if err != nil {
-		err = fmt.Errorf("UpdateFeed: %w", err)
+		err = errors.Join(err, errors.New("reload/StandardReloader.UpdateFeed"))
 		return
 	}
 	feed, items, _, err := sr.GetRss(feedurl, cacheTime, cachePath)
 	if err != nil {
-		err = fmt.Errorf("UpdateFeed: %w", err)
+		err = errors.Join(err, errors.New("reload/StandardReloader.UpdateFeed"))
 		return
 	}
 	if addFeed {
@@ -40,7 +40,7 @@ func (sr *StandardReloader) UpdateFeed(
 		}
 		newFeed, err = sr.AddFeed(feedParams, dbh)
 		if err != nil {
-			err = fmt.Errorf("UpdateFeed: %w", err)
+			err = errors.Join(err, errors.New("reload/StandardReloader.UpdateFeed"))
 			return
 		}
 	}
@@ -66,7 +66,7 @@ func (sr *StandardReloader) UpdateFeed(
 	}
 	err = sr.AddArticles(itemsParams, feedurl, dbh)
 	if err != nil {
-		err = fmt.Errorf("UpdateFeed: %w", err)
+		err = errors.Join(err, errors.New("reload/StandardReloader.UpdateFeed"))
 		return
 	}
 	return
@@ -95,13 +95,14 @@ func (sr *StandardReloader) GetRss(
 		err = fmt.Errorf("%s is not cached", url)
 		content, reqErr = requestUrl(url, header)
 		if reqErr != nil {
-			reqErr = fmt.Errorf("GetRss: %w", errors.Join(err, reqErr))
+			reqErr = errors.Join(err, reqErr)
+			reqErr = errors.Join(reqErr, errors.New("reload/StandardReloader.GetRss"))
 			return nil, nil, false, reqErr
 		}
 		log.Println("requested", url)
 		err = cacheUrl(url, cacheDir, content)
 		if err != nil {
-			err = fmt.Errorf("GetRss: %w", err)
+			err = errors.Join(err, errors.New("reload/StandardReloader.GetRss"))
 			return nil, nil, false, err
 		}
 		log.Println("cached", url)
@@ -109,7 +110,7 @@ func (sr *StandardReloader) GetRss(
 		log.Printf("reading %s from cache\n", url)
 		content, err = os.ReadFile(cachePath)
 		if err != nil {
-			err = fmt.Errorf("GetRss: %w", err)
+			err = errors.Join(err, errors.New("reload/StandardReloader.GetRss"))
 			return nil, nil, false, err
 		}
 	}
@@ -120,7 +121,7 @@ func (sr *StandardReloader) GetRss(
 		Title:  feedParsed.Title,
 	}
 	if err != nil {
-		err = fmt.Errorf("GetRss: %w", err)
+		err = errors.Join(err, errors.New("reload/StandardReloader.GetRss"))
 		return nil, nil, true, err
 	}
 	items = make(map[string]*rssdb.RssItem)
@@ -148,7 +149,7 @@ func (sr *StandardReloader) GetRss(
 func (sr *StandardReloader) AddFeed(feed rssdb.CreateFeedParams, dbh rssdb.DbHandle) (newFeed rssdb.RssFeed, err error) {
 	newFeed, err = dbh.Queries.CreateFeed(dbh.Ctx, feed)
 	if err != nil {
-		err = fmt.Errorf("AddFeed: %w", err)
+		err = errors.Join(err, errors.New("reload/StandardReloader.AddFeed"))
 		return
 	}
 	return
@@ -157,20 +158,20 @@ func (sr *StandardReloader) AddFeed(feed rssdb.CreateFeedParams, dbh rssdb.DbHan
 func (sr *StandardReloader) AddArticles(articles []*rssdb.AddArticleParams, feedUrl string, dbh rssdb.DbHandle) (err error) {
 	tx, err := dbh.DB.Begin()
 	if err != nil {
-		err = fmt.Errorf("AddArticles: %w", err)
+		err = errors.Join(err, errors.New("reload/StandardReloader.AddArticles"))
+		return
 	}
-	defer tx.Rollback()
 	qtx := dbh.Queries.WithTx(tx)
 	for _, a := range articles {
 		err = qtx.AddArticle(dbh.Ctx, *a)
 		if err != nil {
-			err = fmt.Errorf("AddArticle: %w, %s", err, a.Guid)
+			err = errors.Join(err, errors.New("reload/StandardReloader.AddArticles"))
 			return
 		}
 	}
 	err = tx.Commit()
 	if err != nil {
-		err = fmt.Errorf("AddArticle: %w", err)
+		err = errors.Join(err, errors.New("reload/StandardReloader.AddArticles"))
 		return
 	}
 	return

@@ -1,6 +1,7 @@
 package nvimboat
 
 import (
+	"errors"
 	"fmt"
 	"slices"
 
@@ -21,7 +22,7 @@ func (tp *TagsOverviewPage) Select(dbh rssdb.DbHandle, id string) (p Page, err e
 	tag.Name = id
 	feeds, err := dbh.Queries.QueryTagFeeds(dbh.Ctx, tp.Tags[id])
 	if err != nil {
-		err = fmt.Errorf("nvimboat/TagsOverviewPage.Select: %w\n", err)
+		err = errors.Join(err, errors.New("nvimboat/TagsOverviewPage.Select"))
 		return
 	}
 	for _, feed := range feeds {
@@ -34,7 +35,7 @@ func (tp *TagsOverviewPage) Render(nv *nvim.Nvim, buf nvim.Buffer) (err error) {
 	if len(tp.Tags) == 0 {
 		err = setLines(nv, buf, []string{"No tags defined."})
 		if err != nil {
-			err = fmt.Errorf("nvimboat/TagsPage.Render: %w\n", err)
+			err = errors.Join(err, errors.New("nvimboat/TagsOverviewPage.Render"))
 			return
 		}
 		return
@@ -46,7 +47,7 @@ func (tp *TagsOverviewPage) Render(nv *nvim.Nvim, buf nvim.Buffer) (err error) {
 	slices.Sort(lines)
 	err = setLines(nv, buf, lines)
 	if err != nil {
-		err = fmt.Errorf("nvimboat/TagsPage.Render: %w\n", err)
+		err = errors.Join(err, errors.New("nvimboat/TagsOverviewPage.Render"))
 		return
 	}
 	return
@@ -65,15 +66,19 @@ func (tp *TagsOverviewPage) ChildIdx(p Page) (idx int, err error) {
 				return i + 1, nil
 			}
 		}
-		return -1, fmt.Errorf(
-			"nvimboat/TagsPage.Render: Could not find the tag: %s\n",
+		err = fmt.Errorf(
+			"nvimboat/TagsPage.Render: Could not find the tag: %s",
 			tagFeeds.Name,
 		)
+		err = errors.Join(err, errors.New("nvimboat/TagsOverviewPage.ChildIdx"))
+		return -1, err
 	default:
-		return -1, fmt.Errorf(
+		err = fmt.Errorf(
 			"nvimboat/TagsPage.Render: Bad Page type: TagFeeds. Got: %T\n",
 			p,
 		)
+		err = errors.Join(err, errors.New("nvimboat/TagsOverviewPage.ChildIdx"))
+		return -1, err
 	}
 }
 
@@ -82,7 +87,7 @@ func (tp *TagsOverviewPage) Back() (cursor_x int, err error) {
 }
 
 func (tp *TagsOverviewPage) ToggleRead(dbh rssdb.DbHandle, ids []string) (err error) {
-	Log("Toggle read status is not implemented for this page.")
+	Log("Read status toggling is not implemented for this page.")
 	return
 }
 

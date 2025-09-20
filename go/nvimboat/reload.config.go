@@ -1,7 +1,7 @@
 package nvimboat
 
 import (
-	"fmt"
+	"errors"
 	"regexp"
 
 	"github.com/EinYakAmNil/Nvimboat/go/engine/reload"
@@ -19,7 +19,7 @@ func ReloadFeeds(feedUrls []string) (err error) {
 	standardReloader := new(reload.StandardReloader)
 	dbh, err := rssdb.ConnectDb(DbPath)
 	if err != nil {
-		err = fmt.Errorf("ReloadFeed: %w", err)
+		err = errors.Join(err, errors.New("nvimboat/ReloadFeeds"))
 		return
 	}
 	defer dbh.DB.Close()
@@ -37,8 +37,7 @@ reloadFeed:
 		for urlPattern, reloader := range CustomReload {
 			ok, err := regexp.MatchString(urlPattern, feedUrl)
 			if err != nil {
-				err = fmt.Errorf("ReloadFeeds: %w. Feed url: %s, pattern: %s", err, feedUrl, urlPattern)
-				return err
+				return errors.Join(err, errors.New("nvimboat/ReloadFeeds"))
 			}
 			if ok {
 				newFeed, reloadErr = reloader.UpdateFeed(dbh, feedUrl, CacheTime, CachePath, addFeed)

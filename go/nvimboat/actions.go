@@ -1,6 +1,7 @@
 package nvimboat
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/EinYakAmNil/Nvimboat/go/engine/rssdb"
@@ -10,12 +11,12 @@ import (
 func Enable(nv *nvim.Nvim, args ...string) (err error) {
 	err = initNvimboat(nv)
 	if err != nil {
-		err = fmt.Errorf("Nvimboat enable: %w", err)
+		err = errors.Join(err, fmt.Errorf("nvimboat/Enable"))
 		return
 	}
 	err = Nvim.ExecLua(luaEnable, new(any))
 	if err != nil {
-		err = fmt.Errorf("Nvimboat enable: %w", err)
+		err = errors.Join(err, fmt.Errorf("nvimboat/Enable"))
 		return
 	}
 	Log("enabled Nvimboat")
@@ -25,7 +26,7 @@ func Enable(nv *nvim.Nvim, args ...string) (err error) {
 func Disable(nv *nvim.Nvim, args ...string) (err error) {
 	err = Nvim.ExecLua(luaDisable, new(any))
 	if err != nil {
-		err = fmt.Errorf("Nvimboat disable: %w", err)
+		err = errors.Join(err, fmt.Errorf("nvimboat/Disable"))
 		return
 	}
 	return
@@ -47,7 +48,7 @@ func Reload(nv *nvim.Nvim, args ...string) (err error) {
 	}
 	err = ReloadFeeds(feedUrls)
 	if err != nil {
-		err = fmt.Errorf("Reload: %w", err)
+		err = errors.Join(err, fmt.Errorf("nvimboat/Reload"))
 		return
 	}
 	return
@@ -57,12 +58,12 @@ func ShowMain(nv *nvim.Nvim, args ...string) (err error) {
 	mm := new(MainMenu)
 	dbh, err := rssdb.ConnectDb(DbPath)
 	if err != nil {
-		err = fmt.Errorf("ShowMain: %w", err)
+		err = errors.Join(err, fmt.Errorf("nvimboat/ShowMain"))
 		return
 	}
 	mainPageFeeds, err := dbh.Queries.QueryMainPage(dbh.Ctx)
 	if err != nil {
-		err = fmt.Errorf("ShowMain: %w", err)
+		err = errors.Join(err, fmt.Errorf("nvimboat/ShowMain"))
 		return
 	}
 	for _, feed := range mainPageFeeds {
@@ -77,22 +78,22 @@ func ShowMain(nv *nvim.Nvim, args ...string) (err error) {
 	}
 	err = updateFilters(dbh)
 	if err != nil {
-		err = fmt.Errorf("nvimboat/Nvimboat.ShowMain: %w\n", err)
+		err = errors.Join(err, fmt.Errorf("nvimboat/ShowMain"))
 		return
 	}
 	err = Pages.Reset()
 	if err != nil {
-		err = fmt.Errorf("nvimboat/Nvimboat.ShowMain: %w\n", err)
+		err = errors.Join(err, fmt.Errorf("nvimboat/ShowMain"))
 		return
 	}
 	err = Pages.Push(mm, "")
 	if err != nil {
-		err = fmt.Errorf("nvimboat/Nvimboat.ShowMain: %w\n", err)
+		err = errors.Join(err, fmt.Errorf("nvimboat/ShowMain"))
 		return
 	}
 	err = Pages.Show()
 	if err != nil {
-		err = fmt.Errorf("nvimboat/Nvimboat.ShowMain: %w\n", err)
+		err = errors.Join(err, fmt.Errorf("nvimboat/ShowMain"))
 		return
 	}
 	return
@@ -100,27 +101,28 @@ func ShowMain(nv *nvim.Nvim, args ...string) (err error) {
 
 func Select(nv *nvim.Nvim, args ...string) (err error) {
 	if len(args) < 2 {
-		err = fmt.Errorf("nvimboat/Nvimboat.Select: no arguments")
+		err = fmt.Errorf("no arguments")
+		err = errors.Join(err, errors.New("nvimboat/Select"))
 		return
 	}
 	dbh, err := rssdb.ConnectDb(DbPath)
 	if err != nil {
-		err = fmt.Errorf("nvimboat/Nvimboat.Select: %w\n", err)
+		err = errors.Join(err, errors.New("nvimboat/Select"))
 		return
 	}
 	p, err := Pages.Top().Select(dbh, args[1])
 	if err != nil {
-		err = fmt.Errorf("nvimboat/Nvimboat.Select: %w\n", err)
+		err = errors.Join(err, errors.New("nvimboat/Select"))
 		return
 	}
 	err = Pages.Push(p, args[1])
 	if err != nil {
-		err = fmt.Errorf("nvimboat/Nvimboat.Select: %w\n", err)
+		err = errors.Join(err, errors.New("nvimboat/Select"))
 		return
 	}
 	err = Pages.Show()
 	if err != nil {
-		err = fmt.Errorf("nvimboat/Nvimboat.Select: %w\n", err)
+		err = errors.Join(err, errors.New("nvimboat/Select"))
 		return
 	}
 	return
@@ -129,7 +131,7 @@ func Select(nv *nvim.Nvim, args ...string) (err error) {
 func ShowTags(nv *nvim.Nvim, args ...string) (err error) {
 	cursorPosition, err := nv.WindowCursor(*NvWindow)
 	if err != nil {
-		err = fmt.Errorf("nvimboat/Nvimboat.ShowTags: %w\n", err)
+		err = errors.Join(err, fmt.Errorf("nvimboat/ShowTags"))
 		return
 	}
 	for i, page := range Pages {
@@ -150,40 +152,54 @@ func ShowTags(nv *nvim.Nvim, args ...string) (err error) {
 	}
 	err = Pages.Push(p, "Tags")
 	if err != nil {
-		err = fmt.Errorf("nvimboat/Nvimboat.Select: %w\n", err)
+		err = errors.Join(err, fmt.Errorf("nvimboat/ShowTags"))
 		return
 	}
 	err = Pages.Show()
 	if err != nil {
-		err = fmt.Errorf("nvimboat/Nvimboat.Select: %w\n", err)
+		err = errors.Join(err, fmt.Errorf("nvimboat/ShowTags"))
 		return
 	}
 	return
 }
 
-func Back(nv *nvim.Nvim, args ...string) error {
+func Back(nv *nvim.Nvim, args ...string) (err error) {
 	switch Pages.Top().(type) {
 	case *MainMenu:
 		return nil
 	default:
-		cursor_x, err := Pages.Top().Back()
+		var cursor_x int
+		cursor_x, err = Pages.Top().Back()
 		if err != nil {
-			return fmt.Errorf("nvimboat/Nvimboat.Back: %w\n", err)
+			err = errors.Join(err, fmt.Errorf("nvimboat/Back"))
+			return
 		}
 		defer Nvim.SetWindowCursor(*NvWindow, [2]int{cursor_x, 0})
 		_, err = Pages.Pop()
 		if err != nil {
-			return fmt.Errorf("nvimboat/Nvimboat.Back: %w\n", err)
+			err = errors.Join(err, fmt.Errorf("nvimboat/Back"))
+			return
 		}
 		err = Pages.Show()
 		if err != nil {
-			return fmt.Errorf("nvimboat/Nvimboat.Back: %w\n", err)
+			err = errors.Join(err, fmt.Errorf("nvimboat/Back"))
+			return
 		}
 		return nil
 	}
 }
 
 func NextUnread(nv *nvim.Nvim, args ...string) (err error) {
+	dbh, err := rssdb.ConnectDb(DbPath)
+	if err != nil {
+		err = errors.Join(err, fmt.Errorf("nvimboat/NextUnread"))
+		return
+	}
+	err = Pages.Top().NextUnread(dbh)
+	if err != nil {
+		err = errors.Join(err, fmt.Errorf("nvimboat/NextUnread"))
+		return
+	}
 	return
 }
 

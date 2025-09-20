@@ -1,6 +1,7 @@
 package nvimboat
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/EinYakAmNil/Nvimboat/go/engine/rssdb"
@@ -15,7 +16,7 @@ type TagFeeds struct {
 func (tf *TagFeeds) Select(dbh rssdb.DbHandle, id string) (p Page, err error) {
 	p, err = selectFeed(dbh, id)
 	if err != nil {
-		err = fmt.Errorf("nvimboat/TagFeeds.Select: %w\n", err)
+		err = errors.Join(err, errors.New("nvimboat/TagFeeds.Select"))
 		return
 	}
 	return
@@ -35,7 +36,7 @@ func (tf *TagFeeds) Render(nv *nvim.Nvim, buf nvim.Buffer) (err error) {
 	for _, c := range [][]string{unreadArticlesRatio, titleCol, urlCol} {
 		err = addColumn(nv, buf, c)
 		if err != nil {
-			err = fmt.Errorf("nvimboat/TagFeeds.Render: %w\n", err)
+			err = errors.Join(err, errors.New("nvimboat/TagFeeds.Render"))
 			return
 		}
 	}
@@ -63,10 +64,11 @@ func (tf *TagFeeds) ChildIdx(p Page) (idx int, err error) {
 			section = len(searchRange) / 2
 		}
 		err = fmt.Errorf(
-			`nvimboat/TagFeeds.ChildIdx: max iterations. "%s" not found in %v`,
+			`Max iterations: "%s" not found in %v`,
 			childTitle,
 			prettyStruct(tf.Feeds),
 		)
+		err = errors.Join(err, errors.New("nvimboat/TagFeeds.ChildIdx"))
 	}
 	return
 }
@@ -76,12 +78,13 @@ func (tf *TagFeeds) Back() (cursor_x int, err error) {
 	if len(Pages) >= 2 {
 		parentPage = Pages[len(Pages)-2]
 	} else {
-		err = fmt.Errorf("nvimboat/Article.Back: page stack is less than 2.\nNo parent page possible.\n")
+		err = fmt.Errorf(`Page stack is less than 2. No parent page possible.`)
+		err = errors.Join(err, errors.New("nvimboat/TagFeeds.Back"))
 		return
 	}
 	cursor_x, err = parentPage.ChildIdx(tf)
 	if err != nil {
-		err = fmt.Errorf("nvimboat/Article.Back: %w\n", err)
+		err = errors.Join(err, errors.New("nvimboat/TagFeeds.Back"))
 		return
 	}
 	return cursor_x + 1, nil
@@ -105,24 +108,24 @@ checkAnyUnread:
 	if setFeedsRead {
 		err = dbh.Queries.SetFeedsRead(dbh.Ctx, ids)
 		if err != nil {
-			err = fmt.Errorf("nvimboat/TagFeeds.ToggleRead: %w\n", err)
+			err = errors.Join(err, errors.New("nvimboat/TagFeeds.ToggleRead"))
 			return
 		}
 	} else {
 		err = dbh.Queries.SetFeedsUnread(dbh.Ctx, ids)
 		if err != nil {
-			err = fmt.Errorf("nvimboat/TagFeeds.ToggleRead: %w\n", err)
+			err = errors.Join(err, errors.New("nvimboat/TagFeeds.ToggleRead"))
 			return
 		}
 	}
 	tf.Feeds, err = dbh.Queries.QueryTagFeeds(dbh.Ctx, urls)
 	if err != nil {
-		err = fmt.Errorf("nvimboat/TagFeeds.ToggleRead: %w\n", err)
+		err = errors.Join(err, errors.New("nvimboat/TagFeeds.ToggleRead"))
 		return
 	}
 	err = Pages.Show()
 	if err != nil {
-		err = fmt.Errorf("nvimboat/TagFeeds.ToggleRead: %w\n", err)
+		err = errors.Join(err, errors.New("nvimboat/TagFeeds.ToggleRead"))
 		return
 	}
 	return

@@ -1,6 +1,7 @@
 package nvimboat
 
 import (
+	"errors"
 	"fmt"
 	"slices"
 
@@ -25,7 +26,7 @@ func (mm *MainMenu) Select(dbh rssdb.DbHandle, id string) (p Page, err error) {
 	if len(extracUrls(id)) > 0 {
 		p, err = selectFeed(dbh, id)
 		if err != nil {
-			err = fmt.Errorf("nvimboat/MainMenu.Select: %w\n", err)
+			err = errors.Join(err, errors.New("in nvimboat/MainMenu.Select"))
 			return
 		}
 		return
@@ -33,7 +34,11 @@ func (mm *MainMenu) Select(dbh rssdb.DbHandle, id string) (p Page, err error) {
 	if filter, okFilter := Filters[id]; okFilter {
 		return filter, nil
 	}
-	err = fmt.Errorf(`nvimboat/MainMenu.Select: "%s" is not recognized as an URL or found as a filter name.`, id)
+	err = fmt.Errorf(
+		`"%s" is not recognized as an URL or found as a filter name.`,
+		id,
+	)
+	err = errors.Join(err, errors.New("nvimboat/MainMenu.Select"))
 	return
 }
 
@@ -72,7 +77,7 @@ func (mm *MainMenu) Render(nv *nvim.Nvim, buf nvim.Buffer) (err error) {
 	for _, c := range [][]string{unreadArticlesRatio, titleCol, urlCol} {
 		err = addColumn(nv, buf, c)
 		if err != nil {
-			err = fmt.Errorf("MainMenu.Render: %w", err)
+			err = errors.Join(err, errors.New("nvimboat/MainMenu.Render"))
 			return
 		}
 	}
@@ -100,14 +105,15 @@ func (mm *MainMenu) ChildIdx(p Page) (idx int, err error) {
 			section = len(searchRange) / 2
 		}
 		err = fmt.Errorf(
-			`nvimboat/MainMenu.ChildIdx: max iterations. "%s" not found in %v`,
+			`Max iterations. "%s" not found in %v`,
 			childTitle,
 			prettyStruct(mm.Feeds),
 		)
+		err = errors.Join(err, errors.New("nvimboat/MainMenu.ChildIdx"))
 		return
 	default:
-		pageType := fmt.Sprintf("%T", f)
-		err = fmt.Errorf(`nvimboat/MainMenu.ChildIdx: cannot find index of type "%s"`, pageType)
+		err = fmt.Errorf(`Cannot find index of type "%s"`, fmt.Sprintf("%T", f))
+		err = errors.Join(err, errors.New("nvimboat/MainMenu.ChildIdx"))
 		return -1, err
 	}
 }
@@ -120,7 +126,8 @@ func (mm *MainMenu) ToggleRead(dbh rssdb.DbHandle, ids []string) (err error) {
 	setFeedsRead := false
 	for _, id := range ids {
 		if len(extracUrls(id)) == 0 {
-			err = fmt.Errorf("nvimboat/MainMenu.ToggleRead: Can't toggle read for %s\n", id)
+			err = fmt.Errorf("Can't toggle read for %s", id)
+			err = errors.Join(err, errors.New("nvimboat/MainMenu.ToggleRead"))
 			return
 		}
 	}
@@ -136,19 +143,19 @@ checkAnyUnread:
 	if setFeedsRead {
 		err = dbh.Queries.SetFeedsRead(dbh.Ctx, ids)
 		if err != nil {
-			err = fmt.Errorf("nvimboat/MainMenu.ToggleRead: %w\n", err)
+			err = errors.Join(err, errors.New("nvimboat/MainMenu.ToggleRead"))
 			return
 		}
 	} else {
 		err = dbh.Queries.SetFeedsUnread(dbh.Ctx, ids)
 		if err != nil {
-			err = fmt.Errorf("nvimboat/MainMenu.ToggleRead: %w\n", err)
+			err = errors.Join(err, errors.New("nvimboat/MainMenu.ToggleRead"))
 			return
 		}
 	}
 	feeds, err := dbh.Queries.QueryMainPage(dbh.Ctx)
 	if err != nil {
-		err = fmt.Errorf("nvimboat/MainMenu.ToggleRead: %w\n", err)
+		err = errors.Join(err, errors.New("nvimboat/MainMenu.ToggleRead"))
 		return
 	}
 	for i, f := range feeds {
@@ -156,7 +163,7 @@ checkAnyUnread:
 	}
 	err = Pages.Show()
 	if err != nil {
-		err = fmt.Errorf("nvimboat/MainMenu.ToggleRead: %w\n", err)
+		err = errors.Join(err, errors.New("nvimboat/MainMenu.ToggleRead"))
 		return
 	}
 	return

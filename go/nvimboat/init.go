@@ -1,6 +1,7 @@
 package nvimboat
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
@@ -39,27 +40,28 @@ func initNvimboat(nv *nvim.Nvim) (err error) {
 	execBatch.ExecLua(luaFilters, rawFilters)
 	err = execBatch.Execute()
 	if err != nil {
-		err = fmt.Errorf("nvimboat/Nvimboat.init: %w", err)
+		err = errors.Join(err, errors.New("nvimboat/initNvimboat"))
 		return
 	}
 	err = parseConfig(rawConfig)
 	if err != nil {
-		err = fmt.Errorf("nvimboat/Nvimboat.init parse lua config: %w", err)
+		err = fmt.Errorf(`Parse lua config: %w`, err)
+		err = errors.Join(err, errors.New("nvimboat/initNvimboat"))
 		return
 	}
 	err = SetupLogging(LogPath)
 	if err != nil {
-		err = fmt.Errorf("Nvimboat init logging: %w", err)
+		err = errors.Join(err, errors.New("nvimboat/initNvimboat"))
 		return
 	}
 	FeedConfig, err = parseFeeds(*rawFeeds)
 	if err != nil {
-		err = fmt.Errorf("nvimboat/Nvimboat.init: %w\n", err)
+		err = errors.Join(err, errors.New("nvimboat/initNvimboat"))
 		return
 	}
 	feedConfig, err := parseFeeds(*rawFeeds)
 	if err != nil {
-		err = fmt.Errorf("nvimboat/Nvimboat.init: %w\n", err)
+		err = errors.Join(err, errors.New("nvimboat/initNvimboat"))
 		return
 	}
 	for feedurl, tags := range feedConfig {
@@ -76,10 +78,9 @@ func initNvimboat(nv *nvim.Nvim) (err error) {
 		filter := new(Filter)
 		*filter, err = parseFilter(rawFilter)
 		if err != nil {
-			err = fmt.Errorf("nvimboat/Nvimboat.init: %w\n", err)
+			err = errors.Join(err, errors.New("nvimboat/initNvimboat"))
 			return
 		}
-
 		Filters[filter.Name] = filter
 	}
 	return
