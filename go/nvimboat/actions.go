@@ -204,6 +204,16 @@ func NextUnread(nv *nvim.Nvim, args ...string) (err error) {
 }
 
 func PrevUnread(nv *nvim.Nvim, args ...string) (err error) {
+	dbh, err := rssdb.ConnectDb(DbPath)
+	if err != nil {
+		err = errors.Join(err, fmt.Errorf("nvimboat/PrevUnread"))
+		return
+	}
+	err = Pages.Top().PrevUnread(dbh)
+	if err != nil {
+		err = errors.Join(err, fmt.Errorf("nvimboat/PrevUnread"))
+		return
+	}
 	return
 }
 

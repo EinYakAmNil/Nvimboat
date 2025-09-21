@@ -3,6 +3,7 @@ package nvimboat
 import (
 	"errors"
 	"fmt"
+	"slices"
 
 	"github.com/EinYakAmNil/Nvimboat/go/engine/rssdb"
 	"github.com/neovim/go-client/nvim"
@@ -108,8 +109,177 @@ func (a *Article) ToggleRead(dbh rssdb.DbHandle, ids []string) (err error) {
 	return
 }
 
-func (a *Article) NextUnread(dbh rssdb.DbHandle) (err error)           { return }
-func (a *Article) PrevUnread(dbh rssdb.DbHandle) (err error)           { return }
+func (a *Article) NextUnread(dbh rssdb.DbHandle) (err error) {
+	parentPage := Pages[len(Pages)-2]
+	articleIdx, err := parentPage.ChildIdx(a)
+	if err != nil {
+		err = errors.Join(err, errors.New("nvimboat/Article.NextUnread"))
+		return
+	}
+	switch p := parentPage.(type) {
+	case *Feed:
+		var newArticle Page
+		articleCycle := p.Articles[articleIdx+1:]
+		articleCycle = append(articleCycle, p.Articles[:articleIdx]...)
+		for _, article := range articleCycle {
+			if article.Unread == 1 {
+				_, err = Pages.Pop()
+				if err != nil {
+					err = errors.Join(err, errors.New("nvimboat/Article.NextUnread"))
+					return
+				}
+				newArticle, err = Pages.Top().Select(dbh, article.Url)
+				if err != nil {
+					err = errors.Join(err, errors.New("nvimboat/Article.NextUnread"))
+					return
+				}
+				err = Pages.Push(newArticle, article.Url)
+				if err != nil {
+					err = errors.Join(err, errors.New("nvimboat/Article.NextUnread"))
+					return
+				}
+				err = Pages.Show()
+				if err != nil {
+					err = errors.Join(err, errors.New("nvimboat/Article.NextUnread"))
+					return
+				}
+				return
+			}
+		}
+		Log(`No more unread articles for this feed.`)
+	case *Filter:
+		var newArticle Page
+		articleCycle := p.Articles[articleIdx+1:]
+		articleCycle = append(articleCycle, p.Articles[:articleIdx]...)
+		for _, article := range articleCycle {
+			if article.Unread == 1 {
+				_, err = Pages.Pop()
+				if err != nil {
+					err = errors.Join(err, errors.New("nvimboat/Article.NextUnread"))
+					return
+				}
+				newArticle, err = Pages.Top().Select(dbh, article.Url)
+				if err != nil {
+					err = errors.Join(err, errors.New("nvimboat/Article.NextUnread"))
+					return
+				}
+				err = Pages.Push(newArticle, article.Url)
+				if err != nil {
+					err = errors.Join(err, errors.New("nvimboat/Article.NextUnread"))
+					return
+				}
+				err = Pages.Show()
+				if err != nil {
+					err = errors.Join(err, errors.New("nvimboat/Article.NextUnread"))
+					return
+				}
+				return
+			}
+		}
+		Log(`No more unread articles for this filter.`)
+	default:
+		err = fmt.Errorf(
+			`Finding next unread article "%s" is not implemented for %T`,
+			a.Url,
+			p,
+		)
+		err = errors.Join(err, errors.New("nvimboat/Article.NextUnread"))
+		return
+	}
+	return
+}
+
+func (a *Article) PrevUnread(dbh rssdb.DbHandle) (err error) {
+	if len(Pages) < 2 {
+		err = fmt.Errorf(`Length of page stack is too short: %d`, len(Pages))
+		err = errors.Join(err, errors.New("nvimboat/Article.PrevUnread"))
+		return
+	}
+	parentPage := Pages[len(Pages)-2]
+	articleIdx, err := parentPage.ChildIdx(a)
+	if err != nil {
+		err = errors.Join(err, errors.New("nvimboat/Article.PrevUnread"))
+		return
+	}
+	switch p := parentPage.(type) {
+	case *Feed:
+		var (
+			newArticle Page
+		)
+		articleCycle := slices.Clone(p.Articles[articleIdx+1:])
+		articleCycle = append(articleCycle, p.Articles[:articleIdx]...)
+		slices.Reverse(articleCycle)
+		for _, article := range articleCycle {
+			if article.Unread == 1 {
+				_, err = Pages.Pop()
+				if err != nil {
+					err = errors.Join(err, errors.New("nvimboat/Article.PrevUnread"))
+					return
+				}
+				newArticle, err = Pages.Top().Select(dbh, article.Url)
+				if err != nil {
+					err = errors.Join(err, errors.New("nvimboat/Article.PrevUnread"))
+					return
+				}
+				err = Pages.Push(newArticle, article.Url)
+				if err != nil {
+					err = errors.Join(err, errors.New("nvimboat/Article.PrevUnread"))
+					return
+				}
+				err = Pages.Show()
+				if err != nil {
+					err = errors.Join(err, errors.New("nvimboat/Article.PrevUnread"))
+					return
+				}
+				return
+			}
+		}
+		Log(`No more unread articles for this feed.`)
+	case *Filter:
+		var newArticle Page
+		articleCycle := slices.Clone(p.Articles[articleIdx+1:])
+		articleCycle = append(articleCycle, p.Articles[:articleIdx]...)
+		slices.Reverse(articleCycle)
+		for _, article := range articleCycle {
+			if article.Unread == 1 {
+				_, err = Pages.Pop()
+				if err != nil {
+					err = errors.Join(err, errors.New("nvimboat/Article.PrevUnread"))
+					return
+				}
+				newArticle, err = Pages.Top().Select(dbh, article.Url)
+				if err != nil {
+					err = errors.Join(err, errors.New("nvimboat/Article.PrevUnread"))
+					return
+				}
+				err = Pages.Push(newArticle, article.Url)
+				if err != nil {
+					err = errors.Join(err, errors.New("nvimboat/Article.PrevUnread"))
+					return
+				}
+				err = Pages.Show()
+				if err != nil {
+					err = errors.Join(err, errors.New("nvimboat/Article.PrevUnread"))
+					return
+				}
+				return
+			}
+		}
+		Log(`No more unread articles for this filter.`)
+	default:
+		err = fmt.Errorf(
+			`Finding previous unread article "%s" is not implemented for %T`,
+			a.Url,
+			p,
+		)
+		err = errors.Join(err, errors.New("nvimboat/Article.PrevUnread"))
+		return
+	}
+	return
+}
+
 func (a *Article) NextArticle(dbh rssdb.DbHandle) (err error)          { return }
+
 func (a *Article) PrevArticle(dbh rssdb.DbHandle) (err error)          { return }
+
 func (a *Article) Delete(dbh rssdb.DbHandle, ids []string) (err error) { return }

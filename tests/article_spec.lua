@@ -42,12 +42,6 @@ if go_build.stderr ~= "" then
 	end
 end
 
-local toggle_urls = {
-	"https://archlinux.org/news/providing-a-license-for-package-sources/",
-	"https://archlinux.org/news/manual-intervention-for-pacman-700-and-local-repositories-required/",
-	"https://archlinux.org/news/arch-linux-2024-leader-election-results/",
-}
-
 describe("nvimboat", function()
 	it("can be configured", function()
 		eq("firefox", nvimboat.config.linkHandler)
@@ -58,19 +52,35 @@ describe("nvimboat", function()
 		eq("MainMenu", nvimboat.pages[1].type)
 		eq("", nvimboat.pages[1].id)
 	end)
-	it("can select a filter", function()
-		local filter = "new Linux articles"
-		vim.cmd.Nvimboat("select", filter)
-		eq("Filter", nvimboat.pages[2].type)
-		eq(filter, nvimboat.pages[2].id)
+	it("can select a feed", function()
+		local url = "https://www.archlinux.org/feeds/news/"
+		vim.cmd.Nvimboat("select", url)
+		eq("Feed", nvimboat.pages[2].type)
+		eq(url, nvimboat.pages[2].id)
 	end)
-	it("can toggle the read status", function ()
-		vim.cmd.Nvimboat("toggle-read", unpack(toggle_urls))
-		utils.eq_buf(expected.filter_buf[2])
+	it("can select an article", function()
+		local url = "https://archlinux.org/news/providing-a-license-for-package-sources/"
+		vim.cmd.Nvimboat("select", url)
+		utils.eq_buf(expected.article_buf[2])
+		vim.cmd.Nvimboat("back")
 	end)
-	it("can toggle the read status again", function ()
-		vim.cmd.Nvimboat("toggle-read", toggle_urls[1], toggle_urls[3])
-		utils.eq_buf(expected.filter_buf[3])
+	it("can select the next unread article of a feed", function()
+		local url = "https://archlinux.org/news/glibc-241-corrupting-discord-installation/"
+		utils.eq_buf(expected.feed_buf[5])
+		vim.cmd.Nvimboat("select", url)
+		vim.cmd.Nvimboat("prev-unread")
+		vim.cmd.Nvimboat("back")
+		utils.eq_buf(expected.feed_buf[6])
+		vim.cmd.Nvimboat("show-main")
+	end)
+	it("can select the next unread article of a filter", function()
+		vim.cmd.Nvimboat("select", "new Linux articles")
+		local url = "https://blog.lilydjwg.me/posts/216867.html"
+		utils.eq_buf(expected.filter_buf[4])
+		vim.cmd.Nvimboat("select", url)
+		vim.cmd.Nvimboat("prev-unread")
+		vim.cmd.Nvimboat("back")
+		utils.eq_buf(expected.filter_buf[5])
 	end)
 end)
 
