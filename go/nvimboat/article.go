@@ -206,10 +206,8 @@ func (a *Article) PrevUnread(dbh rssdb.DbHandle) (err error) {
 		var (
 			newArticle Page
 		)
-		articleCycle := slices.Clone(p.Articles[articleIdx+1:])
-		articleCycle = append(articleCycle, p.Articles[:articleIdx]...)
-		slices.Reverse(articleCycle)
-		for _, article := range articleCycle {
+		for _, article := range slices.Backward(
+			append(p.Articles[articleIdx+1:], p.Articles[:articleIdx]...)) {
 			if article.Unread == 1 {
 				_, err = Pages.Pop()
 				if err != nil {
@@ -278,8 +276,8 @@ func (a *Article) PrevUnread(dbh rssdb.DbHandle) (err error) {
 	return
 }
 
-func (a *Article) NextArticle(dbh rssdb.DbHandle) (err error)          { return }
+func (a *Article) NextArticle(dbh rssdb.DbHandle) (err error) { return }
 
-func (a *Article) PrevArticle(dbh rssdb.DbHandle) (err error)          { return }
+func (a *Article) PrevArticle(dbh rssdb.DbHandle) (err error) { return }
 
 func (a *Article) Delete(dbh rssdb.DbHandle, ids []string) (err error) { return }

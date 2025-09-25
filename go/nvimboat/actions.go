@@ -38,6 +38,16 @@ func Disable(nv *nvim.Nvim, args ...string) (err error) {
 		err = errors.Join(err, fmt.Errorf("nvimboat/Disable"))
 		return
 	}
+	err = Nvim.Echo([]nvim.TextChunk{{
+		Text: "Disabled Nvimboat",
+	}},
+		false,
+		make(map[string]any),
+	)
+	if err != nil {
+		err = errors.Join(err, errors.New("nvimboat/Feed.NextUnread"))
+		return
+	}
 	return
 }
 

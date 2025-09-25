@@ -3,6 +3,7 @@ package nvimboat
 import (
 	"errors"
 	"fmt"
+	"slices"
 
 	"github.com/EinYakAmNil/Nvimboat/go/engine/rssdb"
 	"github.com/neovim/go-client/nvim"
@@ -203,8 +204,125 @@ checkAnyUnread:
 	return
 }
 
-func (f *Feed) NextUnread(dbh rssdb.DbHandle) (err error)           { return }
-func (f *Feed) PrevUnread(dbh rssdb.DbHandle) (err error)           { return }
+func (f *Feed) NextUnread(dbh rssdb.DbHandle) (err error) {
+	cursorPosition, err := Nvim.WindowCursor(*NvWindow)
+	if err != nil {
+		err = errors.Join(err, errors.New("nvimboat/Feed.NextUnread"))
+		return
+	}
+	cursorRow := cursorPosition[0] - 1
+	if len(f.Articles) < cursorRow {
+		err = fmt.Errorf(
+			`Cursor row (%d) is outside of this feed's article range: %d.`,
+			cursorRow,
+			len(f.Articles),
+		)
+		err = errors.Join(err, errors.New("nvimboat/Feed.NextUnread"))
+		return
+	}
+	for i, article := range append(f.Articles[cursorRow:], f.Articles[:cursorRow]...) {
+		if article.Unread == 1 {
+			newCursorPosition := [2]int{
+				(i + cursorRow + 1) % len(f.Articles),
+				cursorPosition[1],
+			}
+			err = Nvim.SetWindowCursor(*NvWindow,
+				newCursorPosition,
+			)
+			if err != nil {
+				errPosition := fmt.Errorf(
+					`Got: %+v, max row count: %d`,
+					newCursorPosition,
+					len(f.Articles),
+				)
+				errArticle := fmt.Errorf(
+					`Matched article: %+v`,
+					prettyStruct(article),
+				)
+				err = errors.Join(
+					err,
+					errPosition,
+					errArticle,
+					errors.New("nvimboat/Feed.NextUnread"),
+				)
+				return
+			}
+			return
+		}
+	}
+	err = Nvim.Echo([]nvim.TextChunk{{
+		Text: "No more unread articles in this feed.",
+	}},
+		false,
+		make(map[string]any),
+	)
+	if err != nil {
+		err = errors.Join(err, errors.New("nvimboat/Feed.NextUnread"))
+		return
+	}
+	return
+}
+
+func (f *Feed) PrevUnread(dbh rssdb.DbHandle) (err error) {
+	cursorPosition, err := Nvim.WindowCursor(*NvWindow)
+	if err != nil {
+		err = errors.Join(err, errors.New("nvimboat/Feed.NextUnread"))
+		return
+	}
+	cursorRow := cursorPosition[0] - 1
+	if len(f.Articles) < cursorRow {
+		err = fmt.Errorf(
+			`Cursor row (%d) is outside of this feed's article range: %d.`,
+			cursorRow,
+			len(f.Articles),
+		)
+		err = errors.Join(err, errors.New("nvimboat/Feed.NextUnread"))
+		return
+	}
+	for i, article := range slices.Backward(
+		append(f.Articles[cursorRow:], f.Articles[:cursorRow]...)) {
+		if article.Unread == 1 {
+			newCursorPosition := [2]int{
+				(i + cursorRow + 1) % len(f.Articles),
+				cursorPosition[1],
+			}
+			err = Nvim.SetWindowCursor(*NvWindow,
+				newCursorPosition,
+			)
+			if err != nil {
+				errPosition := fmt.Errorf(
+					`Got: %+v, max row count: %d`,
+					newCursorPosition,
+					len(f.Articles),
+				)
+				errArticle := fmt.Errorf(
+					`Matched article: %+v`,
+					prettyStruct(article),
+				)
+				err = errors.Join(
+					err,
+					errPosition,
+					errArticle,
+					errors.New("nvimboat/Feed.NextUnread"),
+				)
+				return
+			}
+			return
+		}
+	}
+	err = Nvim.Echo([]nvim.TextChunk{{
+		Text: "No more unread articles in this feed.",
+	}},
+		false,
+		make(map[string]any),
+	)
+	if err != nil {
+		err = errors.Join(err, errors.New("nvimboat/Feed.NextUnread"))
+		return
+	}
+	return
+}
+
 func (f *Feed) NextArticle(dbh rssdb.DbHandle) (err error)          { return }
 func (f *Feed) PrevArticle(dbh rssdb.DbHandle) (err error)          { return }
 func (f *Feed) Delete(dbh rssdb.DbHandle, ids []string) (err error) { return }
