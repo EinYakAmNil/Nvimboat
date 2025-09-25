@@ -2,7 +2,8 @@
 	"diagnostics": {
 		"globals": ["vim", "describe", "it", "before_each", "after_each"],
 	},
-    "workspace.library": [
-		        "${3rd}/luassert/library"
-    ]
+	"workspace.library": [
+		"${3rd}/luassert/library"
+	],
+	"runtime.version": "Lua 5.1"
 }
