@@ -41,6 +41,5 @@ func Log(val ...any) {
 			true,
 			make(map[string]any),
 		)
-		// Nvim.Command(`echo "` + msg + `"`)
 	}
 }
