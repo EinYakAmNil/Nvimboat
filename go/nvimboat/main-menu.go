@@ -126,8 +126,7 @@ func (mm *MainMenu) ToggleRead(dbh rssdb.DbHandle, ids []string) (err error) {
 	setFeedsRead := false
 	for _, id := range ids {
 		if len(extracUrls(id)) == 0 {
-			err = fmt.Errorf("Can't toggle read for %s", id)
-			err = errors.Join(err, errors.New("nvimboat/MainMenu.ToggleRead"))
+			Log(fmt.Sprintf(`Can't toggle read for "%s".`, id))
 			return
 		}
 	}
@@ -169,7 +168,85 @@ checkAnyUnread:
 	return
 }
 
-func (mm *MainMenu) NextUnread(dbh rssdb.DbHandle) (err error)           { return }
+func (mm *MainMenu) NextUnread(dbh rssdb.DbHandle) (err error) {
+	cursorPosition, err := Nvim.WindowCursor(*NvWindow)
+	if err != nil {
+		err = errors.Join(err, errors.New("nvimboat/MainMenu.NextUnread"))
+		return
+	}
+	cursorRow := cursorPosition[0]
+	filterNames := make([]string, 0, len(Filters))
+	for name := range Filters {
+		filterNames = append(filterNames, name)
+	}
+	slices.Sort(filterNames)
+	var rows []any
+	for _, name := range filterNames {
+		rows = append(rows, Filters[name])
+	}
+	for _, f := range mm.Feeds {
+		rows = append(rows, f)
+	}
+	if len(rows) < cursorRow {
+		err = fmt.Errorf(
+			`Cursor row (%d) is outside of this filter's article range: %d.`,
+			cursorRow,
+			len(rows),
+		)
+		err = errors.Join(err, errors.New("nvimboat/MainMenu.NextUnread"))
+		return
+	}
+	for i, r := range append(rows[cursorRow:], rows[:cursorRow]...) {
+		switch f := r.(type) {
+		case *Filter:
+			for _, a := range f.Articles {
+				if a.Unread == 1 {
+					err = setCursorNextUnread(
+						(i+cursorRow)%len(rows)+1,
+						cursorPosition[1],
+						len(rows),
+						f,
+					)
+					if err != nil {
+						err = errors.Join(err, errors.New("nvimboat/MainMenu.NextUnread"))
+						return
+					}
+					return
+				}
+			}
+		case MainPageFeed:
+			if f.UnreadCount > 0 {
+				err = setCursorNextUnread(
+					(i+cursorRow)%len(rows)+1,
+					cursorPosition[1],
+					len(rows),
+					f,
+				)
+				if err != nil {
+					err = errors.Join(err, errors.New("nvimboat/MainMenu.NextUnread"))
+					return
+				}
+				return
+			}
+		default:
+			err = fmt.Errorf(`Unknown row type "%T" during search for %+v`, f, f)
+			err = errors.Join(err, errors.New("nvimboat/MainMenu.NextUnread"))
+			return
+		}
+	}
+	err = Nvim.Echo([]nvim.TextChunk{{
+		Text: "No more unread articles.",
+	}},
+		false,
+		make(map[string]any),
+	)
+	if err != nil {
+		err = errors.Join(err, errors.New("nvimboat/MainMenu.NextUnread"))
+		return
+	}
+	return
+}
+
 func (mm *MainMenu) PrevUnread(dbh rssdb.DbHandle) (err error)           { return }
 func (mm *MainMenu) NextArticle(dbh rssdb.DbHandle) (err error)          { return }
 func (mm *MainMenu) PrevArticle(dbh rssdb.DbHandle) (err error)          { return }

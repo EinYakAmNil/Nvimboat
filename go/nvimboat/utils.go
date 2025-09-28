@@ -17,6 +17,36 @@ import (
 	"github.com/neovim/go-client/nvim"
 )
 
+func setCursorNextUnread(row, col, maxRows int, matched any) (err error) {
+	newCursorPosition := [2]int{
+		row,
+		col,
+	}
+	err = Nvim.SetWindowCursor(*NvWindow,
+		newCursorPosition,
+	)
+	if err != nil {
+		errPosition := fmt.Errorf(
+			`Got: %+v, max row count: %d, %d`,
+			newCursorPosition,
+			row,
+			maxRows,
+		)
+		errArticle := fmt.Errorf(
+			`Matched: %+v`,
+			prettyStruct(matched),
+		)
+		err = errors.Join(
+			err,
+			errPosition,
+			errArticle,
+			errors.New("nvimboat/setCursorNextUnread"),
+		)
+		return
+	}
+	return
+}
+
 func updateFilters(dbh rssdb.DbHandle) (err error) {
 	for _, filter := range Filters {
 		filter.Articles, err = dbh.Queries.QueryFilter(dbh.Ctx, filter.QueryFilterParams)

@@ -194,7 +194,7 @@ func (f *Filter) NextUnread(dbh rssdb.DbHandle) (err error) {
 		err = errors.Join(err, errors.New("nvimboat/Filter.NextUnread"))
 		return
 	}
-	cursorRow := cursorPosition[0] - 1
+	cursorRow := cursorPosition[0]
 	if len(f.Articles) < cursorRow {
 		err = fmt.Errorf(
 			`Cursor row (%d) is outside of this filter's article range: %d.`,
@@ -206,29 +206,14 @@ func (f *Filter) NextUnread(dbh rssdb.DbHandle) (err error) {
 	}
 	for i, article := range append(f.Articles[cursorRow:], f.Articles[:cursorRow]...) {
 		if article.Unread == 1 {
-			newCursorPosition := [2]int{
-				(i + cursorRow + 1) % len(f.Articles),
+			err = setCursorNextUnread(
+				(i+cursorRow)%len(f.Articles)+1,
 				cursorPosition[1],
-			}
-			err = Nvim.SetWindowCursor(*NvWindow,
-				newCursorPosition,
+				len(f.Articles),
+				article,
 			)
 			if err != nil {
-				errPosition := fmt.Errorf(
-					`Got: %+v, max row count: %d`,
-					newCursorPosition,
-					len(f.Articles),
-				)
-				errArticle := fmt.Errorf(
-					`Matched article: %+v`,
-					prettyStruct(article),
-				)
-				err = errors.Join(
-					err,
-					errPosition,
-					errArticle,
-					errors.New("nvimboat/Filter.NextUnread"),
-				)
+				err = errors.Join(err, errors.New("nvimboat/Filter.NextUnread"))
 				return
 			}
 			return
