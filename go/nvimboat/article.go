@@ -276,8 +276,4 @@ func (a *Article) PrevUnread(dbh rssdb.DbHandle) (err error) {
 	return
 }
 
-func (a *Article) NextArticle(dbh rssdb.DbHandle) (err error) { return }
-
-func (a *Article) PrevArticle(dbh rssdb.DbHandle) (err error) { return }
-
 func (a *Article) Delete(dbh rssdb.DbHandle, ids []string) (err error) { return }

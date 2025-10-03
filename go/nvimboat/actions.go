@@ -120,7 +120,10 @@ func ShowMain(nv *nvim.Nvim, args ...string) (err error) {
 
 func Select(nv *nvim.Nvim, args ...string) (err error) {
 	if len(args) < 2 {
-		err = fmt.Errorf("no arguments")
+		err = fmt.Errorf(`not enough arguments. Given arguments:`)
+		for _, arg := range args {
+			err = errors.Join(err, errors.New(arg))
+		}
 		err = errors.Join(err, errors.New("nvimboat/Select"))
 		return
 	}
@@ -239,6 +242,45 @@ func PrevUnread(nv *nvim.Nvim, args ...string) (err error) {
 func NextArticle(nv *nvim.Nvim, args ...string) (err error) {
 	switch p := Pages.Top().(type) {
 	case *Article:
+		var (
+			f   Page
+			idx int
+		)
+		f, err = Pages.Pop()
+		if err != nil {
+			err = errors.Join(err, errors.New("nvimboat/NextArticle"))
+			return
+		}
+		switch f := f.(type) {
+		case *Feed:
+			idx, err = f.ChildIdx(p)
+			if err != nil {
+				err = errors.Join(err, errors.New("nvimboat/NextArticle"))
+				return
+			}
+			idx = (idx + 1) % len(f.Articles)
+			err = Select(nv, "", f.Articles[idx].Url)
+			if err != nil {
+				err = errors.Join(err, errors.New("nvimboat/NextArticle"))
+				return
+			}
+		case *Filter:
+			idx, err = f.ChildIdx(p)
+			if err != nil {
+				err = errors.Join(err, errors.New("nvimboat/NextArticle"))
+				return
+			}
+			idx = (idx + 1) % len(f.Articles)
+			err = Select(nv, "", f.Articles[idx].Url)
+			if err != nil {
+				err = errors.Join(err, errors.New("nvimboat/NextArticle"))
+				return
+			}
+		default:
+			err = fmt.Errorf(`Unexpected page type "%T".`, f)
+			err = errors.Join(err, errors.New("nvimboat/NextArticle"))
+			return
+		}
 	default:
 		Nvim.Echo([]nvim.TextChunk{{
 			Text: fmt.Sprintf(
@@ -257,6 +299,51 @@ func NextArticle(nv *nvim.Nvim, args ...string) (err error) {
 func PrevArticle(nv *nvim.Nvim, args ...string) (err error) {
 	switch p := Pages.Top().(type) {
 	case *Article:
+		var (
+			f   Page
+			idx int
+		)
+		f, err = Pages.Pop()
+		if err != nil {
+			err = errors.Join(err, errors.New("nvimboat/PrevArticle"))
+			return
+		}
+		switch f := f.(type) {
+		case *Feed:
+			idx, err = f.ChildIdx(p)
+			if err != nil {
+				err = errors.Join(err, errors.New("nvimboat/PrevArticle"))
+				return
+			}
+			idx = idx - 1
+			if idx < 0 {
+				idx = len(f.Articles) - 1
+			}
+			err = Select(nv, "", f.Articles[idx].Url)
+			if err != nil {
+				err = errors.Join(err, errors.New("nvimboat/PrevArticle"))
+				return
+			}
+		case *Filter:
+			idx, err = f.ChildIdx(p)
+			if err != nil {
+				err = errors.Join(err, errors.New("nvimboat/PrevArticle"))
+				return
+			}
+			idx = idx - 1
+			if idx < 0 {
+				idx = len(f.Articles) - 1
+			}
+			err = Select(nv, "", f.Articles[idx].Url)
+			if err != nil {
+				err = errors.Join(err, errors.New("nvimboat/PrevArticle"))
+				return
+			}
+		default:
+			err = fmt.Errorf(`Unexpected page type "%T".`, f)
+			err = errors.Join(err, errors.New("nvimboat/PrevArticle"))
+			return
+		}
 	default:
 		Nvim.Echo([]nvim.TextChunk{{
 			Text: fmt.Sprintf(
