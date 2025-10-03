@@ -201,7 +201,7 @@ func (mm *MainMenu) NextUnread(dbh rssdb.DbHandle) (err error) {
 		case *Filter:
 			for _, a := range f.Articles {
 				if a.Unread == 1 {
-					err = setCursorNextUnread(
+					err = setCursorUnread(
 						(i+cursorRow)%len(rows)+1,
 						cursorPosition[1],
 						len(rows),
@@ -216,7 +216,7 @@ func (mm *MainMenu) NextUnread(dbh rssdb.DbHandle) (err error) {
 			}
 		case MainPageFeed:
 			if f.UnreadCount > 0 {
-				err = setCursorNextUnread(
+				err = setCursorUnread(
 					(i+cursorRow)%len(rows)+1,
 					cursorPosition[1],
 					len(rows),
@@ -247,7 +247,84 @@ func (mm *MainMenu) NextUnread(dbh rssdb.DbHandle) (err error) {
 	return
 }
 
-func (mm *MainMenu) PrevUnread(dbh rssdb.DbHandle) (err error)           { return }
-func (mm *MainMenu) NextArticle(dbh rssdb.DbHandle) (err error)          { return }
-func (mm *MainMenu) PrevArticle(dbh rssdb.DbHandle) (err error)          { return }
+func (mm *MainMenu) PrevUnread(dbh rssdb.DbHandle) (err error) {
+	cursorPosition, err := Nvim.WindowCursor(*NvWindow)
+	if err != nil {
+		err = errors.Join(err, errors.New("nvimboat/MainMenu.NextUnread"))
+		return
+	}
+	cursorRow := cursorPosition[0] - 1
+	filterNames := make([]string, 0, len(Filters))
+	for name := range Filters {
+		filterNames = append(filterNames, name)
+	}
+	slices.Sort(filterNames)
+	var rows []any
+	for _, name := range filterNames {
+		rows = append(rows, Filters[name])
+	}
+	for _, f := range mm.Feeds {
+		rows = append(rows, f)
+	}
+	if len(rows) < cursorRow {
+		err = fmt.Errorf(
+			`Cursor row (%d) is outside of this filter's article range: %d.`,
+			cursorRow,
+			len(rows),
+		)
+		err = errors.Join(err, errors.New("nvimboat/MainMenu.NextUnread"))
+		return
+	}
+	for i, r := range slices.Backward(
+		append(rows[cursorRow:], rows[:cursorRow]...)) {
+		switch f := r.(type) {
+		case *Filter:
+			for _, a := range f.Articles {
+				if a.Unread == 1 {
+					err = setCursorUnread(
+						(i+cursorRow)%len(rows)+1,
+						cursorPosition[1],
+						len(rows),
+						f,
+					)
+					if err != nil {
+						err = errors.Join(err, errors.New("nvimboat/MainMenu.NextUnread"))
+						return
+					}
+					return
+				}
+			}
+		case MainPageFeed:
+			if f.UnreadCount > 0 {
+				err = setCursorUnread(
+					(i+cursorRow)%len(rows)+1,
+					cursorPosition[1],
+					len(rows),
+					f,
+				)
+				if err != nil {
+					err = errors.Join(err, errors.New("nvimboat/MainMenu.NextUnread"))
+					return
+				}
+				return
+			}
+		default:
+			err = fmt.Errorf(`Unknown row type "%T" during search for %+v`, f, f)
+			err = errors.Join(err, errors.New("nvimboat/MainMenu.NextUnread"))
+			return
+		}
+	}
+	err = Nvim.Echo([]nvim.TextChunk{{
+		Text: "No more unread articles.",
+	}},
+		false,
+		make(map[string]any),
+	)
+	if err != nil {
+		err = errors.Join(err, errors.New("nvimboat/MainMenu.NextUnread"))
+		return
+	}
+	return
+}
+
 func (mm *MainMenu) Delete(dbh rssdb.DbHandle, ids []string) (err error) { return }

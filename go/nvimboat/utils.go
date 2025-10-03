@@ -17,7 +17,7 @@ import (
 	"github.com/neovim/go-client/nvim"
 )
 
-func setCursorNextUnread(row, col, maxRows int, matched any) (err error) {
+func setCursorUnread(row, col, maxRows int, matched any) (err error) {
 	newCursorPosition := [2]int{
 		row,
 		col,

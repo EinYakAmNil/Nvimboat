@@ -79,33 +79,43 @@ func (q *Queries) CreateFeed(ctx context.Context, arg CreateFeedParams) (RssFeed
 	return i, err
 }
 
-const deleteArticle = `-- name: DeleteArticle :exec
+const deleteArticles = `-- name: DeleteArticles :exec
 DELETE FROM rss_item
-WHERE url = ?
+WHERE url IN (/*SLICE:url*/?)
 `
 
-func (q *Queries) DeleteArticle(ctx context.Context, url string) error {
-	_, err := q.db.ExecContext(ctx, deleteArticle, url)
-	return err
-}
-
-const deleteFeed = `-- name: DeleteFeed :exec
-DELETE FROM rss_feed
-WHERE rssurl = ?
-`
-
-func (q *Queries) DeleteFeed(ctx context.Context, rssurl string) error {
-	_, err := q.db.ExecContext(ctx, deleteFeed, rssurl)
+func (q *Queries) DeleteArticles(ctx context.Context, url []string) error {
+	query := deleteArticles
+	var queryParams []interface{}
+	if len(url) > 0 {
+		for _, v := range url {
+			queryParams = append(queryParams, v)
+		}
+		query = strings.Replace(query, "/*SLICE:url*/?", strings.Repeat(",?", len(url))[1:], 1)
+	} else {
+		query = strings.Replace(query, "/*SLICE:url*/?", "NULL", 1)
+	}
+	_, err := q.db.ExecContext(ctx, query, queryParams...)
 	return err
 }
 
 const deleteFeedArticles = `-- name: DeleteFeedArticles :exec
 DELETE FROM rss_item
-WHERE feedurl = ?
+WHERE feedurl IN (/*SLICE:feedurl*/?)
 `
 
-func (q *Queries) DeleteFeedArticles(ctx context.Context, feedurl string) error {
-	_, err := q.db.ExecContext(ctx, deleteFeedArticles, feedurl)
+func (q *Queries) DeleteFeedArticles(ctx context.Context, feedurl []string) error {
+	query := deleteFeedArticles
+	var queryParams []interface{}
+	if len(feedurl) > 0 {
+		for _, v := range feedurl {
+			queryParams = append(queryParams, v)
+		}
+		query = strings.Replace(query, "/*SLICE:feedurl*/?", strings.Repeat(",?", len(feedurl))[1:], 1)
+	} else {
+		query = strings.Replace(query, "/*SLICE:feedurl*/?", "NULL", 1)
+	}
+	_, err := q.db.ExecContext(ctx, query, queryParams...)
 	return err
 }
 
@@ -449,7 +459,7 @@ func (q *Queries) SetArticlesUnread(ctx context.Context, url []string) error {
 const setFeedsRead = `-- name: SetFeedsRead :exec
 UPDATE rss_item
 SET unread = 0
-WHERE feedurl in (/*SLICE:feedurl*/?)
+WHERE feedurl IN (/*SLICE:feedurl*/?)
 `
 
 func (q *Queries) SetFeedsRead(ctx context.Context, feedurl []string) error {
@@ -470,7 +480,7 @@ func (q *Queries) SetFeedsRead(ctx context.Context, feedurl []string) error {
 const setFeedsUnread = `-- name: SetFeedsUnread :exec
 UPDATE rss_item
 SET unread = 1
-WHERE feedurl in (/*SLICE:feedurl*/?)
+WHERE feedurl IN (/*SLICE:feedurl*/?)
 `
 
 func (q *Queries) SetFeedsUnread(ctx context.Context, feedurl []string) error {

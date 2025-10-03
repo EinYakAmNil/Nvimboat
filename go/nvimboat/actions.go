@@ -237,10 +237,38 @@ func PrevUnread(nv *nvim.Nvim, args ...string) (err error) {
 }
 
 func NextArticle(nv *nvim.Nvim, args ...string) (err error) {
+	switch p := Pages.Top().(type) {
+	case *Article:
+	default:
+		Nvim.Echo([]nvim.TextChunk{{
+			Text: fmt.Sprintf(
+				`Only use this function for pages of type "Article" not "%T".`,
+				p,
+			),
+		}},
+			true,
+			make(map[string]any),
+		)
+		return
+	}
 	return
 }
 
 func PrevArticle(nv *nvim.Nvim, args ...string) (err error) {
+	switch p := Pages.Top().(type) {
+	case *Article:
+	default:
+		Nvim.Echo([]nvim.TextChunk{{
+			Text: fmt.Sprintf(
+				`Only use this function for pages of type "Article" not "%T".`,
+				p,
+			),
+		}},
+			true,
+			make(map[string]any),
+		)
+		return
+	}
 	return
 }
 

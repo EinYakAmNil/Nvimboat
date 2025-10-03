@@ -92,6 +92,4 @@ func (tp *TagsOverviewPage) ToggleRead(dbh rssdb.DbHandle, ids []string) (err er
 
 func (tp *TagsOverviewPage) NextUnread(dbh rssdb.DbHandle) (err error)           { return }
 func (tp *TagsOverviewPage) PrevUnread(dbh rssdb.DbHandle) (err error)           { return }
-func (tp *TagsOverviewPage) NextArticle(dbh rssdb.DbHandle) (err error)          { return }
-func (tp *TagsOverviewPage) PrevArticle(dbh rssdb.DbHandle) (err error)          { return }
 func (tp *TagsOverviewPage) Delete(dbh rssdb.DbHandle, ids []string) (err error) { return }

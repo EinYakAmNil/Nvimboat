@@ -134,6 +134,4 @@ checkAnyUnread:
 
 func (tf *TagFeeds) NextUnread(dbh rssdb.DbHandle) (err error)           { return }
 func (tf *TagFeeds) PrevUnread(dbh rssdb.DbHandle) (err error)           { return }
-func (tf *TagFeeds) NextArticle(dbh rssdb.DbHandle) (err error)          { return }
-func (tf *TagFeeds) PrevArticle(dbh rssdb.DbHandle) (err error)          { return }
 func (tf *TagFeeds) Delete(dbh rssdb.DbHandle, ids []string) (err error) { return }

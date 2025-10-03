@@ -222,7 +222,7 @@ func (f *Feed) NextUnread(dbh rssdb.DbHandle) (err error) {
 	}
 	for i, article := range append(f.Articles[cursorRow:], f.Articles[:cursorRow]...) {
 		if article.Unread == 1 {
-			err = setCursorNextUnread(
+			err = setCursorUnread(
 				(i+cursorRow)%len(f.Articles)+1,
 				cursorPosition[1],
 				len(f.Articles),
@@ -267,29 +267,14 @@ func (f *Feed) PrevUnread(dbh rssdb.DbHandle) (err error) {
 	for i, article := range slices.Backward(
 		append(f.Articles[cursorRow:], f.Articles[:cursorRow]...)) {
 		if article.Unread == 1 {
-			newCursorPosition := [2]int{
-				(i + cursorRow + 1) % len(f.Articles),
+			err = setCursorUnread(
+				(i+cursorRow)%len(f.Articles)+1,
 				cursorPosition[1],
-			}
-			err = Nvim.SetWindowCursor(*NvWindow,
-				newCursorPosition,
+				len(f.Articles),
+				article,
 			)
 			if err != nil {
-				errPosition := fmt.Errorf(
-					`Got: %+v, max row count: %d`,
-					newCursorPosition,
-					len(f.Articles),
-				)
-				errArticle := fmt.Errorf(
-					`Matched article: %+v`,
-					prettyStruct(article),
-				)
-				err = errors.Join(
-					err,
-					errPosition,
-					errArticle,
-					errors.New("nvimboat/Feed.NextUnread"),
-				)
+				err = errors.Join(err, errors.New("nvimboat/Feed.PrevUnread"))
 				return
 			}
 			return
@@ -308,6 +293,4 @@ func (f *Feed) PrevUnread(dbh rssdb.DbHandle) (err error) {
 	return
 }
 
-func (f *Feed) NextArticle(dbh rssdb.DbHandle) (err error)          { return }
-func (f *Feed) PrevArticle(dbh rssdb.DbHandle) (err error)          { return }
 func (f *Feed) Delete(dbh rssdb.DbHandle, ids []string) (err error) { return }

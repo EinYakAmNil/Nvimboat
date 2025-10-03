@@ -10,10 +10,6 @@ INSERT INTO rss_feed (
 	)
 RETURNING *;
 
--- name: DeleteFeed :exec
-DELETE FROM rss_feed
-WHERE rssurl = ?;
-
 -- name: GetArticle :one
 SELECT guid, title, author, url, feedurl, pubDate, content, unread FROM rss_item
 WHERE url = ? LIMIT 1;
@@ -40,13 +36,13 @@ INSERT INTO rss_item (
 	?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
 );
 
--- name: DeleteArticle :exec
+-- name: DeleteArticles :exec
 DELETE FROM rss_item
-WHERE url = ?;
+WHERE url IN (sqlc.slice('url'));
 
 -- name: DeleteFeedArticles :exec
 DELETE FROM rss_item
-WHERE feedurl = ?;
+WHERE feedurl IN (sqlc.slice('feedurl'));
 
 -- name: QueryMainPage :many
 SELECT 
@@ -91,9 +87,9 @@ ORDER BY pubDate DESC;
 -- name: SetFeedsRead :exec
 UPDATE rss_item
 SET unread = 0
-WHERE feedurl in (sqlc.slice('feedurl'));
+WHERE feedurl IN (sqlc.slice('feedurl'));
 
 -- name: SetFeedsUnread :exec
 UPDATE rss_item
 SET unread = 1
-WHERE feedurl in (sqlc.slice('feedurl'));
+WHERE feedurl IN (sqlc.slice('feedurl'));
