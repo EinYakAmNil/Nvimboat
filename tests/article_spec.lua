@@ -102,6 +102,7 @@ describe("nvimboat", function()
 	it("can delete an article", function()
 		local url = "https://blog.lilydjwg.me/posts/216867.html"
 		vim.cmd.Nvimboat("select", url)
+		print(vim.inspect(nvimboat.pages))
 		vim.cmd.Nvimboat("delete", url)
 		utils.print_buf()
 		vim.cmd.Nvimboat("show-main")
