@@ -276,4 +276,42 @@ func (a *Article) PrevUnread(dbh rssdb.DbHandle) (err error) {
 	return
 }
 
-func (a *Article) Delete(dbh rssdb.DbHandle, ids []string) (err error) { return }
+func (a *Article) Delete(dbh rssdb.DbHandle, ids []string) (err error) {
+	err = dbh.Queries.DeleteArticles(dbh.Ctx, ids[:1])
+	if err != nil {
+		err = errors.Join(err, errors.New("nvimboat/Article.Delete"))
+		return
+	}
+	idx, err := a.Back()
+	if err != nil {
+		err = errors.Join(err, errors.New("nvimboat/Article.Delete"))
+		return
+	}
+	idx -= 1 // idx is 1-based. Need 0-based
+	p, err := Pages.Pop()
+	if err != nil {
+		err = errors.Join(err, errors.New("nvimboat/Article.Delete"))
+		return
+	}
+	switch f := p.(type) {
+	case *Feed:
+		f.Articles = append(f.Articles[:idx], f.Articles[idx+1:]...)
+	case *Filter:
+		f.Articles = append(f.Articles[:idx], f.Articles[idx+1:]...)
+	default:
+		err = errors.New(`Type of parent page is not Feed/Filter.`)
+		err = errors.Join(err, errors.New("nvimboat/Article.Delete"))
+		return
+	}
+	err = Pages.Show()
+	if err != nil {
+		err = errors.Join(err, fmt.Errorf("nvimboat/Back"))
+		return
+	}
+	err = Nvim.SetWindowCursor(*NvWindow, [2]int{max(idx-1, 0), 0})
+	if err != nil {
+		err = errors.Join(err, errors.New("nvimboat/Article.Delete"))
+		return
+	}
+	return
+}

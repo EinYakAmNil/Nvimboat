@@ -361,7 +361,11 @@ func PrevArticle(nv *nvim.Nvim, args ...string) (err error) {
 
 func ToggleRead(nv *nvim.Nvim, args ...string) (err error) {
 	if len(args) < 2 {
-		err = fmt.Errorf("nvimboat/Nvimboat.ToggleRead: no arguments")
+		err = fmt.Errorf(`not enough arguments. Given arguments:`)
+		for _, arg := range args {
+			err = errors.Join(err, errors.New(arg))
+		}
+		err = errors.Join(err, errors.New("nvimboat/ToggleRead"))
 		return
 	}
 	dbh, err := rssdb.ConnectDb(DbPath)
@@ -378,5 +382,23 @@ func ToggleRead(nv *nvim.Nvim, args ...string) (err error) {
 }
 
 func Delete(nv *nvim.Nvim, args ...string) (err error) {
+	if len(args) < 2 {
+		err = fmt.Errorf(`not enough arguments. Given arguments:`)
+		for _, arg := range args {
+			err = errors.Join(err, errors.New(arg))
+		}
+		err = errors.Join(err, errors.New("nvimboat/Delete"))
+		return
+	}
+	dbh, err := rssdb.ConnectDb(DbPath)
+	if err != nil {
+		err = errors.Join(err, errors.New("nvimboat/Delete"))
+		return
+	}
+	err = Pages.Top().Delete(dbh, args[1:])
+	if err != nil {
+		err = errors.Join(err, errors.New("nvimboat/Delete"))
+		return
+	}
 	return
 }

@@ -123,13 +123,13 @@ func (mm *MainMenu) Back() (int, error) {
 }
 
 func (mm *MainMenu) ToggleRead(dbh rssdb.DbHandle, ids []string) (err error) {
-	setFeedsRead := false
 	for _, id := range ids {
 		if len(extracUrls(id)) == 0 {
 			Log(fmt.Sprintf(`Can't toggle read for "%s".`, id))
 			return
 		}
 	}
+	setFeedsRead := false
 checkAnyUnread:
 	for _, f := range mm.Feeds {
 		for _, id := range ids {
@@ -327,4 +327,17 @@ func (mm *MainMenu) PrevUnread(dbh rssdb.DbHandle) (err error) {
 	return
 }
 
-func (mm *MainMenu) Delete(dbh rssdb.DbHandle, ids []string) (err error) { return }
+func (mm *MainMenu) Delete(dbh rssdb.DbHandle, ids []string) (err error) {
+	for _, id := range ids {
+		if len(extracUrls(id)) == 0 {
+			Log(fmt.Sprintf(`Can't delete articles for "%s".`, id))
+			return
+		}
+	}
+	err = dbh.Queries.DeleteFeedArticles(dbh.Ctx, ids)
+	if err != nil {
+		err = errors.Join(err, errors.New("nvimboat/MainMenu.Delete"))
+		return
+	}
+	return
+}

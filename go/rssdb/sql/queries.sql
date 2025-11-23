@@ -37,12 +37,18 @@ INSERT INTO rss_item (
 );
 
 -- name: DeleteArticles :exec
-DELETE FROM rss_item
+UPDATE rss_item
+SET deleted = 1
 WHERE url IN (sqlc.slice('url'));
 
 -- name: DeleteFeedArticles :exec
-DELETE FROM rss_item
+UPDATE rss_item
+SET deleted = 1
 WHERE feedurl IN (sqlc.slice('feedurl'));
+
+-- name: CleanupDeleted :exec
+DELETE FROM rss_item
+WHERE deleted = 1;
 
 -- name: QueryMainPage :many
 SELECT 
@@ -81,7 +87,8 @@ url LIKE ? AND
 feedurl IN (sqlc.slice('feedurls')) AND
 content LIKE ? AND
 unread IN (sqlc.slice('unread_states')) AND
-content_mime_type LIKE ?
+content_mime_type LIKE ? AND
+deleted = 0
 ORDER BY pubDate DESC;
 
 -- name: SetFeedsRead :exec

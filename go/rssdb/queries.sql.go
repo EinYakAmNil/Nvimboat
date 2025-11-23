@@ -50,6 +50,16 @@ func (q *Queries) AddArticle(ctx context.Context, arg AddArticleParams) error {
 	return err
 }
 
+const cleanupDeleted = `-- name: CleanupDeleted :exec
+DELETE FROM rss_item
+WHERE deleted = 1
+`
+
+func (q *Queries) CleanupDeleted(ctx context.Context) error {
+	_, err := q.db.ExecContext(ctx, cleanupDeleted)
+	return err
+}
+
 const createFeed = `-- name: CreateFeed :one
 INSERT INTO rss_feed (
 	rssurl, url, title
@@ -80,7 +90,8 @@ func (q *Queries) CreateFeed(ctx context.Context, arg CreateFeedParams) (RssFeed
 }
 
 const deleteArticles = `-- name: DeleteArticles :exec
-DELETE FROM rss_item
+UPDATE rss_item
+SET deleted = 1
 WHERE url IN (/*SLICE:url*/?)
 `
 
@@ -100,7 +111,8 @@ func (q *Queries) DeleteArticles(ctx context.Context, url []string) error {
 }
 
 const deleteFeedArticles = `-- name: DeleteFeedArticles :exec
-DELETE FROM rss_item
+UPDATE rss_item
+SET deleted = 1
 WHERE feedurl IN (/*SLICE:feedurl*/?)
 `
 
@@ -222,7 +234,8 @@ url LIKE ? AND
 feedurl IN (/*SLICE:feedurls*/?) AND
 content LIKE ? AND
 unread IN (/*SLICE:unread_states*/?) AND
-content_mime_type LIKE ?
+content_mime_type LIKE ? AND
+deleted = 0
 ORDER BY pubDate DESC
 `
 
