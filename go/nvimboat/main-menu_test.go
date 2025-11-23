@@ -1,7 +1,7 @@
 package nvimboat
 
 import (
-	"fmt"
+	"reflect"
 	"testing"
 
 	"github.com/EinYakAmNil/Nvimboat/go/engine/rssdb"
@@ -78,7 +78,7 @@ func TestParseFilter(t *testing.T) {
 			"tags": []any{"A", "!B"},
 		}, {
 			"name":   "TestFilter2",
-			"unread": 1,
+			"unread": int64(1),
 			"tags":   []any{"!C", "B"},
 		}, {
 			"name":  "TestFilter3",
@@ -86,12 +86,64 @@ func TestParseFilter(t *testing.T) {
 			"tags":  []any{"!A", "C"},
 		},
 	}
-	for _, raw := range rawFilters {
-
+	expectedFilters := []Filter{
+		{
+			Name: "TestFilter1",
+			QueryFilterParams: rssdb.QueryFilterParams{
+				Guid:            "%",
+				Title:           "%",
+				Author:          "%",
+				Url:             "%",
+				Content:         "%",
+				UnreadStates:    []int{0, 1},
+				ContentMimeType: "%",
+			},
+			FilterDescription: "filter: tags: A, !B",
+			IncludeTags:       map[string]bool{"A": true},
+			ExcludeTags:       map[string]bool{"B": true},
+		},
+		{
+			Name: "TestFilter2",
+			QueryFilterParams: rssdb.QueryFilterParams{
+				Guid:            "%",
+				Title:           "%",
+				Author:          "%",
+				Url:             "%",
+				Content:         "%",
+				UnreadStates:    []int{1},
+				ContentMimeType: "%",
+			},
+			FilterDescription: "filter: unread: 1, tags: !C, B",
+			IncludeTags:       map[string]bool{"B": true},
+			ExcludeTags:       map[string]bool{"C": true},
+		},
+		{
+			Name: "TestFilter3",
+			QueryFilterParams: rssdb.QueryFilterParams{
+				Guid:            "%",
+				Title:           "abc",
+				Author:          "%",
+				Url:             "%",
+				Content:         "%",
+				UnreadStates:    []int{0, 1},
+				ContentMimeType: "%",
+			},
+			FilterDescription: "filter: title: abc, tags: !A, C",
+			IncludeTags:       map[string]bool{"C": true},
+			ExcludeTags:       map[string]bool{"A": true},
+		},
+	}
+	for i, raw := range rawFilters {
 		parsedFilter, err := parseFilter(raw)
 		if err != nil {
 			t.Fatalf("nvimboat/TestParseFilter: %v\n", err)
 		}
-		fmt.Println(prettyStruct(parsedFilter))
+		if !reflect.DeepEqual(parsedFilter, expectedFilters[i]) {
+			t.Fatalf(
+				"nvimboat/TestParseFilter:\nExpected:\n%s\nGot:\n%s",
+				prettyStruct(expectedFilters[i]),
+				prettyStruct(parsedFilter),
+			)
+		}
 	}
 }
