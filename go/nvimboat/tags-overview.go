@@ -12,12 +12,12 @@ import (
 // The attribute "Tags" maps the name of the tag to the corresponding feed URLs.
 // It will be initialized by Nvimboat.ShowTags().
 // Tag names are keys, URLs are values.
-type TagsOverviewPage struct {
+type TagsOverview struct {
 	Tags               map[string][]string
 	PrevCursorPosition [2]int
 }
 
-func (tp *TagsOverviewPage) Select(dbh rssdb.DbHandle, id string) (p Page, err error) {
+func (tp *TagsOverview) Select(dbh rssdb.DbHandle, id string) (p Page, err error) {
 	tag := new(TagFeeds)
 	tag.Name = id
 	feeds, err := dbh.Queries.QueryTagFeeds(dbh.Ctx, tp.Tags[id])
@@ -30,7 +30,7 @@ func (tp *TagsOverviewPage) Select(dbh rssdb.DbHandle, id string) (p Page, err e
 	return tag, err
 }
 
-func (tp *TagsOverviewPage) Render(nv *nvim.Nvim, buf nvim.Buffer) (err error) {
+func (tp *TagsOverview) Render(nv *nvim.Nvim, buf nvim.Buffer) (err error) {
 	if len(tp.Tags) == 0 {
 		err = setLines(nv, buf, []string{"No tags defined."})
 		if err != nil {
@@ -52,7 +52,7 @@ func (tp *TagsOverviewPage) Render(nv *nvim.Nvim, buf nvim.Buffer) (err error) {
 	return
 }
 
-func (tp *TagsOverviewPage) ChildIdx(p Page) (idx int, err error) {
+func (tp *TagsOverview) ChildIdx(p Page) (idx int, err error) {
 	switch tagFeeds := p.(type) {
 	case *TagFeeds:
 		tagNames := make([]string, 0, len(tp.Tags))
@@ -81,15 +81,15 @@ func (tp *TagsOverviewPage) ChildIdx(p Page) (idx int, err error) {
 	}
 }
 
-func (tp *TagsOverviewPage) Back() (cursor_x int, err error) {
+func (tp *TagsOverview) Back() (cursor_x int, err error) {
 	return tp.PrevCursorPosition[0], nil
 }
 
-func (tp *TagsOverviewPage) ToggleRead(dbh rssdb.DbHandle, ids []string) (err error) {
+func (tp *TagsOverview) ToggleRead(dbh rssdb.DbHandle, ids []string) (err error) {
 	Log("Read status toggling is not implemented for this page.")
 	return
 }
 
-func (tp *TagsOverviewPage) NextUnread(dbh rssdb.DbHandle) (err error)           { return }
-func (tp *TagsOverviewPage) PrevUnread(dbh rssdb.DbHandle) (err error)           { return }
-func (tp *TagsOverviewPage) Delete(dbh rssdb.DbHandle, ids []string) (err error) { return }
+func (tp *TagsOverview) NextUnread(dbh rssdb.DbHandle) (err error)           { return }
+func (tp *TagsOverview) PrevUnread(dbh rssdb.DbHandle) (err error)           { return }
+func (tp *TagsOverview) Delete(dbh rssdb.DbHandle, ids []string) (err error) { return }

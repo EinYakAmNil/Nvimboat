@@ -27,7 +27,7 @@ var (
 		UnreadCount:  12,
 		ArticleCount: 12,
 	}}
-	tp = TagsOverviewPage{
+	tp = TagsOverview{
 		Tags: map[string][]string{
 			"Tag A": {"a", "b", "c"},
 			"Tag B": {"u", "v", "w", "x", "y", "z"},

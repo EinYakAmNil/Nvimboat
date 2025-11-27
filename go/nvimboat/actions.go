@@ -158,13 +158,13 @@ func ShowTags(nv *nvim.Nvim, args ...string) (err error) {
 	}
 	for i, page := range Pages {
 		switch page.(type) {
-		case *TagsOverviewPage:
+		case *TagsOverview:
 			Pages = Pages[:i+1]
 			Pages.Show()
 			return
 		}
 	}
-	p := new(TagsOverviewPage)
+	p := new(TagsOverview)
 	p.PrevCursorPosition = cursorPosition
 	p.Tags = make(map[string][]string)
 	for url, tags := range FeedConfig {
