@@ -1,15 +1,30 @@
 local pages = require("nvimboat.pages")
+
 local M = {}
+
+---Check if item is contained in list
+---@param item any
+---@param list any[]
+---@return boolean
+local function contained_in(item, list)
+	for _, value in ipairs(list) do
+		if item == value then
+			return true
+		end
+	end
+
+	return false
+end
 
 ---Split `input_str` by `separator`. If no separator is given, then whitespace is used
 ---@param input_str string
 ---@param separator string
 ---@return string[]
-function M.string_split(input_str, separator)
+function string_split(input_str, separator)
 	separator = separator or "%s"
 	local splits = {}
 	for str in string.gmatch(input_str, "([^" .. separator .. "]+)") do
-		splits[#splits+1] = str:match("^%s*(.-)%s*$")
+		splits[#splits + 1] = str:match("^%s*(.-)%s*$")
 	end
 	return splits
 end
@@ -29,9 +44,16 @@ function M.get_link()
 			end
 		end
 	end
-	if pages[#pages].type == "Feed" then
+
+	local allowed_page_types = {
+		"Feed",
+		"Filter",
+		"MainPage",
+		"TagFeeds",
+	}
+	if contained_in(pages[#pages].type, allowed_page_types) then
 		local cursor_xy = vim.api.nvim_win_get_cursor(0)
-		local splits = M.string_split(lines[cursor_xy[1]], " │ ")
+		local splits = string_split(lines[cursor_xy[1]], " │ ")
 		link = splits[#splits]
 	end
 
