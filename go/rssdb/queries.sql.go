@@ -185,6 +185,7 @@ func (q *Queries) GetFeed(ctx context.Context, rssurl string) (RssFeed, error) {
 const getFeedPage = `-- name: GetFeedPage :many
 SELECT unread, pubDate, author, title, url FROM rss_item
 WHERE feedurl = ?
+AND deleted = 0
 ORDER BY pubDate DESC
 `
 
@@ -226,16 +227,16 @@ func (q *Queries) GetFeedPage(ctx context.Context, feedurl string) ([]GetFeedPag
 }
 
 const queryFilter = `-- name: QueryFilter :many
-SELECT guid, title, author, url, feedurl, pubDate, content, unread FROM rss_item WHERE
-guid LIKE ? AND
-title LIKE ? AND
-author LIKE ? AND
-url LIKE ? AND
-feedurl IN (/*SLICE:feedurls*/?) AND
-content LIKE ? AND
-unread IN (/*SLICE:unread_states*/?) AND
-content_mime_type LIKE ? AND
-deleted = 0
+SELECT guid, title, author, url, feedurl, pubDate, content, unread FROM rss_item
+WHERE guid LIKE ?
+AND title LIKE ?
+AND author LIKE ?
+AND url LIKE ?
+AND feedurl IN (/*SLICE:feedurls*/?)
+AND content LIKE ?
+AND unread IN (/*SLICE:unread_states*/?)
+AND content_mime_type LIKE ?
+AND deleted = 0
 ORDER BY pubDate DESC
 `
 

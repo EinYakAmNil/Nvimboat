@@ -27,6 +27,7 @@ WHERE url IN (sqlc.slice('url'));
 -- name: GetFeedPage :many
 SELECT unread, pubDate, author, title, url FROM rss_item
 WHERE feedurl = ?
+AND deleted = 0
 ORDER BY pubDate DESC;
 
 -- name: AddArticle :exec
@@ -79,16 +80,16 @@ GROUP BY f.title, f.rssurl
 ORDER BY f.title;
 
 -- name: QueryFilter :many
-SELECT guid, title, author, url, feedurl, pubDate, content, unread FROM rss_item WHERE
-guid LIKE ? AND
-title LIKE ? AND
-author LIKE ? AND
-url LIKE ? AND
-feedurl IN (sqlc.slice('feedurls')) AND
-content LIKE ? AND
-unread IN (sqlc.slice('unread_states')) AND
-content_mime_type LIKE ? AND
-deleted = 0
+SELECT guid, title, author, url, feedurl, pubDate, content, unread FROM rss_item
+WHERE guid LIKE ?
+AND title LIKE ?
+AND author LIKE ?
+AND url LIKE ?
+AND feedurl IN (sqlc.slice('feedurls'))
+AND content LIKE ?
+AND unread IN (sqlc.slice('unread_states'))
+AND content_mime_type LIKE ?
+AND deleted = 0
 ORDER BY pubDate DESC;
 
 -- name: SetFeedsRead :exec
