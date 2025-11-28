@@ -118,7 +118,3 @@ This should be taken into account when making custom scripts.
 
 You can just copy your old newsboat database into the cache directory of the installation path.
 If you use lazy.nvim it should look something like _$HOME/.local/share/nvim/lazy/Nvimboat/cache_.
-
-# Notice
-Please feel free to give me any feedback you have about this plugin.
-It is the first project I made that is somewhat intended to be usable by other people.
