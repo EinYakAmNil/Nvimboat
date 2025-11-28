@@ -148,8 +148,8 @@ func assignFilterVarcharAttr(attribute *string, luaValue any) (replaced bool) {
 	}
 }
 
-func selectFeed(dbh rssdb.DbHandle, feedurl string) (p Page, err error) {
-	feed := new(Feed)
+func selectFeed(dbh rssdb.DbHandle, feedurl string) (feed *Feed, err error) {
+	feed = new(Feed)
 	feed.Articles, err = dbh.Queries.GetFeedPage(dbh.Ctx, feedurl)
 	feed.Rssurl = feedurl
 	if err != nil {
@@ -162,7 +162,6 @@ func selectFeed(dbh rssdb.DbHandle, feedurl string) (p Page, err error) {
 		return
 	}
 	feed.RssFeed = feedInfo
-	p = feed
 	return
 }
 

@@ -293,4 +293,27 @@ func (f *Feed) PrevUnread(dbh rssdb.DbHandle) (err error) {
 	return
 }
 
-func (f *Feed) Delete(dbh rssdb.DbHandle, ids []string) (err error) { return }
+func (f *Feed) Delete(dbh rssdb.DbHandle, ids []string) (err error) {
+	err = dbh.Queries.DeleteArticles(dbh.Ctx, ids)
+	if err != nil {
+		err = errors.Join(err, errors.New("nvimboat/Feed.Delete"))
+		return
+	}
+	f, err = selectFeed(dbh, f.Rssurl)
+	if err != nil {
+		err = errors.Join(err, errors.New("nvimboat/Feed.Delete"))
+		return
+	}
+	err = setLines(Nvim, *NvBuffer, []string{""})
+	if err != nil {
+		err = fmt.Errorf("nvimboat/Nvimboat.Show: %w\n", err)
+		return
+	}
+	err = f.Render(Nvim, *NvBuffer)
+	if err != nil {
+		err = errors.Join(err, errors.New("nvimboat/Feed.Delete"))
+		return
+	}
+	defer trimTrail(Nvim, *NvBuffer)
+	return
+}

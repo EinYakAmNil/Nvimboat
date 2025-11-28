@@ -93,6 +93,15 @@ describe("nvimboat", function()
 		vim.cmd.Nvimboat("next-unread")
 		utils.eq_cursor_row(6)
 	end)
+	it("can delete an article", function()
+		vim.cmd.Nvimboat("delete", "https://archlinux.org/news/mkinitcpio-hook-migration-and-early-microcode/")
+		utils.eq_buf(expected.feed_buf[7])
+		vim.cmd.Nvimboat("delete"
+		, "https://archlinux.org/news/providing-a-license-for-package-sources/"
+		, "https://archlinux.org/news/the-xz-package-has-been-backdoored/"
+		)
+		utils.eq_buf(expected.feed_buf[8])
+	end)
 end)
 
-vim.system({ "sqlite3", dbPath, "UPDATE rss_item SET unread = 1;" })
+vim.system({ "sqlite3", dbPath, "UPDATE rss_item SET unread = 1, deleted = 0;" })

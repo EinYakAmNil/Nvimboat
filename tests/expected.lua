@@ -101,6 +101,24 @@ M.feed_buf = { {
 	"N │ 29 Mar 24 │ David Runge            │ The xz package has been backdoored                                      │ https://archlinux.org/news/the-xz-package-has-been-backdoored/",
 	"N │ 04 Mar 24 │ Morten Linderud        │ mkinitcpio hook migration and early microcode                           │ https://archlinux.org/news/mkinitcpio-hook-migration-and-early-microcode/",
 	"  │ 09 Jan 24 │ Jan Alexander Steffens │ Making dbus-broker our default D-Bus daemon                             │ https://archlinux.org/news/making-dbus-broker-our-default-d-bus-daemon/",
+}, {
+	"  │ 03 Feb 25 │ Frederik Schwan        │ Glibc 2.41 corrupting Discord installation                              │ https://archlinux.org/news/glibc-241-corrupting-discord-installation/",
+	"  │ 16 Jan 25 │ Robin Candau           │ Critical rsync security release 3.4.0                                   │ https://archlinux.org/news/critical-rsync-security-release-340/",
+	"N │ 19 Nov 24 │ Rafael Epplée          │ Providing a license for package sources                                 │ https://archlinux.org/news/providing-a-license-for-package-sources/",
+	"N │ 14 Sep 24 │ Morten Linderud        │ Manual intervention for pacman 7.0.0 and local repositories required    │ https://archlinux.org/news/manual-intervention-for-pacman-700-and-local-repositories-required/",
+	"  │ 01 Jul 24 │ Robin Candau           │ The sshd service needs to be restarted after upgrading to openssh-9.8p1 │ https://archlinux.org/news/the-sshd-service-needs-to-be-restarted-after-upgrading-to-openssh-98p1/",
+	"N │ 15 Apr 24 │ Christian Heusel       │ Arch Linux 2024 Leader Election Results                                 │ https://archlinux.org/news/arch-linux-2024-leader-election-results/",
+	"  │ 07 Apr 24 │ Robin Candau           │ Increasing the default vm.max_map_count value                           │ https://archlinux.org/news/increasing-the-default-vmmax_map_count-value/",
+	"  │ 29 Mar 24 │ David Runge            │ The xz package has been backdoored                                      │ https://archlinux.org/news/the-xz-package-has-been-backdoored/",
+	"  │ 09 Jan 24 │ Jan Alexander Steffens │ Making dbus-broker our default D-Bus daemon                             │ https://archlinux.org/news/making-dbus-broker-our-default-d-bus-daemon/",
+}, {
+	"  │ 03 Feb 25 │ Frederik Schwan        │ Glibc 2.41 corrupting Discord installation                              │ https://archlinux.org/news/glibc-241-corrupting-discord-installation/",
+	"  │ 16 Jan 25 │ Robin Candau           │ Critical rsync security release 3.4.0                                   │ https://archlinux.org/news/critical-rsync-security-release-340/",
+	"N │ 14 Sep 24 │ Morten Linderud        │ Manual intervention for pacman 7.0.0 and local repositories required    │ https://archlinux.org/news/manual-intervention-for-pacman-700-and-local-repositories-required/",
+	"  │ 01 Jul 24 │ Robin Candau           │ The sshd service needs to be restarted after upgrading to openssh-9.8p1 │ https://archlinux.org/news/the-sshd-service-needs-to-be-restarted-after-upgrading-to-openssh-98p1/",
+	"N │ 15 Apr 24 │ Christian Heusel       │ Arch Linux 2024 Leader Election Results                                 │ https://archlinux.org/news/arch-linux-2024-leader-election-results/",
+	"  │ 07 Apr 24 │ Robin Candau           │ Increasing the default vm.max_map_count value                           │ https://archlinux.org/news/increasing-the-default-vmmax_map_count-value/",
+	"  │ 09 Jan 24 │ Jan Alexander Steffens │ Making dbus-broker our default D-Bus daemon                             │ https://archlinux.org/news/making-dbus-broker-our-default-d-bus-daemon/",
 } }
 
 M.tag_buf = { {
