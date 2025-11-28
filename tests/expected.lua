@@ -303,6 +303,26 @@ M.filter_buf = { {
 	"N │ 13 Jan 24 │ 依云             │ 使用 atuin 管理 shell 命令历史                                          │ https://blog.lilydjwg.me/posts/216770.html",
 	"N │ 25 Jul 23 │ 依云             │ btrfs 元数据满了怎么办                                                  │ https://blog.lilydjwg.me/posts/216670.html",
 	"N │ 06 Jul 23 │ 依云             │ btrfs 翻车记                                                            │ https://blog.lilydjwg.me/posts/216658.html",
+}, {
+	"N │ 03 Feb 25 │ Frederik Schwan        │ Glibc 2.41 corrupting Discord installation                              │ https://archlinux.org/news/glibc-241-corrupting-discord-installation/",
+	"N │ 16 Jan 25 │ Robin Candau           │ Critical rsync security release 3.4.0                                   │ https://archlinux.org/news/critical-rsync-security-release-340/",
+	"N │ 11 Jan 25 │ 依云                   │ 用 Android 手机当电脑的话筒                                             │ https://blog.lilydjwg.me/posts/216900.html",
+	"N │ 19 Nov 24 │ Rafael Epplée          │ Providing a license for package sources                                 │ https://archlinux.org/news/providing-a-license-for-package-sources/",
+	"N │ 24 Oct 24 │ 依云                   │ 为团队部署邮件服务                                                      │ https://blog.lilydjwg.me/posts/216887.html",
+	"N │ 27 Aug 24 │ 依云                   │ 使用 nftables 屏蔽大量 IP                                               │ https://blog.lilydjwg.me/posts/216869.html",
+	"N │ 23 Aug 24 │ 依云                   │ YubiKey 初体验                                                          │ https://blog.lilydjwg.me/posts/216867.html",
+	"N │ 28 Jul 24 │ 依云                   │ fcitx5 码表同步方案                                                     │ https://blog.lilydjwg.me/posts/216861.html",
+	"N │ 09 Jul 24 │ 依云                   │ 我正在使用的火狐扩展（2024年版）                                        │ https://blog.lilydjwg.me/posts/216855.html",
+	"N │ 01 Jul 24 │ Robin Candau           │ The sshd service needs to be restarted after upgrading to openssh-9.8p1 │ https://archlinux.org/news/the-sshd-service-needs-to-be-restarted-after-upgrading-to-openssh-98p1/",
+	"N │ 22 Jun 24 │ 依云                   │ 使用 PipeWire 实现自动应用均衡器                                        │ https://blog.lilydjwg.me/posts/216847.html",
+	"N │ 15 Apr 24 │ Christian Heusel       │ Arch Linux 2024 Leader Election Results                                 │ https://archlinux.org/news/arch-linux-2024-leader-election-results/",
+	"N │ 07 Apr 24 │ Robin Candau           │ Increasing the default vm.max_map_count value                           │ https://archlinux.org/news/increasing-the-default-vmmax_map_count-value/",
+	"N │ 29 Mar 24 │ David Runge            │ The xz package has been backdoored                                      │ https://archlinux.org/news/the-xz-package-has-been-backdoored/",
+	"N │ 04 Mar 24 │ Morten Linderud        │ mkinitcpio hook migration and early microcode                           │ https://archlinux.org/news/mkinitcpio-hook-migration-and-early-microcode/",
+	"N │ 13 Jan 24 │ 依云                   │ 使用 atuin 管理 shell 命令历史                                          │ https://blog.lilydjwg.me/posts/216770.html",
+	"N │ 09 Jan 24 │ Jan Alexander Steffens │ Making dbus-broker our default D-Bus daemon                             │ https://archlinux.org/news/making-dbus-broker-our-default-d-bus-daemon/",
+	"N │ 25 Jul 23 │ 依云                   │ btrfs 元数据满了怎么办                                                  │ https://blog.lilydjwg.me/posts/216670.html",
+	"N │ 06 Jul 23 │ 依云                   │ btrfs 翻车记                                                            │ https://blog.lilydjwg.me/posts/216658.html",
 } }
 
 return M
