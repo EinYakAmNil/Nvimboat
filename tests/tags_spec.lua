@@ -70,6 +70,11 @@ local gaming = {
 	"N (10/10) │ Starsector         │ https://fractalsoftworks.com/feed/",
 }
 
+local deletion = {
+	"N (30/30) │ Path of Exile News │ https://www.pathofexile.com/news/rss",
+	"  (0/0)   │ Starsector         │ https://fractalsoftworks.com/feed/",
+}
+
 describe("nvimboat", function()
 	it("can select the tags page from the main menu", function()
 		vim.cmd.Nvimboat("enable")
@@ -95,13 +100,17 @@ describe("nvimboat", function()
 		vim.cmd.Nvimboat("select", tag)
 		utils.eq_buf(gaming)
 	end)
-	it("can select a feed", function ()
-		-- local url = "https://www.pathofexile.com/news/rss"
+	it("can select a feed", function()
 		local url = "https://fractalsoftworks.com/feed/"
 		vim.cmd.Nvimboat("select", url)
-		print(vim.inspect(nvimboat.pages))
 		vim.cmd.Nvimboat("back")
-		utils.print_buf()
-		print(vim.inspect(nvimboat.pages))
+		utils.eq_buf(gaming)
+	end)
+	it("can delete a feed", function()
+		local url = "https://fractalsoftworks.com/feed/"
+		vim.cmd.Nvimboat("delete", url)
+		utils.eq_buf(deletion)
 	end)
 end)
+
+vim.system({ "sqlite3", dbPath, "UPDATE rss_item SET unread = 1, deleted = 0;" })

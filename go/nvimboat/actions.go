@@ -87,7 +87,7 @@ func ShowMain(nv *nvim.Nvim, args ...string) (err error) {
 	}
 	for _, feed := range mainPageFeeds {
 		tags := make(map[string]bool)
-		for _, tag := range FeedConfig[feed.Feedurl] {
+		for _, tag := range FeedConfig[feed.Rssurl] {
 			tags[tag] = true
 		}
 		mm.Feeds = append(mm.Feeds, MainPageFeed{

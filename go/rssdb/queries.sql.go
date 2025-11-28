@@ -321,7 +321,9 @@ func (q *Queries) QueryFilter(ctx context.Context, arg QueryFilterParams) ([]Que
 const queryMainPage = `-- name: QueryMainPage :many
 SELECT 
 	rss_feed.title,
-	feed_articles.feedurl, feed_articles.unread_count, feed_articles.article_count
+	rss_feed.rssurl,
+	COALESCE(feed_articles.article_count, 0),
+	COALESCE(feed_articles.unread_count, 0)
 FROM rss_feed
 LEFT JOIN (
 	SELECT feedurl,
@@ -336,9 +338,9 @@ ORDER BY rss_feed.title
 
 type QueryMainPageRow struct {
 	Title        string
-	Feedurl      string
-	UnreadCount  int64
+	Rssurl       string
 	ArticleCount int64
+	UnreadCount  int64
 }
 
 func (q *Queries) QueryMainPage(ctx context.Context) ([]QueryMainPageRow, error) {
@@ -352,9 +354,9 @@ func (q *Queries) QueryMainPage(ctx context.Context) ([]QueryMainPageRow, error)
 		var i QueryMainPageRow
 		if err := rows.Scan(
 			&i.Title,
-			&i.Feedurl,
-			&i.UnreadCount,
+			&i.Rssurl,
 			&i.ArticleCount,
+			&i.UnreadCount,
 		); err != nil {
 			return nil, err
 		}
@@ -373,8 +375,8 @@ const queryTagFeeds = `-- name: QueryTagFeeds :many
 SELECT
 	f.title,
 	f.rssurl AS feedurl,
-	CAST(SUM(i.unread) AS INTEGER) AS unread_count,
-	COUNT(*) AS article_count
+	CAST(COALESCE(SUM(i.unread), 0) AS INTEGER) AS unread_count,
+	COUNT(i.title) AS article_count
 FROM rss_feed f
 LEFT JOIN rss_item i
 ON f.rssurl = i.feedurl AND i.deleted = 0

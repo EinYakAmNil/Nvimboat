@@ -72,7 +72,7 @@ func (mm *MainMenu) Render(nv *nvim.Nvim, buf nvim.Buffer) (err error) {
 	for _, f := range mm.Feeds {
 		unreadArticlesRatio = append(unreadArticlesRatio, makeUnreadRatio(f.UnreadCount, f.ArticleCount))
 		titleCol = append(titleCol, f.Title)
-		urlCol = append(urlCol, f.Feedurl)
+		urlCol = append(urlCol, f.Rssurl)
 	}
 	for _, c := range [][]string{unreadArticlesRatio, titleCol, urlCol} {
 		err = addColumn(nv, buf, c)
@@ -133,7 +133,7 @@ func (mm *MainMenu) ToggleRead(dbh rssdb.DbHandle, ids []string) (err error) {
 checkAnyUnread:
 	for _, f := range mm.Feeds {
 		for _, id := range ids {
-			if f.Feedurl == id && f.UnreadCount > 0 {
+			if f.Rssurl == id && f.UnreadCount > 0 {
 				setFeedsRead = true
 				break checkAnyUnread
 			}
@@ -335,6 +335,11 @@ func (mm *MainMenu) Delete(dbh rssdb.DbHandle, ids []string) (err error) {
 		}
 	}
 	err = dbh.Queries.DeleteFeedArticles(dbh.Ctx, ids)
+	if err != nil {
+		err = errors.Join(err, errors.New("nvimboat/MainMenu.Delete"))
+		return
+	}
+	err = ShowMain(Nvim)
 	if err != nil {
 		err = errors.Join(err, errors.New("nvimboat/MainMenu.Delete"))
 		return

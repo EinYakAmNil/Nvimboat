@@ -132,6 +132,35 @@ checkAnyUnread:
 	return
 }
 
-func (tf *TagFeeds) NextUnread(dbh rssdb.DbHandle) (err error)           { return }
-func (tf *TagFeeds) PrevUnread(dbh rssdb.DbHandle) (err error)           { return }
-func (tf *TagFeeds) Delete(dbh rssdb.DbHandle, ids []string) (err error) { return }
+func (tf *TagFeeds) NextUnread(dbh rssdb.DbHandle) (err error) { return }
+func (tf *TagFeeds) PrevUnread(dbh rssdb.DbHandle) (err error) { return }
+func (tf *TagFeeds) Delete(dbh rssdb.DbHandle, ids []string) (err error) {
+	for _, id := range ids {
+		if len(extracUrls(id)) == 0 {
+			Log(fmt.Sprintf(`Can't delete articles for "%s".`, id))
+			return
+		}
+	}
+	err = dbh.Queries.DeleteFeedArticles(dbh.Ctx, ids)
+	if err != nil {
+		err = errors.Join(err, errors.New("nvimboat/TagFeeds.Delete"))
+		return
+	}
+	tf.Feeds, err = dbh.Queries.QueryTagFeeds(dbh.Ctx, tf.Urls)
+	if err != nil {
+		err = errors.Join(err, errors.New("nvimboat/TagsOverviewPage.Select"))
+		return
+	}
+	err = setLines(Nvim, *NvBuffer, []string{""})
+	if err != nil {
+		err = fmt.Errorf("nvimboat/Nvimboat.Show: %w\n", err)
+		return
+	}
+	err = tf.Render(Nvim, *NvBuffer)
+	if err != nil {
+		err = errors.Join(err, errors.New("nvimboat/Feed.Delete"))
+		return
+	}
+	defer trimTrail(Nvim, *NvBuffer)
+	return
+}

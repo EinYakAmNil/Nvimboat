@@ -115,6 +115,14 @@ describe("nvimboat", function()
 		vim.cmd.Nvimboat("prev-unread")
 		utils.eq_cursor_row(7)
 	end)
+	it("can delete articles of feeds", function()
+		vim.cmd.Nvimboat("show-main")
+		vim.cmd.Nvimboat("delete"
+		, "https://fractalsoftworks.com/feed/"
+		, "https://www.archlinux.org/feeds/news/"
+		)
+		utils.eq_buf(expected.main_menu_buf[4])
+	end)
 end)
 
-vim.system({ "sqlite3", dbPath, "UPDATE rss_item SET unread = 1;" })
+vim.system({ "sqlite3", dbPath, "UPDATE rss_item SET unread = 1, deleted = 0;" })

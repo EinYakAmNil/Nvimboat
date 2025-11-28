@@ -54,7 +54,9 @@ WHERE deleted = 1;
 -- name: QueryMainPage :many
 SELECT 
 	rss_feed.title,
-	feed_articles.*
+	rss_feed.rssurl,
+	COALESCE(feed_articles.article_count, 0),
+	COALESCE(feed_articles.unread_count, 0)
 FROM rss_feed
 LEFT JOIN (
 	SELECT feedurl,
@@ -70,8 +72,8 @@ ORDER BY rss_feed.title;
 SELECT
 	f.title,
 	f.rssurl AS feedurl,
-	CAST(SUM(i.unread) AS INTEGER) AS unread_count,
-	COUNT(*) AS article_count
+	CAST(COALESCE(SUM(i.unread), 0) AS INTEGER) AS unread_count,
+	COUNT(i.title) AS article_count
 FROM rss_feed f
 LEFT JOIN rss_item i
 ON f.rssurl = i.feedurl AND i.deleted = 0

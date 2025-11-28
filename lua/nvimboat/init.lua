@@ -1,5 +1,5 @@
-local M = {}
 local defaults = require("nvimboat.defaults")
+local M = {}
 
 local function start_engine()
 	return vim.fn.jobstart({ M.config.engine }, {
