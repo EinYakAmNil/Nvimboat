@@ -1,9 +1,10 @@
 {
 	"diagnostics": {
-		"globals": ["vim", "describe", "it", "before_each", "after_each"],
+		"globals": ["describe", "it", "before_each", "after_each"],
 	},
 	"workspace.library": [
-		"${3rd}/luassert/library"
+		"${3rd}/luassert/library",
+		"/usr/share/nvim/runtime/lua/"
 	],
 	"runtime.version": "Lua 5.1"
 }
