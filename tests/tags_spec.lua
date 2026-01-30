@@ -1,3 +1,4 @@
+local assert = require("luassert")
 local nvimboat = require("nvimboat")
 local utils = require("tests.utils")
 
@@ -94,6 +95,12 @@ describe("nvimboat", function()
 		local url = "https://www.archlinux.org/feeds/news/"
 		vim.cmd.Nvimboat("select", url)
 		vim.cmd.Nvimboat("show-tags")
+	end)
+	it("can copy a tag name", function()
+		vim.api.nvim_win_set_cursor(0, { 2, 0 })
+		local copied_link = nvimboat.actions.copy_link()
+		assert.are.equal("Gaming", vim.fn.getreg("+"))
+		assert.are.equal("Gaming", copied_link)
 	end)
 	it("can select a tag", function()
 		local tag = "Gaming"

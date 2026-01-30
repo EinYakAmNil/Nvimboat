@@ -9,19 +9,20 @@ import (
 )
 
 var (
-	CachePath    string
-	CacheTime    time.Duration
-	DbPath       string
-	FeedConfig   map[string][]string
-	Feeds        []*Feed
-	FilterConfig []*Filter
-	Filters      map[string]*Filter
-	LinkHandler  string
-	LogPath      string
-	NvBuffer     *nvim.Buffer
-	NvWindow     *nvim.Window
-	Nvim         *nvim.Nvim
-	Pages        PageStack
+	CachePath       string
+	CacheTime       time.Duration
+	DbPath          string
+	FeedConfig      map[string][]string
+	Feeds           []*Feed
+	FilterConfig    []*Filter
+	Filters         map[string]*Filter
+	LinkHandler     string
+	LogPath         string
+	ColumnSeparator string
+	NvBuffer        *nvim.Buffer
+	NvWindow        *nvim.Window
+	Nvim            *nvim.Nvim
+	Pages           PageStack
 )
 
 func initNvimboat(nv *nvim.Nvim) (err error) {

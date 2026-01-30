@@ -234,7 +234,7 @@ func addColumn(nv *nvim.Nvim, buf nvim.Buffer, col []string) (err error) {
 		if len(currentLines[i]) == 0 {
 			lines = append(lines, c)
 		} else {
-			lines = append(lines, string(currentLines[i])+" │ "+c)
+			lines = append(lines, string(currentLines[i])+ColumnSeparator+c)
 		}
 	}
 	err = setLines(nv, buf, lines)

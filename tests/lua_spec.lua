@@ -1,3 +1,4 @@
+local assert = require("luassert")
 local nvimboat = require("nvimboat")
 local eq = assert.are.equal
 

@@ -15,6 +15,7 @@
 local M = {}
 
 ---@param page_type PageType
+---@param page_id string
 ---@return nil
 function M:push(page_type, page_id)
 	self[#self + 1] = { type = page_type, id = page_id }

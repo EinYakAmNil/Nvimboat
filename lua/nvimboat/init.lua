@@ -1,5 +1,9 @@
-local defaults = require("nvimboat.defaults")
 local M = {}
+
+M.config = require("nvimboat.config")
+M.actions = require("nvimboat.actions")
+M.pages = require("nvimboat.pages")
+M.keymaps = require("nvimboat.keymaps")
 
 local function start_engine()
 	return vim.fn.jobstart({ M.config.engine }, {
@@ -22,24 +26,26 @@ end
 
 function M.setup(opts)
 	opts = opts or {}
-	M.config.engine = opts.engine or defaults.engine
-	M.config.linkHandler = opts.linkHandler or defaults.linkHandler
-	M.config.logPath = opts.logPath or defaults.logPath
-	M.config.cachePath = opts.cachePath or defaults.cachePath
-	M.config.cacheTime = opts.cacheTime or defaults.cacheTime
-	M.config.dbPath = opts.dbPath or defaults.dbPath
+	M.config.engine = opts.engine or M.config.engine
+	M.config.linkHandler = opts.linkHandler or M.config.linkHandler
+	M.config.logPath = opts.logPath or M.config.logPath
+	M.config.cachePath = opts.cachePath or M.config.cachePath
+	M.config.cacheTime = opts.cacheTime or M.config.cacheTime
+	M.config.dbPath = opts.dbPath or M.config.dbPath
+	M.config.separator = opts.separator or M.config.separator
 	M.feeds = opts.feeds or {}
 	M.filters = opts.filters or {}
+	M.keymaps.configure(opts.keymaps or {})
 
 	vim.fn["remote#host#Register"]("nvimboat", 'x', start_engine)
-	vim.fn["remote#host#RegisterPlugin"]("nvimboat", '0', {
-		{ type = 'command',  name = 'Nvimboat',         sync = 1, opts = { complete = "customlist,CompleteNvimboat", nargs = "+" } },
-		{ type = 'function', name = 'CompleteNvimboat', sync = 1, opts = { _ = "" } },
-	})
+	vim.fn["remote#host#RegisterPlugin"]("nvimboat", '0', { {
+		type = 'command',
+		name = 'Nvimboat',
+		sync = 1,
+		opts = { complete = "customlist,CompleteNvimboat", nargs = "+" }
+	}, {
+		type = 'function', name = 'CompleteNvimboat', sync = 1, opts = { _ = "" }
+	} })
 end
-
-M.actions = require("nvimboat.actions")
-M.pages = require("nvimboat.pages")
-M.config = {}
 
 return M

@@ -30,6 +30,7 @@ func parseConfig(rawConfig map[string]any) (err error) {
 		"dbPath":      &DbPath,
 		"linkHandler": &LinkHandler,
 		"logPath":     &LogPath,
+		"separator":   &ColumnSeparator,
 	}
 	for luaName, GoVar := range luaGoMap {
 		*GoVar, ok = rawConfig[luaName].(string)
