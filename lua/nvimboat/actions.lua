@@ -22,16 +22,6 @@ local Nvimboat = vim.cmd.Nvimboat
 
 local M = {}
 
----@return boolean
-function M.enable()
-	return true
-end
-
----@return boolean
-function M.disable()
-	return true
-end
-
 ---Show the main menu.
 ---Resets the page stack.
 ---@return nil

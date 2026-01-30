@@ -1,5 +1,8 @@
 local M = {}
 
+---State of Nvimboat
+M._enabled = false
+
 M.config = require("nvimboat.config")
 M.actions = require("nvimboat.actions")
 M.pages = require("nvimboat.pages")
@@ -22,6 +25,23 @@ local function start_engine()
 		end,
 		stderr_buffered = true
 	})
+end
+
+---@return nil
+function M.enable()
+	if M._enabled then
+		return
+	end
+
+	M.keymaps.activate_keymaps(M.keymaps.keymaps)
+	if #M.pages < 1 then
+		M.show_main_page()
+	end
+	M._enabled = true
+end
+
+---@return nil
+function M.disable()
 end
 
 function M.setup(opts)
