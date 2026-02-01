@@ -33,6 +33,7 @@ function M.enable()
 		return
 	end
 
+	vim.wo.wrap = false
 	M.keymaps.activate_keymaps(M.keymaps.keymaps)
 	if #M.pages < 1 then
 		M.actions.show_main_page()
