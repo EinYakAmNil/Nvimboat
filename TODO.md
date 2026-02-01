@@ -1,9 +1,11 @@
 # Rewrite
+
 - Write RSS parser, beacuse gofeed fails to detect content
+- enable keymaps
 
 # Features
 
-- Read state toggling on feed basis
+- ~Read state toggling on feed basis~
 
 # Bugfix
 
@@ -14,3 +16,4 @@
 # Behaviour
 
 - filters should not remove articles from their feeds as quickly
+

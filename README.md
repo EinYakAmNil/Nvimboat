@@ -91,7 +91,7 @@ nvimboat.setup({
     -- These values don't have to be configured, but they can be.
     db = 'path/to/database'
     separator = " | " -- separator for UI, changing it will break treesitter
-    cache_dir = "path/to/xml/cache"
+    cache_dir = "/path/to/xml/cache"
     cache_time = 1200 -- time for which cache is valid
 })
 ```
