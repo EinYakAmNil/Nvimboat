@@ -142,6 +142,13 @@ func Select(nv *nvim.Nvim, args ...string) (err error) {
 		err = errors.Join(err, errors.New("nvimboat/Select"))
 		return
 	}
+	if _, ok := Pages.Top().(*Article); ok {
+		err = Nvim.SetWindowOption(*NvWindow, "wrap", true)
+		if err != nil {
+			err = errors.Join(err, errors.New("nvimboat/initNvimboat"))
+			return
+		}
+	}
 	err = Pages.Show()
 	if err != nil {
 		err = errors.Join(err, errors.New("nvimboat/Select"))
@@ -190,6 +197,13 @@ func Back(nv *nvim.Nvim, args ...string) (err error) {
 	case *MainMenu:
 		return nil
 	default:
+		if _, ok := Pages.Top().(*Article); ok {
+			err = Nvim.SetWindowOption(*NvWindow, "wrap", false)
+			if err != nil {
+				err = errors.Join(err, errors.New("nvimboat/initNvimboat"))
+				return
+			}
+		}
 		var cursor_x int
 		cursor_x, err = Pages.Top().Back()
 		if err != nil {

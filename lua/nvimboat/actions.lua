@@ -40,7 +40,6 @@ end
 ---@return nil
 function M.back()
 	Nvimboat("back")
-	vim.wo.wrap = false
 end
 
 ---@return string
@@ -56,9 +55,6 @@ function M.select()
 		return id
 	end
 	Nvimboat("select", id)
-	if pages[#pages].type == "Article" then
-		vim.wo.wrap = true
-	end
 	return id
 end
 

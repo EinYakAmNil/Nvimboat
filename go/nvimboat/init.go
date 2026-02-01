@@ -84,5 +84,10 @@ func initNvimboat(nv *nvim.Nvim) (err error) {
 		}
 		Filters[filter.Name] = filter
 	}
+	err = Nvim.SetWindowOption(*NvWindow, "wrap", false)
+	if err != nil {
+		err = errors.Join(err, errors.New("nvimboat/initNvimboat"))
+		return
+	}
 	return
 }
