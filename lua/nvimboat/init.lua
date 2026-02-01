@@ -35,7 +35,7 @@ function M.enable()
 
 	M.keymaps.activate_keymaps(M.keymaps.keymaps)
 	if #M.pages < 1 then
-		M.show_main_page()
+		M.actions.show_main_page()
 	end
 	M._enabled = true
 end

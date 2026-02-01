@@ -15,12 +15,20 @@ end
 ---@param input_str string
 ---@param separator string
 ---@return string[]
-function string_split(input_str, separator)
+local function string_split(input_str, separator)
 	separator = separator or "%s"
+
+	---@type string[]
 	local splits = {}
-	for str in string.gmatch(input_str, "([^" .. separator .. "]+)") do
+	for str in input_str:gmatch("(.-)" .. separator) do
 		splits[#splits + 1] = str:match("^%s*(.-)%s*$")
 	end
+
+	local last_col = input_str:match(".*" .. separator .. "(.*)") or input_str
+	if input_str ~= "" then
+		splits[#splits + 1] = last_col:match("^%s*(.-)%s*$")
+	end
+
 	return splits
 end
 
@@ -84,7 +92,7 @@ function M.multi_select_id(page, separator)
 	---@type integer
 	local start_row = vim.fn.getpos("v")[2]
 	---@type integer
-	local end_row = vim.fn.getpos()[2]
+	local end_row = vim.fn.getpos(".")[2]
 	---@type integer
 	local direction
 	if start_row < end_row then

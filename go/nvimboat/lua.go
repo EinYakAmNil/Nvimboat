@@ -8,8 +8,8 @@ import (
 
 const (
 	luaPackage    = "return package.loaded.nvimboat"
-	luaEnable     = luaPackage + ".actions.enable()"
-	luaDisable    = luaPackage + ".actions.disable()"
+	luaEnable     = luaPackage + ".enable()"
+	luaDisable    = luaPackage + ".disable()"
 	luaConfig     = luaPackage + ".config"
 	luaFeeds      = luaPackage + ".feeds"
 	luaFilters    = luaPackage + ".filters"
