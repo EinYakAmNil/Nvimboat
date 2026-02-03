@@ -23,14 +23,14 @@ module.exports = grammar({
 			$.unread_article,
 			$.read_article
 		),
-		unread_filter: $ => / \| N \(\d+\/\d+\).*? \| query:.*?, tags:.*?/,
-		read_filter: $ => / \|   \(\d+\/\d+\).*? \| query:.*?, tags:.*?/,
+		unread_filter: $ => /N \(\d+\/\d+\).*? │ query:.*?, tags:.*?/,
+		read_filter: $ => /  \(\d+\/\d+\).*? │ query:.*?, tags:.*?/,
 
-		unread_feed: $ => / \| N \(\d+\/\d+\).*? \| http.*?/,
-		read_feed: $ => / \|   \(\d+\/\d+\).*? \| http.*?/,
+		unread_feed: $ => /N \(\d+\/\d+\).*? │ http.*?/,
+		read_feed: $ => /  \(\d+\/\d+\).*? │ http.*?/,
 
-		unread_article: $ => / \| N \| \d\d (?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec).*?/,
-		read_article: $ => / \|   \| \d\d (?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec).*?/,
+		unread_article: $ => /N │ \d\d (?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec).*?/,
+		read_article: $ => /  │ \d\d (?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec).*?/,
 
 		header: $ => seq($._header_line),
 		_header_line: $ => seq($._header_key, ':', $._expression),
