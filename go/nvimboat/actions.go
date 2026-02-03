@@ -110,6 +110,11 @@ func ShowMain(nv *nvim.Nvim, args ...string) (err error) {
 		err = errors.Join(err, fmt.Errorf("nvimboat/ShowMain"))
 		return
 	}
+	err = Nvim.SetWindowOption(*NvWindow, "wrap", false)
+	if err != nil {
+		err = errors.Join(err, errors.New("nvimboat/ShowMain"))
+		return
+	}
 	err = Pages.Show()
 	if err != nil {
 		err = errors.Join(err, fmt.Errorf("nvimboat/ShowMain"))
