@@ -75,11 +75,11 @@
     },
     "unread_filter": {
       "type": "PATTERN",
-      "value": "N \\(\\d+\\/\\d+\\).*? │ query:.*?, tags:.*?"
+      "value": "N \\(\\d+\\/\\d+\\).*? │ filter:.*?"
     },
     "read_filter": {
       "type": "PATTERN",
-      "value": "  \\(\\d+\\/\\d+\\).*? │ query:.*?, tags:.*?"
+      "value": "  \\(\\d+\\/\\d+\\).*? │ filter:.*?"
     },
     "unread_feed": {
       "type": "PATTERN",

@@ -23,8 +23,8 @@ module.exports = grammar({
 			$.unread_article,
 			$.read_article
 		),
-		unread_filter: $ => /N \(\d+\/\d+\).*? │ query:.*?, tags:.*?/,
-		read_filter: $ => /  \(\d+\/\d+\).*? │ query:.*?, tags:.*?/,
+		unread_filter: $ => /N \(\d+\/\d+\).*? │ filter:.*?/,
+		read_filter: $ => /  \(\d+\/\d+\).*? │ filter:.*?/,
 
 		unread_feed: $ => /N \(\d+\/\d+\).*? │ http.*?/,
 		read_feed: $ => /  \(\d+\/\d+\).*? │ http.*?/,

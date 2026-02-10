@@ -65,9 +65,14 @@ function M.get_select_id(line, page, separator)
 			return get_last_column(line, separator)
 		end,
 		Filter = function()
-			return get_filter_name(line, separator)
+			return get_last_column(line, separator)
 		end,
+		---TODO: fix for detection if filter or feed by "filter:" or "https://"
 		MainMenu = function()
+			local last_column = get_last_column(line, separator)
+			if last_column:match("^filter:") then
+				return get_filter_name(line, separator)
+			end
 			return get_last_column(line, separator)
 		end,
 		TagFeeds = function()

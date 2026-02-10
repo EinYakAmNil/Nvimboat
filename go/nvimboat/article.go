@@ -100,6 +100,11 @@ func (a *Article) ToggleRead(dbh rssdb.DbHandle, ids []string) (err error) {
 		err = errors.Join(err, errors.New("nvimboat/Article.ToggleRead"))
 		return
 	}
+	err = Nvim.SetWindowOption(*NvWindow, "wrap", false)
+	if err != nil {
+		err = errors.Join(err, errors.New("nvimboat/Article.ToggleRead"))
+		return
+	}
 	// Go back
 	err = Pages.Show()
 	if err != nil {
@@ -303,9 +308,14 @@ func (a *Article) Delete(dbh rssdb.DbHandle, ids []string) (err error) {
 		err = errors.Join(err, errors.New("nvimboat/Article.Delete"))
 		return
 	}
+	err = Nvim.SetWindowOption(*NvWindow, "wrap", false)
+	if err != nil {
+		err = errors.Join(err, errors.New("nvimboat/Article.Delete"))
+		return
+	}
 	err = Pages.Show()
 	if err != nil {
-		err = errors.Join(err, fmt.Errorf("nvimboat/Back"))
+		err = errors.Join(err, errors.New("nvimboat/Article.Delete"))
 		return
 	}
 	err = Nvim.SetWindowCursor(*NvWindow, [2]int{max(idx-1, 0), 0})
