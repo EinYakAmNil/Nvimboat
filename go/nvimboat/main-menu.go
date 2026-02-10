@@ -52,7 +52,7 @@ func (mm *MainMenu) Render(nv *nvim.Nvim, buf nvim.Buffer) (err error) {
 	for name := range Filters {
 		filterNames = append(filterNames, name)
 	}
-	slices.Sort(filterNames)
+	// slices.Sort(filterNames)
 	var (
 		unreadCount int64
 		f           *Filter
