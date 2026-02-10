@@ -1,6 +1,4 @@
 nvimboat.log
 go/engine
 cache/*
-treesitter/*
-!treesitter/grammar.js
 parser/nvimboat.so

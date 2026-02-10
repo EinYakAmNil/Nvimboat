@@ -1,0 +1,33 @@
+{
+  "$schema": "https://tree-sitter.github.io/tree-sitter/assets/schemas/config.schema.json",
+  "grammars": [
+    {
+      "name": "nvimboat",
+      "camelcase": "Nvimboat",
+      "title": "Nvimboat",
+      "scope": "source.nvimboat",
+      "file-types": [
+        "nvimboat"
+      ],
+      "injection-regex": "^nvimboat$",
+      "class-name": "TreeSitterNvimboat"
+    }
+  ],
+  "metadata": {
+    "version": "0.1.0",
+    "license": "GPL-3.0",
+    "description": "Colors for the Nvimboat-Plugin",
+    "authors": [
+      {
+        "name": "Linkai Zhang",
+        "email": "linkai.zhang@einyakamnil.xyz",
+        "url": "https://einyakamnil.xyz/"
+      }
+    ],
+    "links": {
+      "repository": "https://github.com/EinYakAmNil/Nvimboat",
+      "funding": "https://ko-fi.com/einyakamnil"
+    }
+  }
+}
+

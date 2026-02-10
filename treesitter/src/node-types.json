@@ -1,0 +1,126 @@
+[
+  {
+    "type": "body",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "body_start",
+          "named": true
+        },
+        {
+          "type": "content",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "header",
+    "named": true,
+    "fields": {}
+  },
+  {
+    "type": "nvimboat",
+    "named": true,
+    "root": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "body",
+          "named": true
+        },
+        {
+          "type": "header",
+          "named": true
+        },
+        {
+          "type": "read_article",
+          "named": true
+        },
+        {
+          "type": "read_feed",
+          "named": true
+        },
+        {
+          "type": "read_filter",
+          "named": true
+        },
+        {
+          "type": "unread_article",
+          "named": true
+        },
+        {
+          "type": "unread_feed",
+          "named": true
+        },
+        {
+          "type": "unread_filter",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": ":",
+    "named": false
+  },
+  {
+    "type": "Author",
+    "named": false
+  },
+  {
+    "type": "Date",
+    "named": false
+  },
+  {
+    "type": "Feed",
+    "named": false
+  },
+  {
+    "type": "Link",
+    "named": false
+  },
+  {
+    "type": "Title",
+    "named": false
+  },
+  {
+    "type": "body_start",
+    "named": true
+  },
+  {
+    "type": "content",
+    "named": true
+  },
+  {
+    "type": "read_article",
+    "named": true
+  },
+  {
+    "type": "read_feed",
+    "named": true
+  },
+  {
+    "type": "read_filter",
+    "named": true
+  },
+  {
+    "type": "unread_article",
+    "named": true
+  },
+  {
+    "type": "unread_feed",
+    "named": true
+  },
+  {
+    "type": "unread_filter",
+    "named": true
+  }
+]
