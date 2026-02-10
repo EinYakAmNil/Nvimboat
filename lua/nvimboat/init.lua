@@ -37,6 +37,8 @@ function M.enable()
 	if #M.pages < 1 then
 		M.actions.show_main_page()
 	end
+	vim.bo.filetype = "nvimboat"
+	vim.bo.buftype = "nofile"
 	M._enabled = true
 end
 
