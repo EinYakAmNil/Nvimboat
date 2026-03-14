@@ -131,13 +131,10 @@ func (f *Feed) Back() (cursor_x int, err error) {
 			dbErr = errors.Join(dbErr, errors.New("nvimboat/Feed.Back"))
 			return -1, dbErr
 		}
-		mainPageFeeds, err := dbh.Queries.QueryMainPage(dbh.Ctx)
+		pp.Feeds, err = dbh.Queries.QueryMainPage(dbh.Ctx)
 		if err != nil {
 			err = errors.Join(err, errors.New("nvimboat/Feed.Back"))
 			return -1, err
-		}
-		for idx, feed := range mainPageFeeds {
-			pp.Feeds[idx].QueryMainPageRow = feed
 		}
 		err = updateFilters(dbh)
 		if err != nil {

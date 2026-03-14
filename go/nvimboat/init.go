@@ -60,12 +60,7 @@ func initNvimboat(nv *nvim.Nvim) (err error) {
 		err = errors.Join(err, errors.New("nvimboat/initNvimboat"))
 		return
 	}
-	feedConfig, err := parseFeeds(*rawFeeds)
-	if err != nil {
-		err = errors.Join(err, errors.New("nvimboat/initNvimboat"))
-		return
-	}
-	for feedurl, tags := range feedConfig {
+	for feedurl, tags := range FeedConfig {
 		f := new(Feed)
 		t := make(map[string]bool)
 		for _, tag := range tags {

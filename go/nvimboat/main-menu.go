@@ -9,15 +9,9 @@ import (
 	"github.com/neovim/go-client/nvim"
 )
 
-type (
-	MainPageFeed struct {
-		rssdb.QueryMainPageRow
-		Tags map[string]bool
-	}
-	MainMenu struct {
-		Feeds []MainPageFeed
-	}
-)
+type MainMenu struct {
+	Feeds []rssdb.QueryMainPageRow
+}
 
 // If the id is a URL then Select() assumes, that a feed is being searched.
 // Otherwise the id is matched against the name of a filter.
@@ -152,13 +146,10 @@ checkAnyUnread:
 			return
 		}
 	}
-	feeds, err := dbh.Queries.QueryMainPage(dbh.Ctx)
+	mm.Feeds, err = dbh.Queries.QueryMainPage(dbh.Ctx)
 	if err != nil {
 		err = errors.Join(err, errors.New("nvimboat/MainMenu.ToggleRead"))
 		return
-	}
-	for i, f := range feeds {
-		mm.Feeds[i].QueryMainPageRow = f
 	}
 	err = Pages.Show()
 	if err != nil {
@@ -214,7 +205,7 @@ func (mm *MainMenu) NextUnread(dbh rssdb.DbHandle) (err error) {
 					return
 				}
 			}
-		case MainPageFeed:
+		case rssdb.QueryMainPageRow:
 			if f.UnreadCount > 0 {
 				err = setCursorUnread(
 					(i+cursorRow)%len(rows)+1,
@@ -294,7 +285,7 @@ func (mm *MainMenu) PrevUnread(dbh rssdb.DbHandle) (err error) {
 					return
 				}
 			}
-		case MainPageFeed:
+		case rssdb.QueryMainPageRow:
 			if f.UnreadCount > 0 {
 				err = setCursorUnread(
 					(i+cursorRow)%len(rows)+1,

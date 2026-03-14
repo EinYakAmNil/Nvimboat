@@ -52,12 +52,12 @@ filterFeed:
 
 func TestMainMenuChildIdx(t *testing.T) {
 	mm := MainMenu{
-		Feeds: []MainPageFeed{
-			{QueryMainPageRow: rssdb.QueryMainPageRow{Title: "Abc"}},
-			{QueryMainPageRow: rssdb.QueryMainPageRow{Title: "Abd"}},
-			{QueryMainPageRow: rssdb.QueryMainPageRow{Title: "Bbc"}},
-			{QueryMainPageRow: rssdb.QueryMainPageRow{Title: "abc"}},
-			{QueryMainPageRow: rssdb.QueryMainPageRow{Title: "bbc"}},
+		Feeds: []rssdb.QueryMainPageRow{
+			{Title: "Abc"},
+			{Title: "Abd"},
+			{Title: "Bbc"},
+			{Title: "abc"},
+			{Title: "bbc"},
 		},
 	}
 	for i, f := range mm.Feeds {

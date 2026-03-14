@@ -90,10 +90,7 @@ func ShowMain(nv *nvim.Nvim, args ...string) (err error) {
 		for _, tag := range FeedConfig[feed.Rssurl] {
 			tags[tag] = true
 		}
-		mm.Feeds = append(mm.Feeds, MainPageFeed{
-			QueryMainPageRow: feed,
-			Tags:             tags,
-		})
+		mm.Feeds = append(mm.Feeds, feed)
 	}
 	err = updateFilters(dbh)
 	if err != nil {
