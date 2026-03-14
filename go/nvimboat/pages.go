@@ -35,7 +35,14 @@ func (ps *PageStack) Show() (err error) {
 		err = errors.Join(err, errors.New("nvimboat/PageStack.Show"))
 		return
 	}
-	ps.Top().Render(Nvim, *NvBuffer)
+	if _, ok := Pages.Top().(*Article); ok {
+		err = Nvim.SetWindowOption(*NvWindow, "wrap", false)
+		if err != nil {
+			err = errors.Join(err, errors.New("nvimboat/PageStack.Show"))
+			return
+		}
+	}
+	err = ps.Top().Render(Nvim, *NvBuffer)
 	if err != nil {
 		err = errors.Join(err, errors.New("nvimboat/PageStack.Show"))
 		return
