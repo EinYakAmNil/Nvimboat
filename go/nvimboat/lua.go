@@ -32,8 +32,8 @@ func parseConfig(rawConfig map[string]any) (err error) {
 		"logPath":     &LogPath,
 		"separator":   &ColumnSeparator,
 	}
-	for luaName, GoVar := range luaGoMap {
-		*GoVar, ok = rawConfig[luaName].(string)
+	for luaName, goVar := range luaGoMap {
+		*goVar, ok = rawConfig[luaName].(string)
 		if !ok {
 			err = errors.Join(err, fmt.Errorf(
 				`Lua variable %s must be a string, got: %v -> %T`,
