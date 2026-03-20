@@ -100,11 +100,6 @@ func (a *Article) ToggleRead(dbh rssdb.DbHandle, ids []string) (err error) {
 		err = errors.Join(err, errors.New("nvimboat/Article.ToggleRead"))
 		return
 	}
-	err = Nvim.SetWindowOption(*NvWindow, "wrap", false)
-	if err != nil {
-		err = errors.Join(err, errors.New("nvimboat/Article.ToggleRead"))
-		return
-	}
 	// Go back
 	err = Pages.Show()
 	if err != nil {
@@ -305,11 +300,6 @@ func (a *Article) Delete(dbh rssdb.DbHandle, ids []string) (err error) {
 		f.Articles = append(f.Articles[:idx], f.Articles[idx+1:]...)
 	default:
 		err = errors.New(`Type of parent page is not Feed/Filter.`)
-		err = errors.Join(err, errors.New("nvimboat/Article.Delete"))
-		return
-	}
-	err = Nvim.SetWindowOption(*NvWindow, "wrap", false)
-	if err != nil {
 		err = errors.Join(err, errors.New("nvimboat/Article.Delete"))
 		return
 	}

@@ -63,6 +63,9 @@ func parseFilter(rawFilter map[string]any) (filter Filter, err error) {
 		descriptionTags []string
 		descriptionSql  []string
 		descriptions    []string
+		tags            []any
+		t               string
+		ok, okTags      bool
 	)
 	configMapping := map[string]*string{
 		"name":              &filter.Name,
@@ -94,25 +97,28 @@ func parseFilter(rawFilter map[string]any) (filter Filter, err error) {
 	}
 	filter.ExcludeTags = make(map[string]bool)
 	filter.IncludeTags = make(map[string]bool)
-	if tags, okTags := rawFilter["tags"].([]any); okTags {
-		for _, tag := range tags {
-			if t, ok := tag.(string); ok {
-				if len(t) == 0 {
-					err = fmt.Errorf(`Length of string is 0. cannot parse %+v`, rawFilter)
-					err = errors.Join(err, errors.New("nvimboat/parseFilter"))
-					return
-				} else if t[0] == '!' {
-					filter.ExcludeTags[t[1:]] = true
-				} else {
-					filter.IncludeTags[t] = true
-				}
-				descriptionTags = append(descriptionTags, t)
-			}
-		}
-	} else {
+	if tags, okTags = rawFilter["tags"].([]any); !okTags {
 		err = fmt.Errorf(`Can't parse %+v`, rawFilter)
 		err = errors.Join(err, errors.New("nvimboat/parseFilter"))
 		return
+	}
+	for _, tag := range tags {
+		if t, ok = tag.(string); !ok {
+			err = fmt.Errorf(`Can't use tag: %+v. Not of type "string"`, tag)
+			err = errors.Join(err, errors.New("nvimboat/parseFilter"))
+			return
+		}
+		if len(t) == 0 {
+			err = fmt.Errorf(`Length of string is 0. cannot parse %+v`, rawFilter)
+			err = errors.Join(err, errors.New("nvimboat/parseFilter"))
+			return
+		}
+		if t[0] == '!' {
+			filter.ExcludeTags[t[1:]] = true
+		} else {
+			filter.IncludeTags[t] = true
+		}
+		descriptionTags = append(descriptionTags, t)
 	}
 	if len(descriptionSql) > 0 {
 		descriptions = append(descriptions, descriptionSql...)
@@ -121,18 +127,55 @@ func parseFilter(rawFilter map[string]any) (filter Filter, err error) {
 		descriptions = append(descriptions, "tags: "+strings.Join(descriptionTags, ", "))
 	}
 	filter.FilterDescription = "filter: " + strings.Join(descriptions, ", ")
-filterFeed:
-	for _, feed := range Feeds {
-		for excTag := range filter.ExcludeTags {
-			if feed.Tags[excTag] == true {
-				continue filterFeed
+
+	includeFeeds := make(map[string]bool)
+	excludedFeeds := make(map[string]bool)
+
+	if len(filter.IncludeTags) == 0 {
+		for f, tags := range FeedConfig {
+			includeFeeds[f] = true
+			if len(setIntersection(tags, filter.ExcludeTags)) > 0 {
+				excludedFeeds[f] = true
 			}
 		}
-		for incTag := range filter.IncludeTags {
-			if feed.Tags[incTag] == true {
-				filter.Feedurls = append(filter.Feedurls, feed.Rssurl)
-				continue filterFeed
-			}
+		for f := range setDifference(includeFeeds, excludedFeeds) {
+			filter.Feedurls = append(filter.Feedurls, f)
+		}
+		return
+	}
+
+filterFeeds:
+	for f, tags := range FeedConfig {
+		if len(setIntersection(tags, filter.IncludeTags)) > 0 {
+			includeFeeds[f] = true
+			continue filterFeeds
+		}
+		if len(setIntersection(tags, filter.ExcludeTags)) > 0 {
+			excludedFeeds[f] = true
+		}
+	}
+	for f := range setDifference(includeFeeds, excludedFeeds) {
+		filter.Feedurls = append(filter.Feedurls, f)
+	}
+
+	return
+}
+
+func setDifference[T comparable](a, b map[T]bool) (diff map[T]any) {
+	diff = make(map[T]any)
+	for k := range a {
+		if !b[k] {
+			diff[k] = true
+		}
+	}
+	return
+}
+
+func setIntersection[T comparable](a, b map[T]bool) (intersection map[T]any) {
+	intersection = make(map[T]any)
+	for k := range a {
+		if b[k] {
+			intersection[k] = true
 		}
 	}
 	return

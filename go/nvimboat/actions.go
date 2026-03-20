@@ -86,10 +86,6 @@ func ShowMain(nv *nvim.Nvim, args ...string) (err error) {
 		return
 	}
 	for _, feed := range mainPageFeeds {
-		tags := make(map[string]bool)
-		for _, tag := range FeedConfig[feed.Rssurl] {
-			tags[tag] = true
-		}
 		mm.Feeds = append(mm.Feeds, feed)
 	}
 	err = updateFilters(dbh)
@@ -105,11 +101,6 @@ func ShowMain(nv *nvim.Nvim, args ...string) (err error) {
 	err = Pages.Push(mm, "")
 	if err != nil {
 		err = errors.Join(err, fmt.Errorf("nvimboat/ShowMain"))
-		return
-	}
-	err = Nvim.SetWindowOption(*NvWindow, "wrap", false)
-	if err != nil {
-		err = errors.Join(err, errors.New("nvimboat/ShowMain"))
 		return
 	}
 	err = Pages.Show()
@@ -144,13 +135,6 @@ func Select(nv *nvim.Nvim, args ...string) (err error) {
 		err = errors.Join(err, errors.New("nvimboat/Select"))
 		return
 	}
-	if _, ok := Pages.Top().(*Article); ok {
-		err = Nvim.SetWindowOption(*NvWindow, "wrap", true)
-		if err != nil {
-			err = errors.Join(err, errors.New("nvimboat/Select"))
-			return
-		}
-	}
 	err = Pages.Show()
 	if err != nil {
 		err = errors.Join(err, errors.New("nvimboat/Select"))
@@ -175,12 +159,7 @@ func ShowTags(nv *nvim.Nvim, args ...string) (err error) {
 	}
 	p := new(TagsOverview)
 	p.PrevCursorPosition = cursorPosition
-	p.Tags = make(map[string][]string)
-	for url, tags := range FeedConfig {
-		for _, t := range tags {
-			p.Tags[t] = append(p.Tags[t], url)
-		}
-	}
+	p.TagConfig = TagConfig
 	err = Pages.Push(p, "Tags")
 	if err != nil {
 		err = errors.Join(err, fmt.Errorf("nvimboat/ShowTags"))
@@ -199,13 +178,6 @@ func Back(nv *nvim.Nvim, args ...string) (err error) {
 	case *MainMenu:
 		return nil
 	default:
-		if _, ok := Pages.Top().(*Article); ok {
-			err = Nvim.SetWindowOption(*NvWindow, "wrap", false)
-			if err != nil {
-				err = errors.Join(err, errors.New("nvimboat/Back"))
-				return
-			}
-		}
 		var cursor_x int
 		cursor_x, err = Pages.Top().Back()
 		if err != nil {

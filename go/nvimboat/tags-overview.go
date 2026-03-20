@@ -13,25 +13,25 @@ import (
 // It will be initialized by Nvimboat.ShowTags().
 // Tag names are keys, URLs are values.
 type TagsOverview struct {
-	Tags               map[string][]string
+	TagConfig          map[string][]string
 	PrevCursorPosition [2]int
 }
 
 func (tp *TagsOverview) Select(dbh rssdb.DbHandle, id string) (p Page, err error) {
 	tag := new(TagFeeds)
 	tag.Name = id
-	feeds, err := dbh.Queries.QueryTagFeeds(dbh.Ctx, tp.Tags[id])
+	feeds, err := dbh.Queries.QueryTagFeeds(dbh.Ctx, tp.TagConfig[id])
 	if err != nil {
 		err = errors.Join(err, errors.New("nvimboat/TagsOverviewPage.Select"))
 		return
 	}
 	tag.Feeds = feeds
-	tag.Urls = tp.Tags[id]
+	tag.Urls = tp.TagConfig[id]
 	return tag, err
 }
 
 func (tp *TagsOverview) Render(nv *nvim.Nvim, buf nvim.Buffer) (err error) {
-	if len(tp.Tags) == 0 {
+	if len(tp.TagConfig) == 0 {
 		err = setLines(nv, buf, []string{"No tags defined."})
 		if err != nil {
 			err = errors.Join(err, errors.New("nvimboat/TagsOverviewPage.Render"))
@@ -40,7 +40,7 @@ func (tp *TagsOverview) Render(nv *nvim.Nvim, buf nvim.Buffer) (err error) {
 		return
 	}
 	var lines []string
-	for tag, urls := range tp.Tags {
+	for tag, urls := range tp.TagConfig {
 		lines = append(lines, fmt.Sprintf(`%s (%d)`, tag, len(urls)))
 	}
 	slices.Sort(lines)
@@ -55,8 +55,8 @@ func (tp *TagsOverview) Render(nv *nvim.Nvim, buf nvim.Buffer) (err error) {
 func (tp *TagsOverview) ChildIdx(p Page) (idx int, err error) {
 	switch tagFeeds := p.(type) {
 	case *TagFeeds:
-		tagNames := make([]string, 0, len(tp.Tags))
-		for t := range tp.Tags {
+		tagNames := make([]string, 0, len(tp.TagConfig))
+		for t := range tp.TagConfig {
 			tagNames = append(tagNames, t)
 		}
 		slices.Sort(tagNames)

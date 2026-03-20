@@ -28,7 +28,7 @@ var (
 		ArticleCount: 12,
 	}}
 	tp = TagsOverview{
-		Tags: map[string][]string{
+		TagConfig: map[string][]string{
 			"Tag A": {"a", "b", "c"},
 			"Tag B": {"u", "v", "w", "x", "y", "z"},
 		},
@@ -41,7 +41,7 @@ var (
 
 func TestConstructPage(t *testing.T) {
 	var lines []string
-	for tag, urls := range tp.Tags {
+	for tag, urls := range tp.TagConfig {
 		lines = append(lines, fmt.Sprintf(`%s (%d)`, tag, len(urls)))
 	}
 	sort.Strings(lines)
