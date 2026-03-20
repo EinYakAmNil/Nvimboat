@@ -48,7 +48,7 @@ func setCursorUnread(row, col, maxRows int, matched any) (err error) {
 }
 
 func updateFilters(dbh rssdb.DbHandle) (err error) {
-	for _, filter := range Filters {
+	for _, filter := range FilterConfig {
 		filter.Articles, err = dbh.Queries.QueryFilter(dbh.Ctx, filter.QueryFilterParams)
 		if err != nil {
 			err = errors.Join(err, errors.New("nvimboat/updateFilters"))

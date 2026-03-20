@@ -10,8 +10,8 @@ import (
 )
 
 type Filter struct {
-	Name string
 	rssdb.QueryFilterParams
+	Name              string
 	FilterDescription string
 	IncludeTags       map[string]bool
 	ExcludeTags       map[string]bool
@@ -119,13 +119,8 @@ func (f *Filter) ChildIdx(p Page) (idx int, err error) {
 }
 
 func (f *Filter) Back() (cursor_x int, err error) {
-	filterNames := make([]string, 0, len(Filters))
-	for name := range Filters {
-		filterNames = append(filterNames, name)
-	}
-	slices.Sort(filterNames)
-	for idx, filterName := range filterNames {
-		if f.Name == filterName {
+	for idx, filter := range FilterConfig {
+		if f.Name == filter.Name {
 			cursor_x = idx + 1
 			return
 		}

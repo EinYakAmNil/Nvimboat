@@ -16,7 +16,6 @@ var (
 	TagConfig       map[string][]string
 	Feeds           []*Feed
 	FilterConfig    []*Filter
-	Filters         map[string]*Filter
 	LinkHandler     string
 	LogPath         string
 	ColumnSeparator string
@@ -30,7 +29,6 @@ func initNvimboat(nv *nvim.Nvim) (err error) {
 	rawConfig := make(map[string]any)
 	rawFeeds := new([]map[string]any)
 	rawFilters := new([]map[string]any)
-	Filters = make(map[string]*Filter)
 	Nvim = nv
 	NvBuffer = new(nvim.Buffer)
 	NvWindow = new(nvim.Window)
@@ -74,7 +72,7 @@ func initNvimboat(nv *nvim.Nvim) (err error) {
 			err = errors.Join(err, errors.New("nvimboat/initNvimboat"))
 			return
 		}
-		Filters[filter.Name] = filter
+		FilterConfig = append(FilterConfig, filter)
 	}
 	return
 }

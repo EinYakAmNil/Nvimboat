@@ -25,8 +25,10 @@ func (mm *MainMenu) Select(dbh rssdb.DbHandle, id string) (p Page, err error) {
 		}
 		return
 	}
-	if filter, okFilter := Filters[id]; okFilter {
-		return filter, nil
+	for _, filter := range FilterConfig {
+		if id == filter.Name {
+			return filter, nil
+		}
 	}
 	err = fmt.Errorf(
 		`"%s" is not recognized as an URL or found as a filter name.`,
@@ -41,18 +43,9 @@ func (mm *MainMenu) Render(nv *nvim.Nvim, buf nvim.Buffer) (err error) {
 		unreadArticlesRatio []string
 		titleCol            []string
 		urlCol              []string
+		unreadCount         int64
 	)
-	filterNames := make([]string, 0, len(Filters))
-	for name := range Filters {
-		filterNames = append(filterNames, name)
-	}
-	// slices.Sort(filterNames)
-	var (
-		unreadCount int64
-		f           *Filter
-	)
-	for _, filterName := range filterNames {
-		f = Filters[filterName]
+	for _, f := range FilterConfig {
 		for _, a := range f.Articles {
 			if a.Unread == 1 {
 				unreadCount++
@@ -94,7 +87,7 @@ func (mm *MainMenu) ChildIdx(p Page) (idx int, err error) {
 				searchRange = searchRange[:section]
 			} else if childTitle == searchRange[section].Title {
 				idx += section
-				return idx + len(Filters), nil
+				return idx + len(FilterConfig), nil
 			}
 			section = len(searchRange) / 2
 		}
@@ -166,14 +159,9 @@ func (mm *MainMenu) NextUnread(dbh rssdb.DbHandle) (err error) {
 		return
 	}
 	cursorRow := cursorPosition[0]
-	filterNames := make([]string, 0, len(Filters))
-	for name := range Filters {
-		filterNames = append(filterNames, name)
-	}
-	slices.Sort(filterNames)
 	var rows []any
-	for _, name := range filterNames {
-		rows = append(rows, Filters[name])
+	for _, f := range FilterConfig {
+		rows = append(rows, f)
 	}
 	for _, f := range mm.Feeds {
 		rows = append(rows, f)
@@ -245,14 +233,9 @@ func (mm *MainMenu) PrevUnread(dbh rssdb.DbHandle) (err error) {
 		return
 	}
 	cursorRow := cursorPosition[0] - 1
-	filterNames := make([]string, 0, len(Filters))
-	for name := range Filters {
-		filterNames = append(filterNames, name)
-	}
-	slices.Sort(filterNames)
 	var rows []any
-	for _, name := range filterNames {
-		rows = append(rows, Filters[name])
+	for _, f := range FilterConfig {
+		rows = append(rows, f)
 	}
 	for _, f := range mm.Feeds {
 		rows = append(rows, f)

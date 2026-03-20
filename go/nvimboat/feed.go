@@ -126,21 +126,21 @@ func (f *Feed) Back() (cursor_x int, err error) {
 	}
 	switch pp := parentPage.(type) {
 	case *MainMenu:
-		dbh, dbErr := rssdb.ConnectDb(DbPath)
-		if dbErr != nil {
-			dbErr = errors.Join(dbErr, errors.New("nvimboat/Feed.Back"))
-			return -1, dbErr
-		}
-		pp.Feeds, err = dbh.Queries.QueryMainPage(dbh.Ctx)
-		if err != nil {
-			err = errors.Join(err, errors.New("nvimboat/Feed.Back"))
-			return -1, err
-		}
-		err = updateFilters(dbh)
-		if err != nil {
-			err = errors.Join(err, errors.New("nvimboat/Feed.Back"))
-			return -1, err
-		}
+		// dbh, dbErr := rssdb.ConnectDb(DbPath)
+		// if dbErr != nil {
+		// 	dbErr = errors.Join(dbErr, errors.New("nvimboat/Feed.Back"))
+		// 	return -1, dbErr
+		// }
+		// pp.Feeds, err = dbh.Queries.QueryMainPage(dbh.Ctx)
+		// if err != nil {
+		// 	err = errors.Join(err, errors.New("nvimboat/Feed.Back"))
+		// 	return -1, err
+		// }
+		// err = updateFilters(dbh)
+		// if err != nil {
+		// 	err = errors.Join(err, errors.New("nvimboat/Feed.Back"))
+		// 	return -1, err
+		// }
 		cursor_x, err = pp.ChildIdx(f)
 		if err != nil {
 			err = errors.Join(err, errors.New("nvimboat/Feed.Back"))
