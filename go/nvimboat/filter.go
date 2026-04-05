@@ -36,6 +36,18 @@ func (f *Filter) Select(dbh rssdb.DbHandle, id string) (p Page, err error) {
 		return
 	}
 	f.Articles[idx].Unread = 0
+	feed := Feeds[f.Articles[idx].Feedurl]
+	feed.UnreadCount = 0
+	for _, a := range feed.Articles {
+		Log(a.Unread)
+		if a.Unread == 1 {
+			feed.UnreadCount++
+		} else if a.Unread > 1 || a.Unread < 0 {
+			err = fmt.Errorf(`Unexpected value for unread: %d`, a.Unread)
+			err = errors.Join(err, errors.New("nvimboat/Filter.Select"))
+			return
+		}
+	}
 	return
 }
 
@@ -174,11 +186,6 @@ checkAnyUnread:
 				}
 			}
 		}
-	}
-	err = Pages.Show()
-	if err != nil {
-		err = errors.Join(err, errors.New("nvimboat/Filter.ToggleRead"))
-		return
 	}
 	return
 }
