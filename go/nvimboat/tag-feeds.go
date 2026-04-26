@@ -9,9 +9,22 @@ import (
 )
 
 type TagFeeds struct {
-	Name  string
-	Feeds []rssdb.QueryTagFeedsRow
-	Urls  []string
+	Name string
+	Urls []string
+}
+
+func (tf *TagFeeds) Feeds() (feeds []*Feed, err error) {
+	feedSubset := make(map[string]*Feed)
+	for _, url := range tf.Urls {
+		if Feeds[url] == nil {
+			err = fmt.Errorf(url, `is not in Feeds`)
+			err = errors.Join(err, errors.New("nvimboat/TagFeeds.Feeds"))
+			return
+		}
+		feedSubset[url] = Feeds[url]
+	}
+	feeds = sortFeeds(feedSubset)
+	return
 }
 
 func (tf *TagFeeds) Select(dbh rssdb.DbHandle, id string) (p Page, err error) {
@@ -29,10 +42,15 @@ func (tf *TagFeeds) Render(nv *nvim.Nvim, buf nvim.Buffer) (err error) {
 		titleCol            []string
 		urlCol              []string
 	)
-	for _, f := range tf.Feeds {
+	feeds, err := tf.Feeds()
+	if err != nil {
+		err = errors.Join(err, errors.New("nvimboat/TagFeeds.Render"))
+		return
+	}
+	for _, f := range feeds {
 		unreadArticlesRatio = append(unreadArticlesRatio, makeUnreadRatio(f.UnreadCount, f.ArticleCount))
 		titleCol = append(titleCol, f.Title)
-		urlCol = append(urlCol, f.Feedurl)
+		urlCol = append(urlCol, f.Rssurl)
 	}
 	for _, c := range [][]string{unreadArticlesRatio, titleCol, urlCol} {
 		err = addColumn(nv, buf, c)
@@ -45,14 +63,19 @@ func (tf *TagFeeds) Render(nv *nvim.Nvim, buf nvim.Buffer) (err error) {
 }
 
 func (tf *TagFeeds) ChildIdx(p Page) (idx int, err error) {
+	feeds, err := tf.Feeds()
+	if err != nil {
+		err = errors.Join(err, errors.New("nvimboat/TagFeeds.ChildIdx"))
+		return
+	}
 	switch f := p.(type) {
 	case *Feed:
 		childTitle := f.Title
 		var (
-			section     = len(tf.Feeds) / 2
-			searchRange = tf.Feeds
+			section     = len(feeds) / 2
+			searchRange = feeds
 		)
-		for range len(tf.Feeds) {
+		for range len(feeds) {
 			if childTitle > searchRange[section].Title {
 				idx += section
 				searchRange = searchRange[section:]
@@ -67,7 +90,7 @@ func (tf *TagFeeds) ChildIdx(p Page) (idx int, err error) {
 		err = fmt.Errorf(
 			`Max iterations: "%s" not found in %v`,
 			childTitle,
-			prettyStruct(tf.Feeds),
+			prettyStruct(feeds),
 		)
 		err = errors.Join(err, errors.New("nvimboat/TagFeeds.ChildIdx"))
 	}
@@ -92,13 +115,18 @@ func (tf *TagFeeds) Back() (cursor_x int, err error) {
 }
 
 func (tf *TagFeeds) ToggleRead(dbh rssdb.DbHandle, ids []string) (err error) {
+	feeds, err := tf.Feeds()
+	if err != nil {
+		err = errors.Join(err, errors.New("nvimboat/TagFeeds.ToggleRead"))
+		return
+	}
 	setFeedsRead := false
 	urls := []string{}
 checkAnyUnread:
-	for _, feed := range tf.Feeds {
+	for _, feed := range feeds {
 		for _, id := range ids {
-			if feed.Feedurl == id {
-				urls = append(urls, feed.Feedurl)
+			if feed.Rssurl == id {
+				urls = append(urls, feed.Rssurl)
 				if feed.UnreadCount > 0 {
 					setFeedsRead = true
 				}
@@ -112,28 +140,35 @@ checkAnyUnread:
 			err = errors.Join(err, errors.New("nvimboat/TagFeeds.ToggleRead"))
 			return
 		}
+		for _, id := range ids {
+			if Feeds[id] == nil {
+				err = fmt.Errorf(id, `is not in Feeds`)
+				err = errors.Join(err, errors.New("nvimboat/TagFeeds.Feeds"))
+				return
+			}
+			Feeds[id].UnreadCount = 0
+		}
 	} else {
 		err = dbh.Queries.SetFeedsUnread(dbh.Ctx, ids)
 		if err != nil {
 			err = errors.Join(err, errors.New("nvimboat/TagFeeds.ToggleRead"))
 			return
 		}
-	}
-	tf.Feeds, err = dbh.Queries.QueryTagFeeds(dbh.Ctx, tf.Urls)
-	if err != nil {
-		err = errors.Join(err, errors.New("nvimboat/TagFeeds.ToggleRead"))
-		return
-	}
-	err = Pages.Show()
-	if err != nil {
-		err = errors.Join(err, errors.New("nvimboat/TagFeeds.ToggleRead"))
-		return
+		for _, id := range ids {
+			if Feeds[id] == nil {
+				err = fmt.Errorf(id, `is not in Feeds`)
+				err = errors.Join(err, errors.New("nvimboat/TagFeeds.Feeds"))
+				return
+			}
+			Feeds[id].UnreadCount = Feeds[id].ArticleCount
+		}
 	}
 	return
 }
 
 func (tf *TagFeeds) NextUnread(dbh rssdb.DbHandle) (err error) { return }
 func (tf *TagFeeds) PrevUnread(dbh rssdb.DbHandle) (err error) { return }
+
 func (tf *TagFeeds) Delete(dbh rssdb.DbHandle, ids []string) (err error) {
 	for _, id := range ids {
 		if len(extracUrls(id)) == 0 {
@@ -146,21 +181,14 @@ func (tf *TagFeeds) Delete(dbh rssdb.DbHandle, ids []string) (err error) {
 		err = errors.Join(err, errors.New("nvimboat/TagFeeds.Delete"))
 		return
 	}
-	tf.Feeds, err = dbh.Queries.QueryTagFeeds(dbh.Ctx, tf.Urls)
-	if err != nil {
-		err = errors.Join(err, errors.New("nvimboat/TagsOverviewPage.Select"))
-		return
+	for _, id := range ids {
+		if Feeds[id] == nil {
+			err = fmt.Errorf(id, `is not in Feeds`)
+			err = errors.Join(err, errors.New("nvimboat/TagFeeds.Feeds"))
+			return
+		}
+		Feeds[id].ArticleCount = 0
+		Feeds[id].UnreadCount = 0
 	}
-	err = setLines(Nvim, *NvBuffer, []string{""})
-	if err != nil {
-		err = fmt.Errorf("nvimboat/Nvimboat.Show: %w\n", err)
-		return
-	}
-	err = tf.Render(Nvim, *NvBuffer)
-	if err != nil {
-		err = errors.Join(err, errors.New("nvimboat/Feed.Delete"))
-		return
-	}
-	defer trimTrail(Nvim, *NvBuffer)
 	return
 }

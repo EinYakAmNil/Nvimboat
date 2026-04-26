@@ -68,19 +68,6 @@ LEFT JOIN (
 ON rss_feed.rssurl = feed_articles.feedurl
 ORDER BY rss_feed.title;
 
--- name: QueryTagFeeds :many
-SELECT
-	f.title,
-	f.rssurl AS feedurl,
-	CAST(COALESCE(SUM(i.unread), 0) AS INTEGER) AS unread_count,
-	COUNT(i.title) AS article_count
-FROM rss_feed f
-LEFT JOIN rss_item i
-ON f.rssurl = i.feedurl AND i.deleted = 0
-WHERE f.rssurl IN (sqlc.slice('feedurls'))
-GROUP BY f.title, f.rssurl
-ORDER BY f.title;
-
 -- name: QueryFilter :many
 SELECT guid, title, author, url, feedurl, pubDate, content, unread FROM rss_item
 WHERE guid LIKE ?
