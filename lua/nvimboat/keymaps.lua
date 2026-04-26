@@ -64,7 +64,7 @@ M.keymaps = {
 		K = prev_article,
 		n = next_unread,
 		N = prev_unread,
-		P = prev_unread,
+		p = prev_unread,
 		R = reload,
 		t = show_tags,
 	},
