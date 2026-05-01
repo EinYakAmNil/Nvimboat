@@ -6,39 +6,51 @@ import (
 	"github.com/neovim/go-client/nvim"
 )
 
-type NvimboatAction func(*nvim.Nvim, ...string) error
+type NvimboatAction func(*Nvimboat, *nvim.Nvim, ...string) error
 
 var actions = map[string]NvimboatAction{
-	"back":         Back,
-	"delete":       Delete,
-	"disable":      Disable,
-	"enable":       Enable,
-	"next-article": NextArticle,
-	"next-unread":  NextUnread,
-	"prev-article": PrevArticle,
-	"prev-unread":  PrevUnread,
-	"reload":       Reload,
-	"select":       Select,
-	"show-main":    ShowMain,
-	"show-tags":    ShowTags,
-	"toggle-read":  ToggleRead,
+	"back":         (*Nvimboat).Back,
+	"delete":       (*Nvimboat).Delete,
+	"disable":      (*Nvimboat).Disable,
+	"enable":       (*Nvimboat).Enable,
+	"next-article": (*Nvimboat).NextArticle,
+	"next-unread":  (*Nvimboat).NextUnread,
+	"prev-article": (*Nvimboat).PrevArticle,
+	"prev-unread":  (*Nvimboat).PrevUnread,
+	"reload":       (*Nvimboat).Reload,
+	"select":       (*Nvimboat).Select,
+	"show-main":    (*Nvimboat).ShowMain,
+	"show-tags":    (*Nvimboat).ShowTags,
+	"toggle-read":  (*Nvimboat).ToggleRead,
 }
 
-func HandleAction(nv *nvim.Nvim, args []string) (err error) {
+type (
+	Nvimboat struct {
+		ChanAsync chan Async
+	}
+	Async struct {
+		Function func(...any) error
+		Args     []any
+	}
+)
+
+func (nb *Nvimboat) HandleAction(nv *nvim.Nvim, args []string) (err error) {
 	if len(args) == 0 {
 		return fmt.Errorf("no arguments supplied")
 	}
-	action, ok := actions[args[0]]
-	if ok {
-		err = action(nv, args...)
-		if err != nil {
-			Log(err)
-		}
-		return
-	} else {
+	var (
+		action NvimboatAction
+		ok     bool
+	)
+	if action, ok = actions[args[0]]; !ok {
 		err = fmt.Errorf("'%s' is not implemented", args[0])
 		return
 	}
+	err = action(nb, nv, args...)
+	if err != nil {
+		Log(err)
+	}
+	return
 }
 
 func CompleteNvimboat(args *nvim.CommandCompletionArgs) (suggestions []string, err error) {

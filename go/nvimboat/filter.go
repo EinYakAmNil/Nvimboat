@@ -25,39 +25,28 @@ func (f *Filter) Select(dbh rssdb.DbHandle, id string) (p Page, err error) {
 		return
 	}
 	p = &Article{articleInfo}
-	idx, err := f.ChildIdx(p)
-	if err != nil {
-		err = errors.Join(err, errors.New("nvimboat/Filter.Select"))
-		return
-	}
-	type syncUnread struct {
-		mainPageRows []rssdb.QueryMainPageRow
-		feed         *Feed
-		err          error
-	}
-	syncChan := make(chan syncUnread)
-	go func() {
-		err = dbh.Queries.SetArticlesRead(dbh.Ctx, []string{id})
-		if err != nil {
-			syncChan <- syncUnread{nil, nil, err}
-			return
-		}
-		f.Articles[idx].Unread = 0
 
-		feedUrl := f.Articles[idx].Feedurl
-		feed, err := selectFeed(dbh, feedUrl)
-		if err != nil {
-			syncChan <- syncUnread{nil, nil, err}
+	Global.ChanAsync <- Async{
+		func(...any) (err error) {
+			idx, err := f.ChildIdx(p)
+			if err != nil {
+				err = errors.Join(err, errors.New("nvimboat/Filter.Select"))
+				return
+			}
+			err = dbh.Queries.SetArticlesRead(dbh.Ctx, []string{id})
+			if err != nil {
+				return
+			}
+			f.Articles[idx].Unread = 0
+
+			feedUrl := f.Articles[idx].Feedurl
+			feed, err := selectFeed(dbh, feedUrl)
+			if err != nil {
+				return
+			}
+			Feeds[feedUrl] = feed
 			return
-		}
-		Feeds[feedUrl] = feed
-		syncChan <- syncUnread{nil, feed, err}
-	}()
-	sync := <-syncChan
-	err = sync.err
-	if err != nil {
-		err = errors.Join(err, errors.New("nvimboat/Filter.Select"))
-		return
+		}, nil,
 	}
 	return
 }

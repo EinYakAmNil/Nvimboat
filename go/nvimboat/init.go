@@ -22,9 +22,12 @@ var (
 	NvWindow        *nvim.Window
 	Nvim            *nvim.Nvim
 	Pages           PageStack
+	Global          *Nvimboat
 )
 
-func initNvimboat(nv *nvim.Nvim) (err error) {
+func initNvimboat(nb *Nvimboat, nv *nvim.Nvim) (err error) {
+	Global = nb
+	// Global.ChanAsync = make(chan Async)
 	rawConfig := make(map[string]any)
 	rawFeeds := new([]map[string]any)
 	rawFilters := new([]map[string]any)

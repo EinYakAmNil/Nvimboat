@@ -320,7 +320,7 @@ func (mm *MainMenu) Delete(dbh rssdb.DbHandle, ids []string) (err error) {
 		err = errors.Join(err, errors.New("nvimboat/MainMenu.Delete"))
 		return
 	}
-	err = ShowMain(Nvim)
+	err = Global.ShowMain(Nvim)
 	if err != nil {
 		err = errors.Join(err, errors.New("nvimboat/MainMenu.Delete"))
 		return

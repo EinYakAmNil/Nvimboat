@@ -8,8 +8,8 @@ import (
 	"github.com/neovim/go-client/nvim"
 )
 
-func Enable(nv *nvim.Nvim, args ...string) (err error) {
-	err = initNvimboat(nv)
+func (nb *Nvimboat) Enable(nv *nvim.Nvim, args ...string) (err error) {
+	err = initNvimboat(nb, nv)
 	if err != nil {
 		err = errors.Join(err, fmt.Errorf("nvimboat/Enable"))
 		return
@@ -26,13 +26,13 @@ func Enable(nv *nvim.Nvim, args ...string) (err error) {
 		make(map[string]any),
 	)
 	if err != nil {
-		err = errors.Join(err, errors.New("nvimboat/Feed.NextUnread"))
+		err = errors.Join(err, errors.New("nvimboat/Enable"))
 		return
 	}
 	return
 }
 
-func Disable(nv *nvim.Nvim, args ...string) (err error) {
+func (nb *Nvimboat) Disable(nv *nvim.Nvim, args ...string) (err error) {
 	err = Nvim.ExecLua(luaDisable, new(any))
 	if err != nil {
 		err = errors.Join(err, fmt.Errorf("nvimboat/Disable"))
@@ -51,7 +51,7 @@ func Disable(nv *nvim.Nvim, args ...string) (err error) {
 	return
 }
 
-func Reload(nv *nvim.Nvim, args ...string) (err error) {
+func (nb *Nvimboat) Reload(nv *nvim.Nvim, args ...string) (err error) {
 	if len(args) < 1 {
 		err = fmt.Errorf("Reload: expected at least one argument")
 		return
@@ -73,7 +73,7 @@ func Reload(nv *nvim.Nvim, args ...string) (err error) {
 	return
 }
 
-func ShowMain(nv *nvim.Nvim, args ...string) (err error) {
+func (nb *Nvimboat) ShowMain(nv *nvim.Nvim, args ...string) (err error) {
 	mm := new(MainMenu)
 	dbh, err := rssdb.ConnectDb(DbPath)
 	if err != nil {
@@ -116,7 +116,7 @@ func ShowMain(nv *nvim.Nvim, args ...string) (err error) {
 	return
 }
 
-func Select(nv *nvim.Nvim, args ...string) (err error) {
+func (nb *Nvimboat) Select(nv *nvim.Nvim, args ...string) (err error) {
 	if len(args) < 2 {
 		err = fmt.Errorf(`not enough arguments. Given arguments:`)
 		for _, arg := range args {
@@ -148,7 +148,7 @@ func Select(nv *nvim.Nvim, args ...string) (err error) {
 	return
 }
 
-func ShowTags(nv *nvim.Nvim, args ...string) (err error) {
+func (nb *Nvimboat) ShowTags(nv *nvim.Nvim, args ...string) (err error) {
 	cursorPosition, err := nv.WindowCursor(*NvWindow)
 	if err != nil {
 		err = errors.Join(err, fmt.Errorf("nvimboat/ShowTags"))
@@ -177,7 +177,7 @@ func ShowTags(nv *nvim.Nvim, args ...string) (err error) {
 	return
 }
 
-func Back(nv *nvim.Nvim, args ...string) (err error) {
+func (nb *Nvimboat) Back(nv *nvim.Nvim, args ...string) (err error) {
 	switch Pages.Top().(type) {
 	case *MainMenu:
 		return nil
@@ -203,7 +203,7 @@ func Back(nv *nvim.Nvim, args ...string) (err error) {
 	}
 }
 
-func NextUnread(nv *nvim.Nvim, args ...string) (err error) {
+func (nb *Nvimboat) NextUnread(nv *nvim.Nvim, args ...string) (err error) {
 	dbh, err := rssdb.ConnectDb(DbPath)
 	if err != nil {
 		err = errors.Join(err, fmt.Errorf("nvimboat/NextUnread"))
@@ -217,7 +217,7 @@ func NextUnread(nv *nvim.Nvim, args ...string) (err error) {
 	return
 }
 
-func PrevUnread(nv *nvim.Nvim, args ...string) (err error) {
+func (nb *Nvimboat) PrevUnread(nv *nvim.Nvim, args ...string) (err error) {
 	dbh, err := rssdb.ConnectDb(DbPath)
 	if err != nil {
 		err = errors.Join(err, fmt.Errorf("nvimboat/PrevUnread"))
@@ -231,7 +231,7 @@ func PrevUnread(nv *nvim.Nvim, args ...string) (err error) {
 	return
 }
 
-func NextArticle(nv *nvim.Nvim, args ...string) (err error) {
+func (nb *Nvimboat) NextArticle(nv *nvim.Nvim, args ...string) (err error) {
 	switch p := Pages.Top().(type) {
 	case *Article:
 		var (
@@ -251,7 +251,7 @@ func NextArticle(nv *nvim.Nvim, args ...string) (err error) {
 				return
 			}
 			idx = (idx + 1) % len(f.Articles)
-			err = Select(nv, "", f.Articles[idx].Url)
+			err = nb.Select(nv, "", f.Articles[idx].Url)
 			if err != nil {
 				err = errors.Join(err, errors.New("nvimboat/NextArticle"))
 				return
@@ -263,7 +263,7 @@ func NextArticle(nv *nvim.Nvim, args ...string) (err error) {
 				return
 			}
 			idx = (idx + 1) % len(f.Articles)
-			err = Select(nv, "", f.Articles[idx].Url)
+			err = nb.Select(nv, "", f.Articles[idx].Url)
 			if err != nil {
 				err = errors.Join(err, errors.New("nvimboat/NextArticle"))
 				return
@@ -276,7 +276,7 @@ func NextArticle(nv *nvim.Nvim, args ...string) (err error) {
 	default:
 		Nvim.Echo([]nvim.TextChunk{{
 			Text: fmt.Sprintf(
-				`Only use this function for pages of type "Article" not "%T".`,
+				`Only use this func (nb *Nvimboat)tion for pages of type "Article" not "%T".`,
 				p,
 			),
 		}},
@@ -288,7 +288,7 @@ func NextArticle(nv *nvim.Nvim, args ...string) (err error) {
 	return
 }
 
-func PrevArticle(nv *nvim.Nvim, args ...string) (err error) {
+func (nb *Nvimboat) PrevArticle(nv *nvim.Nvim, args ...string) (err error) {
 	switch p := Pages.Top().(type) {
 	case *Article:
 		var (
@@ -311,7 +311,7 @@ func PrevArticle(nv *nvim.Nvim, args ...string) (err error) {
 			if idx < 0 {
 				idx = len(f.Articles) - 1
 			}
-			err = Select(nv, "", f.Articles[idx].Url)
+			err = nb.Select(nv, "", f.Articles[idx].Url)
 			if err != nil {
 				err = errors.Join(err, errors.New("nvimboat/PrevArticle"))
 				return
@@ -326,7 +326,7 @@ func PrevArticle(nv *nvim.Nvim, args ...string) (err error) {
 			if idx < 0 {
 				idx = len(f.Articles) - 1
 			}
-			err = Select(nv, "", f.Articles[idx].Url)
+			err = nb.Select(nv, "", f.Articles[idx].Url)
 			if err != nil {
 				err = errors.Join(err, errors.New("nvimboat/PrevArticle"))
 				return
@@ -339,7 +339,7 @@ func PrevArticle(nv *nvim.Nvim, args ...string) (err error) {
 	default:
 		Nvim.Echo([]nvim.TextChunk{{
 			Text: fmt.Sprintf(
-				`Only use this function for pages of type "Article" not "%T".`,
+				`Only use this func (nb *Nvimboat)tion for pages of type "Article" not "%T".`,
 				p,
 			),
 		}},
@@ -351,7 +351,7 @@ func PrevArticle(nv *nvim.Nvim, args ...string) (err error) {
 	return
 }
 
-func ToggleRead(nv *nvim.Nvim, args ...string) (err error) {
+func (nb *Nvimboat) ToggleRead(nv *nvim.Nvim, args ...string) (err error) {
 	if len(args) < 2 {
 		err = fmt.Errorf(`not enough arguments. Given arguments:`)
 		for _, arg := range args {
@@ -388,7 +388,7 @@ func ToggleRead(nv *nvim.Nvim, args ...string) (err error) {
 	return
 }
 
-func Delete(nv *nvim.Nvim, args ...string) (err error) {
+func (nb *Nvimboat) Delete(nv *nvim.Nvim, args ...string) (err error) {
 	if len(args) < 2 {
 		err = fmt.Errorf(`not enough arguments. Given arguments:`)
 		for _, arg := range args {
