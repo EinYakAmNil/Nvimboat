@@ -10,9 +10,11 @@ import (
 )
 
 type Feed struct {
-	rssdb.RssFeed
+	rssdb.GetFeedRow
 	Tags     map[string]bool
 	Articles []rssdb.GetFeedPageRow
+	// ArticleCount int64
+	// UnreadCount  int64
 }
 
 func (f *Feed) Select(dbh rssdb.DbHandle, id string) (p Page, err error) {
@@ -33,6 +35,16 @@ func (f *Feed) Select(dbh rssdb.DbHandle, id string) (p Page, err error) {
 		return
 	}
 	f.Articles[idx].Unread = 0
+	f.UnreadCount = 0
+	for _, a := range f.Articles {
+		if a.Unread == 1 {
+			f.UnreadCount++
+		} else if a.Unread > 1 || a.Unread < 0 {
+			err = fmt.Errorf(`Unexpected value for unread: %d`, a.Unread)
+			err = errors.Join(err, errors.New("nvimboat/Feed.Select"))
+			return
+		}
+	}
 	return
 }
 
@@ -124,41 +136,12 @@ func (f *Feed) Back() (cursor_x int, err error) {
 		err = errors.Join(err, errors.New("nvimboat/Feed.Back"))
 		return -1, err
 	}
-	switch pp := parentPage.(type) {
-	case *MainMenu:
-		// dbh, dbErr := rssdb.ConnectDb(DbPath)
-		// if dbErr != nil {
-		// 	dbErr = errors.Join(dbErr, errors.New("nvimboat/Feed.Back"))
-		// 	return -1, dbErr
-		// }
-		// pp.Feeds, err = dbh.Queries.QueryMainPage(dbh.Ctx)
-		// if err != nil {
-		// 	err = errors.Join(err, errors.New("nvimboat/Feed.Back"))
-		// 	return -1, err
-		// }
-		// err = updateFilters(dbh)
-		// if err != nil {
-		// 	err = errors.Join(err, errors.New("nvimboat/Feed.Back"))
-		// 	return -1, err
-		// }
-		cursor_x, err = pp.ChildIdx(f)
-		if err != nil {
-			err = errors.Join(err, errors.New("nvimboat/Feed.Back"))
-			return -1, err
-		}
-		return cursor_x + 1, nil
-	case *TagFeeds:
-		cursor_x, err = pp.ChildIdx(f)
-		if err != nil {
-			err = errors.Join(err, errors.New("nvimboat/Feed.Back"))
-			return
-		}
-		return cursor_x + 1, nil
-	default:
-		pageType := fmt.Sprintf("%T", parentPage)
-		err = fmt.Errorf("parent page type is unaccounted for: %s", pageType)
+	cursor_x, err = parentPage.ChildIdx(f)
+	if err != nil {
+		err = errors.Join(err, errors.New("nvimboat/Feed.Back"))
 		return -1, err
 	}
+	return cursor_x + 1, nil
 }
 
 // If any selected articles are unread, then they will be set to read.
@@ -180,7 +163,6 @@ checkAnyUnread:
 			err = errors.Join(err, errors.New("nvimboat/Feed.ToggleRead"))
 			return
 		}
-
 	} else {
 		err = dbh.Queries.SetArticlesUnread(dbh.Ctx, ids)
 		if err != nil {
@@ -188,16 +170,24 @@ checkAnyUnread:
 			return
 		}
 	}
-	f.Articles, err = dbh.Queries.GetFeedPage(dbh.Ctx, f.Rssurl)
+	feed, err := selectFeed(dbh, f.Rssurl)
 	if err != nil {
 		err = errors.Join(err, errors.New("nvimboat/Feed.ToggleRead"))
 		return
 	}
-	err = Pages.Show()
-	if err != nil {
-		err = errors.Join(err, errors.New("nvimboat/Feed.ToggleRead"))
-		return
-	}
+	*f = *feed
+	// Log(f.UnreadCount)
+	// f.Articles, err = dbh.Queries.GetFeedPage(dbh.Ctx, f.Rssurl)
+	// if err != nil {
+	// 	err = errors.Join(err, errors.New("nvimboat/Feed.ToggleRead"))
+	// 	return
+	// }
+	// f.UnreadCount = 0
+	// for _, a := range f.Articles {
+	// 	if a.Unread == 1 {
+	// 		f.UnreadCount++
+	// 	}
+	// }
 	return
 }
 

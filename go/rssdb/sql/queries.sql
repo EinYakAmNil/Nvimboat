@@ -1,6 +1,20 @@
 -- name: GetFeed :one
-SELECT * FROM rss_feed
-WHERE rssurl = ? LIMIT 1;
+SELECT 
+	rss_feed.*,
+	COALESCE(feed_stats.article_count, 0) AS article_count,
+	COALESCE(feed_stats.unread_count, 0) AS unread_count
+FROM rss_feed
+LEFT JOIN (
+	SELECT feedurl,
+		CAST(SUM(unread) AS INTEGER) AS unread_count,
+		COUNT(*) AS article_count
+	FROM rss_item
+	WHERE deleted = 0
+	GROUP BY feedurl
+) feed_stats
+ON rss_feed.rssurl = feed_stats.feedurl
+WHERE rss_feed.rssurl = ?
+ORDER BY rss_feed.title;
 
 -- name: CreateFeed :one
 INSERT INTO rss_feed (

@@ -10,7 +10,6 @@ import (
 )
 
 type MainMenu struct {
-	Feeds []rssdb.QueryMainPageRow
 }
 
 // If the id is a URL then Select() assumes, that a feed is being searched.
@@ -23,6 +22,12 @@ func (mm *MainMenu) Select(dbh rssdb.DbHandle, id string) (p Page, err error) {
 			err = errors.Join(err, errors.New("in nvimboat/MainMenu.Select"))
 			return
 		}
+		if f, ok := p.(*Feed); ok {
+			Feeds[id] = f
+			return
+		}
+		err = fmt.Errorf(`"%s" not of type %T: %T`, id, new(Feed), p)
+		err = errors.Join(err, errors.New("nvimboat/MainMenu.Select"))
 		return
 	}
 	for _, filter := range FilterConfig {
@@ -56,7 +61,7 @@ func (mm *MainMenu) Render(nv *nvim.Nvim, buf nvim.Buffer) (err error) {
 		urlCol = append(urlCol, f.FilterDescription)
 		unreadCount = 0
 	}
-	for _, f := range mm.Feeds {
+	for _, f := range sortFeeds(Feeds) {
 		unreadArticlesRatio = append(unreadArticlesRatio, makeUnreadRatio(f.UnreadCount, f.ArticleCount))
 		titleCol = append(titleCol, f.Title)
 		urlCol = append(urlCol, f.Rssurl)
@@ -72,14 +77,15 @@ func (mm *MainMenu) Render(nv *nvim.Nvim, buf nvim.Buffer) (err error) {
 }
 
 func (mm *MainMenu) ChildIdx(p Page) (idx int, err error) {
+	feedCount := len(Feeds)
 	switch f := p.(type) {
 	case *Feed:
 		childTitle := f.Title
 		var (
-			section     = len(mm.Feeds) / 2
-			searchRange = mm.Feeds
+			section     = feedCount / 2
+			searchRange = sortFeeds(Feeds)
 		)
-		for range len(mm.Feeds) {
+		for range feedCount {
 			if childTitle > searchRange[section].Title {
 				idx += section
 				searchRange = searchRange[section:]
@@ -94,7 +100,7 @@ func (mm *MainMenu) ChildIdx(p Page) (idx int, err error) {
 		err = fmt.Errorf(
 			`Max iterations. "%s" not found in %v`,
 			childTitle,
-			prettyStruct(mm.Feeds),
+			prettyStruct(sortFeeds(Feeds)),
 		)
 		err = errors.Join(err, errors.New("nvimboat/MainMenu.ChildIdx"))
 		return
@@ -118,7 +124,7 @@ func (mm *MainMenu) ToggleRead(dbh rssdb.DbHandle, ids []string) (err error) {
 	}
 	setFeedsRead := false
 checkAnyUnread:
-	for _, f := range mm.Feeds {
+	for _, f := range sortFeeds(Feeds) {
 		for _, id := range ids {
 			if f.Rssurl == id && f.UnreadCount > 0 {
 				setFeedsRead = true
@@ -139,15 +145,16 @@ checkAnyUnread:
 			return
 		}
 	}
-	mm.Feeds, err = dbh.Queries.QueryMainPage(dbh.Ctx)
+	mainPageFeeds, err := dbh.Queries.QueryMainPage(dbh.Ctx)
 	if err != nil {
 		err = errors.Join(err, errors.New("nvimboat/MainMenu.ToggleRead"))
 		return
 	}
-	err = Pages.Show()
-	if err != nil {
-		err = errors.Join(err, errors.New("nvimboat/MainMenu.ToggleRead"))
-		return
+	for _, mpf := range mainPageFeeds {
+		Feeds[mpf.Rssurl].Title = mpf.Title
+		Feeds[mpf.Rssurl].Rssurl = mpf.Rssurl
+		Feeds[mpf.Rssurl].ArticleCount = mpf.ArticleCount
+		Feeds[mpf.Rssurl].UnreadCount = mpf.UnreadCount
 	}
 	return
 }
@@ -163,7 +170,7 @@ func (mm *MainMenu) NextUnread(dbh rssdb.DbHandle) (err error) {
 	for _, f := range FilterConfig {
 		rows = append(rows, f)
 	}
-	for _, f := range mm.Feeds {
+	for _, f := range sortFeeds(Feeds) {
 		rows = append(rows, f)
 	}
 	if len(rows) < cursorRow {
@@ -193,7 +200,7 @@ func (mm *MainMenu) NextUnread(dbh rssdb.DbHandle) (err error) {
 					return
 				}
 			}
-		case rssdb.QueryMainPageRow:
+		case *Feed:
 			if f.UnreadCount > 0 {
 				err = setCursorUnread(
 					(i+cursorRow)%len(rows)+1,
@@ -229,7 +236,7 @@ func (mm *MainMenu) NextUnread(dbh rssdb.DbHandle) (err error) {
 func (mm *MainMenu) PrevUnread(dbh rssdb.DbHandle) (err error) {
 	cursorPosition, err := Nvim.WindowCursor(*NvWindow)
 	if err != nil {
-		err = errors.Join(err, errors.New("nvimboat/MainMenu.NextUnread"))
+		err = errors.Join(err, errors.New("nvimboat/MainMenu.PrevUnread"))
 		return
 	}
 	cursorRow := cursorPosition[0] - 1
@@ -237,7 +244,7 @@ func (mm *MainMenu) PrevUnread(dbh rssdb.DbHandle) (err error) {
 	for _, f := range FilterConfig {
 		rows = append(rows, f)
 	}
-	for _, f := range mm.Feeds {
+	for _, f := range sortFeeds(Feeds) {
 		rows = append(rows, f)
 	}
 	if len(rows) < cursorRow {
@@ -246,7 +253,7 @@ func (mm *MainMenu) PrevUnread(dbh rssdb.DbHandle) (err error) {
 			cursorRow,
 			len(rows),
 		)
-		err = errors.Join(err, errors.New("nvimboat/MainMenu.NextUnread"))
+		err = errors.Join(err, errors.New("nvimboat/MainMenu.PrevUnread"))
 		return
 	}
 	for i, r := range slices.Backward(
@@ -262,13 +269,13 @@ func (mm *MainMenu) PrevUnread(dbh rssdb.DbHandle) (err error) {
 						f,
 					)
 					if err != nil {
-						err = errors.Join(err, errors.New("nvimboat/MainMenu.NextUnread"))
+						err = errors.Join(err, errors.New("nvimboat/MainMenu.PrevUnread"))
 						return
 					}
 					return
 				}
 			}
-		case rssdb.QueryMainPageRow:
+		case *Feed:
 			if f.UnreadCount > 0 {
 				err = setCursorUnread(
 					(i+cursorRow)%len(rows)+1,
@@ -277,14 +284,14 @@ func (mm *MainMenu) PrevUnread(dbh rssdb.DbHandle) (err error) {
 					f,
 				)
 				if err != nil {
-					err = errors.Join(err, errors.New("nvimboat/MainMenu.NextUnread"))
+					err = errors.Join(err, errors.New("nvimboat/MainMenu.PrevUnread"))
 					return
 				}
 				return
 			}
 		default:
 			err = fmt.Errorf(`Unknown row type "%T" during search for %+v`, f, f)
-			err = errors.Join(err, errors.New("nvimboat/MainMenu.NextUnread"))
+			err = errors.Join(err, errors.New("nvimboat/MainMenu.PrevUnread"))
 			return
 		}
 	}
@@ -295,7 +302,7 @@ func (mm *MainMenu) PrevUnread(dbh rssdb.DbHandle) (err error) {
 		make(map[string]any),
 	)
 	if err != nil {
-		err = errors.Join(err, errors.New("nvimboat/MainMenu.NextUnread"))
+		err = errors.Join(err, errors.New("nvimboat/MainMenu.PrevUnread"))
 		return
 	}
 	return

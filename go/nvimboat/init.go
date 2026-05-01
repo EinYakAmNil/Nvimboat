@@ -12,9 +12,8 @@ var (
 	CachePath       string
 	CacheTime       time.Duration
 	DbPath          string
-	FeedConfig      map[string]map[string]bool
 	TagConfig       map[string][]string
-	Feeds           []*Feed
+	Feeds           map[string]*Feed
 	FilterConfig    []*Filter
 	LinkHandler     string
 	LogPath         string
@@ -54,16 +53,10 @@ func initNvimboat(nv *nvim.Nvim) (err error) {
 		err = errors.Join(err, errors.New("nvimboat/initNvimboat"))
 		return
 	}
-	FeedConfig, TagConfig, err = parseFeeds(*rawFeeds)
+	Feeds, TagConfig, err = parseFeeds(*rawFeeds)
 	if err != nil {
 		err = errors.Join(err, errors.New("nvimboat/initNvimboat"))
 		return
-	}
-	for feedurl, tags := range FeedConfig {
-		f := new(Feed)
-		f.Rssurl = feedurl
-		f.Tags = tags
-		Feeds = append(Feeds, f)
 	}
 	for _, rawFilter := range *rawFilters {
 		filter := new(Filter)

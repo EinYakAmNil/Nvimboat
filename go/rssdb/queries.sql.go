@@ -164,13 +164,38 @@ func (q *Queries) GetArticle(ctx context.Context, url string) (GetArticleRow, er
 }
 
 const getFeed = `-- name: GetFeed :one
-SELECT rssurl, url, title, lastmodified, is_rtl, etag FROM rss_feed
-WHERE rssurl = ? LIMIT 1
+SELECT 
+	rss_feed.rssurl, rss_feed.url, rss_feed.title, rss_feed.lastmodified, rss_feed.is_rtl, rss_feed.etag,
+	COALESCE(feed_stats.article_count, 0) AS article_count,
+	COALESCE(feed_stats.unread_count, 0) AS unread_count
+FROM rss_feed
+LEFT JOIN (
+	SELECT feedurl,
+		CAST(SUM(unread) AS INTEGER) AS unread_count,
+		COUNT(*) AS article_count
+	FROM rss_item
+	WHERE deleted = 0
+	GROUP BY feedurl
+) feed_stats
+ON rss_feed.rssurl = feed_stats.feedurl
+WHERE rss_feed.rssurl = ?
+ORDER BY rss_feed.title
 `
 
-func (q *Queries) GetFeed(ctx context.Context, rssurl string) (RssFeed, error) {
+type GetFeedRow struct {
+	Rssurl       string
+	Url          string
+	Title        string
+	Lastmodified int
+	IsRtl        int
+	Etag         string
+	ArticleCount int64
+	UnreadCount  int64
+}
+
+func (q *Queries) GetFeed(ctx context.Context, rssurl string) (GetFeedRow, error) {
 	row := q.db.QueryRowContext(ctx, getFeed, rssurl)
-	var i RssFeed
+	var i GetFeedRow
 	err := row.Scan(
 		&i.Rssurl,
 		&i.Url,
@@ -178,6 +203,8 @@ func (q *Queries) GetFeed(ctx context.Context, rssurl string) (RssFeed, error) {
 		&i.Lastmodified,
 		&i.IsRtl,
 		&i.Etag,
+		&i.ArticleCount,
+		&i.UnreadCount,
 	)
 	return i, err
 }

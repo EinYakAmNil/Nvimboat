@@ -14,16 +14,16 @@ func TestFilterQuery(t *testing.T) {
 	}
 	feeds := []Feed{{ // should be included in filter
 		Tags:    map[string]bool{"tag1": true},
-		RssFeed: rssdb.RssFeed{Rssurl: "https://example0.com/rss"},
+		GetFeedRow: rssdb.GetFeedRow{Rssurl: "https://example0.com/rss"},
 	}, { // should be included in filter
 		Tags:    map[string]bool{"tag2": true},
-		RssFeed: rssdb.RssFeed{Rssurl: "https://example1.com/rss"},
+		GetFeedRow: rssdb.GetFeedRow{Rssurl: "https://example1.com/rss"},
 	}, { // should not be included in filter
 		Tags:    map[string]bool{"tag3": true},
-		RssFeed: rssdb.RssFeed{Rssurl: "https://example2.com/rss"},
+		GetFeedRow: rssdb.GetFeedRow{Rssurl: "https://example2.com/rss"},
 	}, { // should not be included in filter
 		Tags:    map[string]bool{"tag1": true, "tag4": true},
-		RssFeed: rssdb.RssFeed{Rssurl: "https://example3.com/rss"},
+		GetFeedRow: rssdb.GetFeedRow{Rssurl: "https://example3.com/rss"},
 	}}
 	urls := []string{}
 filterFeed:
@@ -51,22 +51,22 @@ filterFeed:
 }
 
 func TestMainMenuChildIdx(t *testing.T) {
-	mm := MainMenu{
-		Feeds: []rssdb.QueryMainPageRow{
-			{Title: "Abc"},
-			{Title: "Abd"},
-			{Title: "Bbc"},
-			{Title: "abc"},
-			{Title: "bbc"},
-		},
+	mm := new(MainMenu)
+	Feeds = map[string]*Feed{
+		"Abc": {GetFeedRow: rssdb.GetFeedRow{Title: "Abc"}},
+		"Abd": {GetFeedRow: rssdb.GetFeedRow{Title: "Abd"}},
+		"Bbc": {GetFeedRow: rssdb.GetFeedRow{Title: "Bbc"}},
+		"abc": {GetFeedRow: rssdb.GetFeedRow{Title: "abc"}},
+		"bbc": {GetFeedRow: rssdb.GetFeedRow{Title: "bbc"}},
 	}
-	for i, f := range mm.Feeds {
-		idx, err := mm.ChildIdx(&Feed{RssFeed: rssdb.RssFeed{Title: f.Title}})
+	feeds := sortFeeds(Feeds)
+	for _, f := range feeds {
+		idx, err := mm.ChildIdx(&Feed{GetFeedRow: rssdb.GetFeedRow{Title: f.Title}})
 		if err != nil {
 			t.Fatal(err)
 		}
-		if mm.Feeds[i].Title != mm.Feeds[idx-len(FilterConfig)].Title {
-			t.Fatal("expected:", mm.Feeds[i], "got:", mm.Feeds[idx-len(FilterConfig)])
+		if f.Title != feeds[idx-len(FilterConfig)].Title {
+			t.Fatal("expected:", f, "got:", feeds[idx-len(FilterConfig)])
 		}
 	}
 }

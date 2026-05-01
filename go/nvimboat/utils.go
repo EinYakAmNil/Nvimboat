@@ -17,6 +17,16 @@ import (
 	"github.com/neovim/go-client/nvim"
 )
 
+func sortFeeds(feedMap map[string]*Feed) (feeds []*Feed) {
+	for _, f := range feedMap {
+		feeds = append(feeds, f)
+	}
+	sort.Slice(feeds, func(i, j int) bool {
+		return feeds[i].Title < feeds[j].Title
+	})
+	return
+}
+
 func setCursorUnread(row, col, maxRows int, matched any) (err error) {
 	newCursorPosition := [2]int{
 		row,
@@ -132,10 +142,10 @@ func parseFilter(rawFilter map[string]any) (filter Filter, err error) {
 	excludedFeeds := make(map[string]bool)
 
 	if len(filter.IncludeTags) == 0 {
-		for f, tags := range FeedConfig {
-			includeFeeds[f] = true
-			if len(setIntersection(tags, filter.ExcludeTags)) > 0 {
-				excludedFeeds[f] = true
+		for rssUrl, feed := range Feeds {
+			includeFeeds[rssUrl] = true
+			if len(setIntersection(feed.Tags, filter.ExcludeTags)) > 0 {
+				excludedFeeds[rssUrl] = true
 			}
 		}
 		for f := range setDifference(includeFeeds, excludedFeeds) {
@@ -144,20 +154,17 @@ func parseFilter(rawFilter map[string]any) (filter Filter, err error) {
 		return
 	}
 
-filterFeeds:
-	for f, tags := range FeedConfig {
-		if len(setIntersection(tags, filter.IncludeTags)) > 0 {
-			includeFeeds[f] = true
-			continue filterFeeds
+	for rssUrl, feed := range Feeds {
+		if len(setIntersection(feed.Tags, filter.IncludeTags)) > 0 {
+			includeFeeds[rssUrl] = true
 		}
-		if len(setIntersection(tags, filter.ExcludeTags)) > 0 {
-			excludedFeeds[f] = true
+		if len(setIntersection(feed.Tags, filter.ExcludeTags)) > 0 {
+			excludedFeeds[rssUrl] = true
 		}
 	}
 	for f := range setDifference(includeFeeds, excludedFeeds) {
 		filter.Feedurls = append(filter.Feedurls, f)
 	}
-
 	return
 }
 
@@ -199,12 +206,11 @@ func selectFeed(dbh rssdb.DbHandle, feedurl string) (feed *Feed, err error) {
 		err = errors.Join(err, errors.New("nvimboat/selectFeed"))
 		return
 	}
-	feedInfo, err := dbh.Queries.GetFeed(dbh.Ctx, feedurl)
+	feed.GetFeedRow, err = dbh.Queries.GetFeed(dbh.Ctx, feedurl)
 	if err != nil {
 		err = errors.Join(err, errors.New("nvimboat/selectFeed"))
 		return
 	}
-	feed.RssFeed = feedInfo
 	return
 }
 

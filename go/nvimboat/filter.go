@@ -24,29 +24,40 @@ func (f *Filter) Select(dbh rssdb.DbHandle, id string) (p Page, err error) {
 		err = errors.Join(err, errors.New("nvimboat/Filter.Select"))
 		return
 	}
-	err = dbh.Queries.SetArticlesRead(dbh.Ctx, []string{id})
-	if err != nil {
-		err = errors.Join(err, errors.New("nvimboat/Filter.Select"))
-		return
-	}
 	p = &Article{articleInfo}
 	idx, err := f.ChildIdx(p)
 	if err != nil {
 		err = errors.Join(err, errors.New("nvimboat/Filter.Select"))
 		return
 	}
-	f.Articles[idx].Unread = 0
-	feed := Feeds[f.Articles[idx].Feedurl]
-	feed.UnreadCount = 0
-	for _, a := range feed.Articles {
-		Log(a.Unread)
-		if a.Unread == 1 {
-			feed.UnreadCount++
-		} else if a.Unread > 1 || a.Unread < 0 {
-			err = fmt.Errorf(`Unexpected value for unread: %d`, a.Unread)
-			err = errors.Join(err, errors.New("nvimboat/Filter.Select"))
+	type syncUnread struct {
+		mainPageRows []rssdb.QueryMainPageRow
+		feed         *Feed
+		err          error
+	}
+	syncChan := make(chan syncUnread)
+	go func() {
+		err = dbh.Queries.SetArticlesRead(dbh.Ctx, []string{id})
+		if err != nil {
+			syncChan <- syncUnread{nil, nil, err}
 			return
 		}
+		f.Articles[idx].Unread = 0
+
+		feedUrl := f.Articles[idx].Feedurl
+		feed, err := selectFeed(dbh, feedUrl)
+		if err != nil {
+			syncChan <- syncUnread{nil, nil, err}
+			return
+		}
+		Feeds[feedUrl] = feed
+		syncChan <- syncUnread{nil, feed, err}
+	}()
+	sync := <-syncChan
+	err = sync.err
+	if err != nil {
+		err = errors.Join(err, errors.New("nvimboat/Filter.Select"))
+		return
 	}
 	return
 }

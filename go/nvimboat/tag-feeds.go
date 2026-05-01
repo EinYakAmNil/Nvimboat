@@ -33,6 +33,12 @@ func (tf *TagFeeds) Select(dbh rssdb.DbHandle, id string) (p Page, err error) {
 		err = errors.Join(err, errors.New("nvimboat/TagFeeds.Select"))
 		return
 	}
+	if f, ok := p.(*Feed); ok {
+		Feeds[id] = f
+		return
+	}
+	err = fmt.Errorf(`"%s" not of type %T: %T`, id, new(Feed), p)
+	err = errors.Join(err, errors.New("nvimboat/TagFeeds.Select"))
 	return
 }
 

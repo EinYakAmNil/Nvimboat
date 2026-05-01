@@ -56,14 +56,13 @@ func parseConfig(rawConfig map[string]any) (err error) {
 	return
 }
 
-func parseFeeds(rawFeeds []map[string]any) (feedConfig map[string]map[string]bool, tagConfig map[string][]string, err error) {
+func parseFeeds(rawFeeds []map[string]any) (feedConfig map[string]*Feed, tagConfig map[string][]string, err error) {
 	var (
-		rssurl                   string
+		rssurl, t                string
 		tagSlice                 []any
-		tag                      string
 		okUrl, okTagSlice, okTag bool
 	)
-	feedConfig = make(map[string]map[string]bool)
+	feedConfig = make(map[string]*Feed)
 	tagConfig = make(map[string][]string)
 	for _, feed := range rawFeeds {
 		if rssurl, okUrl = feed["rssurl"].(string); !okUrl {
@@ -74,14 +73,18 @@ func parseFeeds(rawFeeds []map[string]any) (feedConfig map[string]map[string]boo
 			err = fmt.Errorf(`nvimboat/parseFeeds: tag "%v" is not of type []any`, feed["tags"])
 			return
 		}
-		feedConfig[rssurl] = make(map[string]bool)
-		for _, t := range tagSlice {
-			if tag, okTag = t.(string); !okTag {
-				err = fmt.Errorf(`nvimboat/parseFeeds: tag "%v" is not of type string`, t)
+		feedConfig[rssurl] = new(Feed)
+		for _, tag := range tagSlice {
+			if t, okTag = tag.(string); !okTag {
+				err = fmt.Errorf(`nvimboat/parseFeeds: tag "%v" is not of type string`, tag)
 				return
 			}
-			feedConfig[rssurl][tag] = true
-			tagConfig[tag] = append(tagConfig[tag], rssurl)
+			if feedConfig[rssurl].Tags == nil {
+				feedConfig[rssurl].Tags = make(map[string]bool)
+			}
+			feedConfig[rssurl].Tags[t] = true
+			feedConfig[rssurl].Rssurl = rssurl
+			tagConfig[t] = append(tagConfig[t], rssurl)
 		}
 	}
 	return

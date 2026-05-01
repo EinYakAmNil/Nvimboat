@@ -59,7 +59,7 @@ func Reload(nv *nvim.Nvim, args ...string) (err error) {
 	// reload all feeds if no arguments are given to the subcommand
 	var feedUrls []string
 	if len(args) == 1 {
-		for feedUrl := range FeedConfig {
+		for feedUrl := range Feeds {
 			feedUrls = append(feedUrls, feedUrl)
 		}
 	} else {
@@ -86,7 +86,12 @@ func ShowMain(nv *nvim.Nvim, args ...string) (err error) {
 		return
 	}
 	for _, feed := range mainPageFeeds {
-		mm.Feeds = append(mm.Feeds, feed)
+		if _, ok := Feeds[feed.Rssurl]; !ok {
+			continue
+		}
+		Feeds[feed.Rssurl].Title = feed.Title
+		Feeds[feed.Rssurl].ArticleCount = feed.ArticleCount
+		Feeds[feed.Rssurl].UnreadCount= feed.UnreadCount
 	}
 	err = updateFilters(dbh)
 	if err != nil {
@@ -159,7 +164,6 @@ func ShowTags(nv *nvim.Nvim, args ...string) (err error) {
 	}
 	p := new(TagsOverview)
 	p.PrevCursorPosition = cursorPosition
-	p.TagConfig = TagConfig
 	err = Pages.Push(p, "Tags")
 	if err != nil {
 		err = errors.Join(err, fmt.Errorf("nvimboat/ShowTags"))
@@ -356,6 +360,11 @@ func ToggleRead(nv *nvim.Nvim, args ...string) (err error) {
 		err = errors.Join(err, errors.New("nvimboat/ToggleRead"))
 		return
 	}
+	cursorPosition, err := Nvim.WindowCursor(*NvWindow)
+	if err != nil {
+		err = errors.Join(err, errors.New("nvimboat/ToggleRead"))
+		return
+	}
 	dbh, err := rssdb.ConnectDb(DbPath)
 	if err != nil {
 		err = fmt.Errorf("nvimboat/Nvimboat.ToggleRead: %w\n", err)
@@ -364,6 +373,16 @@ func ToggleRead(nv *nvim.Nvim, args ...string) (err error) {
 	err = Pages.Top().ToggleRead(dbh, args[1:])
 	if err != nil {
 		err = fmt.Errorf("nvimboat/Nvimboat.ToggleRead: %w\n", err)
+		return
+	}
+	err = Pages.Show()
+	if err != nil {
+		err = errors.Join(err, errors.New("nvimboat/ToggleRead"))
+		return
+	}
+	err = Nvim.SetWindowCursor(*NvWindow, cursorPosition)
+	if err != nil {
+		err = errors.Join(err, errors.New("nvimboat/ToggleRead"))
 		return
 	}
 	return
