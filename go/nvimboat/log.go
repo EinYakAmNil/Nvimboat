@@ -36,7 +36,7 @@ func Log(val ...any) {
 	log.Println(msg)
 	if Nvim != nil {
 		Nvim.Echo([]nvim.TextChunk{{
-			Text: msg,
+			Text: msg[:len(msg)-1],
 		}},
 			true,
 			make(map[string]any),
