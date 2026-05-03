@@ -115,14 +115,14 @@ func (sr *StandardReloader) GetRss(
 		}
 	}
 	feedParsed, err := parser.ParseFeed(content, url)
+	if err != nil {
+		err = errors.Join(err, errors.New("reload/StandardReloader.GetRss"))
+		return nil, nil, true, err
+	}
 	feed = &rssdb.RssFeed{
 		Rssurl: feedParsed.Rssurl,
 		Url:    feedParsed.Url,
 		Title:  feedParsed.Title,
-	}
-	if err != nil {
-		err = errors.Join(err, errors.New("reload/StandardReloader.GetRss"))
-		return nil, nil, true, err
 	}
 	items = make(map[string]*rssdb.RssItem)
 	var author string

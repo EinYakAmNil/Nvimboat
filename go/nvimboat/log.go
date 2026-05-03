@@ -7,8 +7,7 @@ import (
 	"log"
 	"os"
 	"reflect"
-
-	"github.com/neovim/go-client/nvim"
+	"strings"
 )
 
 func SetupLogging(logPath string) (err error) {
@@ -34,12 +33,11 @@ func Log(val ...any) {
 		}
 	}
 	log.Println(msg)
-	if Nvim != nil {
-		Nvim.Echo([]nvim.TextChunk{{
-			Text: msg[:len(msg)-1],
-		}},
-			true,
-			make(map[string]any),
-		)
+	if Nvim == nil {
+		return
 	}
+	if i := strings.IndexByte(msg, '\n'); i >= 0 {
+		msg = msg[:i+1]
+	}
+	Nvim.WriteOut(msg)
 }

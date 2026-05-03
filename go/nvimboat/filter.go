@@ -157,11 +157,32 @@ checkAnyUnread:
 		}
 	}
 	if setArticlesRead {
-		err = dbh.Queries.SetArticlesRead(dbh.Ctx, ids)
-		if err != nil {
-			err = errors.Join(err, errors.New("nvimboat/Filter.ToggleRead"))
-			return
-		}
+		Global.ChanAsync <- Async{func(...any) error {
+			err = dbh.Queries.SetArticlesRead(dbh.Ctx, ids)
+			if err != nil {
+				err = errors.Join(err, errors.New("nvimboat/Filter.ToggleRead"))
+				return err
+			}
+			feedUrls := make(map[string]bool)
+		idLoop:
+			for _, url := range ids {
+				for _, a := range f.Articles {
+					if url == a.Url {
+						feedUrls[a.Feedurl] = true
+						continue idLoop
+					}
+				}
+			}
+			for url := range feedUrls {
+				feed, err := selectFeed(dbh, url)
+				if err != nil {
+					err = errors.Join(err, errors.New("nvimboat/Filter.ToggleRead"))
+					return err
+				}
+				Feeds[url] = feed
+			}
+			return nil
+		}, nil}
 	outer1:
 		for i, a := range f.Articles {
 			for _, id := range ids {
@@ -172,11 +193,32 @@ checkAnyUnread:
 			}
 		}
 	} else {
-		err = dbh.Queries.SetArticlesUnread(dbh.Ctx, ids)
-		if err != nil {
-			err = errors.Join(err, errors.New("nvimboat/Filter.ToggleRead"))
-			return
-		}
+		Global.ChanAsync <- Async{func(...any) error {
+			err = dbh.Queries.SetArticlesUnread(dbh.Ctx, ids)
+			if err != nil {
+				err = errors.Join(err, errors.New("nvimboat/Filter.ToggleRead"))
+				return err
+			}
+			feedUrls := make(map[string]bool)
+		idLoop:
+			for _, url := range ids {
+				for _, a := range f.Articles {
+					if url == a.Url {
+						feedUrls[a.Feedurl] = true
+						continue idLoop
+					}
+				}
+			}
+			for url := range feedUrls {
+				feed, err := selectFeed(dbh, url)
+				if err != nil {
+					err = errors.Join(err, errors.New("nvimboat/Filter.ToggleRead"))
+					return err
+				}
+				Feeds[url] = feed
+			}
+			return nil
+		}, nil}
 	outer2:
 		for i, a := range f.Articles {
 			for _, id := range ids {

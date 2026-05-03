@@ -1,8 +1,8 @@
 package main
 
 import (
-	"fmt"
 	"errors"
+	"fmt"
 
 	"github.com/EinYakAmNil/Nvimboat/go/engine/nvimboat"
 	nvimPlugin "github.com/neovim/go-client/nvim/plugin"
@@ -35,8 +35,15 @@ func execAsync(nb *nvimboat.Nvimboat) (err error) {
 		err = errors.Join(err, errors.New("main/execAsync"))
 		return
 	}
+
+	maxWorkers := make(chan struct{}, 4)
+
 	for task := range nb.ChanAsync {
-		task.Function(task.Args...)
+		maxWorkers <- struct{}{}
+		go func(t nvimboat.Async) {
+			defer func() { <-maxWorkers }()
+			task.Function(task.Args...)
+		}(task)
 	}
 	return
 }

@@ -100,6 +100,22 @@ func (a *Article) ToggleRead(dbh rssdb.DbHandle, ids []string) (err error) {
 		err = errors.Join(err, errors.New("nvimboat/Article.ToggleRead"))
 		return
 	}
+	Global.ChanAsync <- Async{
+		func(args ...any) (err error) {
+			err = updateFilters(dbh)
+			if err != nil {
+				err = errors.Join(err, errors.New("nvimboat/Article.ToggleRead"))
+				return
+			}
+			feed, err := selectFeed(dbh, a.Feedurl)
+			if err != nil {
+				err = errors.Join(err, errors.New("nvimboat/Article.ToggleRead"))
+				return
+			}
+			Feeds[a.Feedurl] = feed
+			return
+		}, nil,
+	}
 	return
 }
 

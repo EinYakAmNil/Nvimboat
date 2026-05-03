@@ -65,11 +65,14 @@ func (nb *Nvimboat) Reload(nv *nvim.Nvim, args ...string) (err error) {
 	} else {
 		feedUrls = args[1:]
 	}
-	err = ReloadFeeds(feedUrls)
-	if err != nil {
-		err = errors.Join(err, fmt.Errorf("nvimboat/Reload"))
+	Global.ChanAsync <- Async{func(a ...any) (err error) {
+		err = ReloadFeeds(feedUrls)
+		if err != nil {
+			err = errors.Join(err, fmt.Errorf("nvimboat/Reload"))
+			return
+		}
 		return
-	}
+	}, nil}
 	return
 }
 
@@ -91,7 +94,7 @@ func (nb *Nvimboat) ShowMain(nv *nvim.Nvim, args ...string) (err error) {
 		}
 		Feeds[feed.Rssurl].Title = feed.Title
 		Feeds[feed.Rssurl].ArticleCount = feed.ArticleCount
-		Feeds[feed.Rssurl].UnreadCount= feed.UnreadCount
+		Feeds[feed.Rssurl].UnreadCount = feed.UnreadCount
 	}
 	err = updateFilters(dbh)
 	if err != nil {

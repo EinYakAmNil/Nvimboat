@@ -34,22 +34,24 @@ reloadFeed:
 		if !knownFeeds[feedUrl] {
 			addFeed = true
 		}
+	matchCustomReloader:
 		for urlPattern, reloader := range CustomReload {
 			ok, err := regexp.MatchString(urlPattern, feedUrl)
 			if err != nil {
 				return errors.Join(err, errors.New("nvimboat/ReloadFeeds"))
 			}
-			if ok {
-				newFeed, reloadErr = reloader.UpdateFeed(dbh, feedUrl, CacheTime, CachePath, addFeed)
-				if reloadErr != nil {
-					Log(reloadErr)
-				}
-				if addFeed {
-					Log("Added feed:", newFeed.Url)
-				}
-				addFeed = false
-				continue reloadFeed
+			if !ok {
+				continue matchCustomReloader
 			}
+			newFeed, reloadErr = reloader.UpdateFeed(dbh, feedUrl, CacheTime, CachePath, addFeed)
+			if reloadErr != nil {
+				Log(reloadErr)
+			}
+			if addFeed {
+				Log("Added feed:", newFeed.Url)
+			}
+			addFeed = false
+			continue reloadFeed
 		}
 		newFeed, reloadErr = standardReloader.UpdateFeed(dbh, feedUrl, CacheTime, CachePath, addFeed)
 		if reloadErr != nil {

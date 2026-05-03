@@ -45,6 +45,14 @@ func (f *Feed) Select(dbh rssdb.DbHandle, id string) (p Page, err error) {
 			return
 		}
 	}
+	Global.ChanAsync <- Async{func(...any) (err error) {
+		err = updateFilters(dbh)
+		if err != nil {
+			err = errors.Join(err, errors.New("nvimboat/Feed.ToggleRead"))
+			return
+		}
+		return
+	}, nil}
 	return
 }
 
@@ -176,18 +184,14 @@ checkAnyUnread:
 		return
 	}
 	*f = *feed
-	// Log(f.UnreadCount)
-	// f.Articles, err = dbh.Queries.GetFeedPage(dbh.Ctx, f.Rssurl)
-	// if err != nil {
-	// 	err = errors.Join(err, errors.New("nvimboat/Feed.ToggleRead"))
-	// 	return
-	// }
-	// f.UnreadCount = 0
-	// for _, a := range f.Articles {
-	// 	if a.Unread == 1 {
-	// 		f.UnreadCount++
-	// 	}
-	// }
+	Global.ChanAsync <- Async{func(...any) (err error) {
+		err = updateFilters(dbh)
+		if err != nil {
+			err = errors.Join(err, errors.New("nvimboat/Feed.ToggleRead"))
+			return
+		}
+		return
+	}, nil}
 	return
 }
 
