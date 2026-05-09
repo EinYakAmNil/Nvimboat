@@ -16,6 +16,7 @@ M.cachePath = M.pluginPath .. "cache/"
 M.cacheTime = "10m"
 M.logPath = M.pluginPath .. "nvimboat.log"
 M.dbPath = M.cachePath .. "cache.db"
+M.userAgent = "nvimboat/v0.3"
 M.separator = " │ "
 
 return M

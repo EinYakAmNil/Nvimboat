@@ -48,13 +48,9 @@ end
 
 function M.setup(opts)
 	opts = opts or {}
-	M.config.engine = opts.engine or M.config.engine
-	M.config.linkHandler = opts.linkHandler or M.config.linkHandler
-	M.config.logPath = opts.logPath or M.config.logPath
-	M.config.cachePath = opts.cachePath or M.config.cachePath
-	M.config.cacheTime = opts.cacheTime or M.config.cacheTime
-	M.config.dbPath = opts.dbPath or M.config.dbPath
-	M.config.separator = opts.separator or M.config.separator
+	for key, value in pairs(opts) do
+		M.config[key] = value
+	end
 	M.feeds = opts.feeds or {}
 	M.filters = opts.filters or {}
 	M.keymaps.configure(opts.keymaps or {})
