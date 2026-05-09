@@ -78,7 +78,17 @@ func (tp *TagsOverview) Back() (cursor_x int, err error) {
 	return tp.PrevCursorPosition[0], nil
 }
 
-func (tp *TagsOverview) ToggleRead(dbh rssdb.DbHandle, ids []string) (err error) {
+func (tp *TagsOverview) ToggleRead(dbh rssdb.DbHandle, ids []string) (pos [2][2]int, err error) {
+	pos, err = getCursorPositions()
+	if err != nil {
+		err = errors.Join(err, errors.New("nvimboat/TagsOverview.ToggleRead"))
+		return
+	}
+	err = Nvim.FeedKeys("\x1b", "n", false) // <Esc> = x1b
+	if err != nil {
+		err = errors.Join(err, errors.New("nvimboat/TagsOverview.ToggleRead"))
+		return
+	}
 	Log("Read status toggling is not implemented for this page.")
 	return
 }

@@ -120,7 +120,12 @@ func (tf *TagFeeds) Back() (cursor_x int, err error) {
 	return cursor_x, nil
 }
 
-func (tf *TagFeeds) ToggleRead(dbh rssdb.DbHandle, ids []string) (err error) {
+func (tf *TagFeeds) ToggleRead(dbh rssdb.DbHandle, ids []string) (pos [2][2]int, err error) {
+	pos, err = getCursorPositions()
+	if err != nil {
+		err = errors.Join(err, errors.New("nvimboat/TagFeeds.ToggleRead"))
+		return
+	}
 	feeds, err := tf.Feeds()
 	if err != nil {
 		err = errors.Join(err, errors.New("nvimboat/TagFeeds.ToggleRead"))

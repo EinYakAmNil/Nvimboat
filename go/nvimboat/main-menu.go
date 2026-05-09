@@ -115,21 +115,24 @@ func (mm *MainMenu) Back() (int, error) {
 	return 0, nil
 }
 
-func (mm *MainMenu) ToggleRead(dbh rssdb.DbHandle, ids []string) (err error) {
+func (mm *MainMenu) ToggleRead(dbh rssdb.DbHandle, ids []string) (pos [2][2]int, err error) {
+	pos, err = getCursorPositions()
+	if err != nil {
+		err = errors.Join(err, errors.New("nvimboat/MainMenu.ToggleRead"))
+		return
+	}
 	for _, id := range ids {
 		if len(extracUrls(id)) == 0 {
 			Log(fmt.Sprintf(`Can't toggle read for "%s".`, id))
 			return
 		}
 	}
-	setFeedsRead := false
+	var setFeedsRead = false
 checkAnyUnread:
-	for _, f := range sortFeeds(Feeds) {
-		for _, id := range ids {
-			if f.Rssurl == id && f.UnreadCount > 0 {
-				setFeedsRead = true
-				break checkAnyUnread
-			}
+	for _, id := range ids {
+		if Feeds[id].UnreadCount > 0 {
+			setFeedsRead = true
+			break checkAnyUnread
 		}
 	}
 	if setFeedsRead {
@@ -151,10 +154,14 @@ checkAnyUnread:
 		return
 	}
 	for _, mpf := range mainPageFeeds {
-		Feeds[mpf.Rssurl].Title = mpf.Title
-		Feeds[mpf.Rssurl].Rssurl = mpf.Rssurl
-		Feeds[mpf.Rssurl].ArticleCount = mpf.ArticleCount
-		Feeds[mpf.Rssurl].UnreadCount = mpf.UnreadCount
+		for _, id := range ids {
+			if mpf.Rssurl == id {
+				Feeds[mpf.Rssurl].Title = mpf.Title
+				Feeds[mpf.Rssurl].Rssurl = mpf.Rssurl
+				Feeds[mpf.Rssurl].ArticleCount = mpf.ArticleCount
+				Feeds[mpf.Rssurl].UnreadCount = mpf.UnreadCount
+			}
+		}
 	}
 	return
 }

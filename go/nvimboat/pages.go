@@ -15,7 +15,7 @@ type (
 		Render(nv *nvim.Nvim, buf nvim.Buffer) (err error)
 		ChildIdx(p Page) (idx int, err error)
 		Back() (cursor_x int, err error)
-		ToggleRead(dbh rssdb.DbHandle, ids []string) (err error)
+		ToggleRead(dbh rssdb.DbHandle, ids []string) (pos [2][2]int, err error)
 		NextUnread(dbh rssdb.DbHandle) (err error)
 		PrevUnread(dbh rssdb.DbHandle) (err error)
 		Delete(dbh rssdb.DbHandle, ids []string) (err error)
@@ -26,15 +26,10 @@ type (
 func (ps *PageStack) Show() (err error) {
 	err = setLines(Nvim, *NvBuffer, []string{""})
 	if err != nil {
-		err = fmt.Errorf("nvimboat/Nvimboat.Show: %w\n", err)
-		return
-	}
-	defer trimTrail(Nvim, *NvBuffer)
-	defer Nvim.SetWindowCursor(*NvWindow, [2]int{0, 1})
-	if err != nil {
 		err = errors.Join(err, errors.New("nvimboat/PageStack.Show"))
 		return
 	}
+	defer trimTrail(Nvim, *NvBuffer)
 	if _, ok := Pages.Top().(*Article); ok {
 		err = Nvim.SetWindowOption(*NvWindow, "wrap", true)
 		if err != nil {

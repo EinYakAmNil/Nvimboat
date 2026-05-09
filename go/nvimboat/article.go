@@ -72,7 +72,7 @@ func (a *Article) Back() (cursor_x int, err error) {
 
 // Assumption: the article is always in the "read" state.
 // It will only ever be made unread by this function.
-func (a *Article) ToggleRead(dbh rssdb.DbHandle, ids []string) (err error) {
+func (a *Article) ToggleRead(dbh rssdb.DbHandle, ids []string) (pos [2][2]int, err error) {
 	err = dbh.Queries.SetArticlesUnread(dbh.Ctx, []string{a.Url})
 	if err != nil {
 		err = errors.Join(err, errors.New("nvimboat/Article.ToggleRead"))
@@ -89,7 +89,8 @@ func (a *Article) ToggleRead(dbh rssdb.DbHandle, ids []string) (err error) {
 		err = errors.Join(err, errors.New("nvimboat/Article.ToggleRead"))
 		return
 	}
-	defer Nvim.SetWindowCursor(*NvWindow, [2]int{idx + 1, 0})
+	pos[0] = [2]int{idx + 1, 0}
+	pos[1] = [2]int{idx + 1, 0}
 	switch p := parentPage.(type) {
 	case *Feed:
 		p.Articles[idx].Unread = 1

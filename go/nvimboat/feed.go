@@ -154,7 +154,12 @@ func (f *Feed) Back() (cursor_x int, err error) {
 
 // If any selected articles are unread, then they will be set to read.
 // Set all to unread if all selected articles are read.
-func (f *Feed) ToggleRead(dbh rssdb.DbHandle, ids []string) (err error) {
+func (f *Feed) ToggleRead(dbh rssdb.DbHandle, ids []string) (pos [2][2]int, err error) {
+	pos, err = getCursorPositions()
+	if err != nil {
+		err = errors.Join(err, errors.New("nvimboat/Feed.ToggleRead"))
+		return
+	}
 	setArticlesRead := false
 checkAnyUnread:
 	for _, a := range f.Articles {

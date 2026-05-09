@@ -360,12 +360,7 @@ func (nb *Nvimboat) ToggleRead(nv *nvim.Nvim, args ...string) (err error) {
 		for _, arg := range args {
 			err = errors.Join(err, errors.New(arg))
 		}
-		err = errors.Join(err, errors.New("nvimboat/ToggleRead"))
-		return
-	}
-	cursorPosition, err := Nvim.WindowCursor(*NvWindow)
-	if err != nil {
-		err = errors.Join(err, errors.New("nvimboat/ToggleRead"))
+		err = errors.Join(err, errors.New("nvimboat/Nvimboat.ToggleRead"))
 		return
 	}
 	dbh, err := rssdb.ConnectDb(DbPath)
@@ -373,22 +368,42 @@ func (nb *Nvimboat) ToggleRead(nv *nvim.Nvim, args ...string) (err error) {
 		err = fmt.Errorf("nvimboat/Nvimboat.ToggleRead: %w\n", err)
 		return
 	}
-	err = Pages.Top().ToggleRead(dbh, args[1:])
+	cursorPosition, err := Pages.Top().ToggleRead(dbh, args[1:])
 	if err != nil {
 		err = fmt.Errorf("nvimboat/Nvimboat.ToggleRead: %w\n", err)
 		return
 	}
 	err = Pages.Show()
 	if err != nil {
-		err = errors.Join(err, errors.New("nvimboat/ToggleRead"))
+		err = errors.Join(err, errors.New("nvimboat/Nvimboat.ToggleRead"))
 		return
 	}
-	err = Nvim.SetWindowCursor(*NvWindow, cursorPosition)
+	err = Nvim.SetWindowCursor(*NvWindow, cursorPosition[0])
 	if err != nil {
-		err = errors.Join(err, errors.New("nvimboat/ToggleRead"))
+		err = errors.Join(err, errors.New("nvimboat/Nvimboat.ToggleRead"))
 		return
 	}
-	return
+	mode := new(nvim.Mode)
+	batch := Nvim.NewBatch()
+	batch.Mode(mode)
+	err = batch.Execute()
+	if err != nil {
+		err = errors.Join(err, errors.New("nvimboat/Nvimboat.ToggleRead"))
+		return
+	}
+	switch mode.Mode {
+	case "v", "V":
+		batch.Command("normal! o")
+		batch.SetWindowCursor(*NvWindow, cursorPosition[1])
+		err = batch.Execute()
+		if err != nil {
+			err = errors.Join(err, errors.New("nvimboat/Nvimboat.ToggleRead"))
+			return
+		}
+		return
+	default:
+		return
+	}
 }
 
 func (nb *Nvimboat) Delete(nv *nvim.Nvim, args ...string) (err error) {

@@ -145,8 +145,13 @@ func (f *Filter) Back() (cursor_x int, err error) {
 	return -1, err
 }
 
-func (f *Filter) ToggleRead(dbh rssdb.DbHandle, ids []string) (err error) {
-	setArticlesRead := false
+func (f *Filter) ToggleRead(dbh rssdb.DbHandle, ids []string) (pos [2][2]int, err error) {
+	pos, err = getCursorPositions()
+	if err != nil {
+		err = errors.Join(err, errors.New("nvimboat/Filter.ToggleRead"))
+		return
+	}
+	var setArticlesRead = false
 checkAnyUnread:
 	for _, a := range f.Articles {
 		for _, id := range ids {

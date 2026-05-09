@@ -23,6 +23,7 @@ var (
 	Nvim            *nvim.Nvim
 	Pages           PageStack
 	Global          *Nvimboat
+	UserAgent       string
 )
 
 func initNvimboat(nb *Nvimboat, nv *nvim.Nvim) (err error) {

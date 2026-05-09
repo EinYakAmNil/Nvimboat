@@ -17,6 +17,45 @@ import (
 	"github.com/neovim/go-client/nvim"
 )
 
+func getCursorPositions() (pos [2][2]int, err error) {
+	var (
+		startRow [4]int
+		endRow   [4]int
+	)
+	mode := new(nvim.Mode)
+	batch := Nvim.NewBatch()
+	batch.Mode(mode)
+	batch.Call("getpos", &startRow, "v")
+	batch.Call("getpos", &endRow, ".")
+	err = batch.Execute()
+	if err != nil {
+		err = errors.Join(err, errors.New("nvimboat/getCursorPositions2"))
+		return
+	}
+	switch mode.Mode {
+	case "n":
+		var cursorPos [2]int
+		cursorPos, err = Nvim.WindowCursor(*NvWindow)
+		if err != nil {
+			err = errors.Join(err, errors.New("nvimboat/getCursorPositions"))
+			return
+		}
+		pos[0] = cursorPos
+		pos[1] = cursorPos
+		return
+	case "v", "V":
+		pos[0] = [2]int(startRow[1:3])
+		pos[0][1] -= 1
+		pos[1] = [2]int(endRow[1:3])
+		pos[1][1] -= 1
+		return
+	default:
+		err = fmt.Errorf(`Neovim Mode unaccounted for: %s`, mode.Mode)
+		err = errors.Join(err, errors.New("nvimboat/getCursorPositions"))
+		return
+	}
+}
+
 func sortFeeds(feedMap map[string]*Feed) (feeds []*Feed) {
 	for _, f := range feedMap {
 		feeds = append(feeds, f)
