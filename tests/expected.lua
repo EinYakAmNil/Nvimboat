@@ -23,9 +23,9 @@ M.main_menu_buf = { {
 	"N (10/10) │ Starsector                        │ https://fractalsoftworks.com/feed/",
 	"N (12/12) │ 依云's Blog                       │ https://blog.lilydjwg.me/feed",
 }, {
-	"N (40/40) │ gaming articles                   │ filter: tags: Gaming",
 	"N (21/21) │ new Linux articles                │ filter: unread: 1, tags: Linux",
 	"N (15/15) │ new non political videos          │ filter: unread: 1, tags: Video, !Politics",
+	"N (40/40) │ gaming articles                   │ filter: tags: Gaming",
 	"N (9/10)  │ Arch Linux: Recent news updates   │ https://www.archlinux.org/feeds/news/",
 	"N (15/15) │ CaravanPalace                     │ https://www.youtube.com/feeds/videos.xml?user=CaravanPalace",
 	"N (17/17) │ Not Related! A Big-Braned Podcast │ https://notrelated.xyz/rss",
@@ -34,9 +34,9 @@ M.main_menu_buf = { {
 	"  (0/10)  │ Starsector                        │ https://fractalsoftworks.com/feed/",
 	"N (12/12) │ 依云's Blog                       │ https://blog.lilydjwg.me/feed",
 }, {
-	"N (30/30) │ gaming articles                   │ filter: tags: Gaming",
 	"N (12/12) │ new Linux articles                │ filter: unread: 1, tags: Linux",
 	"N (15/15) │ new non political videos          │ filter: unread: 1, tags: Video, !Politics",
+	"N (30/30) │ gaming articles                   │ filter: tags: Gaming",
 	"  (0/0)   │ Arch Linux: Recent news updates   │ https://www.archlinux.org/feeds/news/",
 	"N (15/15) │ CaravanPalace                     │ https://www.youtube.com/feeds/videos.xml?user=CaravanPalace",
 	"N (17/17) │ Not Related! A Big-Braned Podcast │ https://notrelated.xyz/rss",
