@@ -2,3 +2,8 @@ nvimboat.log
 go/engine
 cache/*
 parser/nvimboat.so
+go/reload/
+!go/reload/main_test.go
+!go/reload/standard_reload.go
+!go/reload/types.go
+!go/reload/utils.go
