@@ -2,16 +2,19 @@ package reload
 
 import (
 	"crypto/sha1"
+	"errors"
 	"encoding/hex"
 	"fmt"
 	"io"
 	"net/http"
 	"os"
 	"path"
+
+	"github.com/EinYakAmNil/Nvimboat/go/engine/rssdb"
 )
 
 func requestUrl(url string, header http.Header) (content []byte, err error) {
-	client := &http.Client{}
+	client := new(http.Client)
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		err = fmt.Errorf("requestUrl: %w", err)
@@ -57,5 +60,31 @@ func hashUrl(url string) (fileName string) {
 	hashBytes := hasher.Sum(nil)
 	fileName = hex.EncodeToString(hashBytes)
 	fileName = path.Clean(fileName)
+	return
+}
+
+func insertFeed(feed rssdb.InsertFeedParams, dbh rssdb.DbHandle) (newFeed rssdb.RssFeed, err error) {
+	tx, err := dbh.DB.BeginTx(dbh.Ctx, nil)
+	if err != nil {
+		err = errors.Join(err, errors.New("reload/StandardReloader.UpsertFeed"))
+		return
+	}
+	defer func() {
+		if err != nil {
+			tx.Rollback()
+		}
+	}()
+
+	qtx := dbh.Queries.WithTx(tx)
+	newFeed, err = qtx.InsertFeed(dbh.Ctx, feed)
+	if err != nil {
+		err = errors.Join(err, errors.New("reload/StandardReloader.UpsertFeed"))
+		return
+	}
+	err = tx.Commit()
+	if err != nil {
+		err = errors.Join(err, errors.New("reload/StandardReloader.UpsertFeed"))
+		return
+	}
 	return
 }

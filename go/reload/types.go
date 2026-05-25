@@ -1,6 +1,7 @@
 package reload
 
 import (
+	"net/http"
 	"time"
 
 	"github.com/EinYakAmNil/Nvimboat/go/engine/rssdb"
@@ -10,14 +11,19 @@ import (
 type Reloader interface {
 	UpdateFeed(
 		dbh rssdb.DbHandle,
-		url string,
-		cacheTime time.Duration,
-		cacheDir string,
-		addFeed bool,
-	) (newFeed rssdb.RssFeed, err error)
+		feed rssdb.InsertFeedParams,
+		items map[string]*rssdb.InsertArticleParams,
+	) (err error)
 
-	GetRss(url string,
+	GetRss(
+		url string,
+		header http.Header,
 		cacheTime time.Duration,
 		cacheDir string,
-	) (feed *rssdb.RssFeed, items []*rssdb.RssItem, fromCache bool, err error)
+	) (
+		feed *rssdb.InsertFeedParams,
+		items map[string]*rssdb.InsertArticleParams,
+		fromCache bool,
+		err error,
+	)
 }

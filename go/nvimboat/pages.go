@@ -11,7 +11,9 @@ import (
 
 type (
 	Page interface {
+		ID() string
 		Select(dbh rssdb.DbHandle, id string) (p Page, err error)
+		Open(urls ...string) (err error)
 		Render(nv *nvim.Nvim, buf nvim.Buffer) (err error)
 		ChildIdx(p Page) (idx int, err error)
 		Back() (cursor_x int, err error)

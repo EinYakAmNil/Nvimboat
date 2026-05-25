@@ -151,23 +151,43 @@ func (nb *Nvimboat) Select(nv *nvim.Nvim, args ...string) (err error) {
 	return
 }
 
+func (nb *Nvimboat) Open(nv *nvim.Nvim, args ...string) (err error) {
+	err = Pages.Top().Open(args[1:]...)
+	if err != nil {
+		err = errors.Join(err, errors.New("nvimboat/Nvimboat.Open"))
+		return
+	}
+	return
+}
+
 func (nb *Nvimboat) ShowTags(nv *nvim.Nvim, args ...string) (err error) {
 	cursorPosition, err := nv.WindowCursor(*NvWindow)
 	if err != nil {
 		err = errors.Join(err, fmt.Errorf("nvimboat/ShowTags"))
 		return
 	}
-	for i, page := range Pages {
+	oldPageStack := Pages
+	err = Pages.Reset()
+	if err != nil {
+		err = errors.Join(err, errors.New("nvimboat/Nvimboat.ShowTags"))
+		return
+	}
+loopPages:
+	for _, page := range oldPageStack {
 		switch page.(type) {
 		case *TagsOverview:
-			Pages = Pages[:i+1]
-			Pages.Show()
-			return
+			break loopPages
+		default:
+			err = Pages.Push(page, page.ID())
+			if err != nil {
+				err = errors.Join(err, errors.New("nvimboat/Nvimboat.ShowTags"))
+				return
+			}
 		}
 	}
 	p := new(TagsOverview)
 	p.PrevCursorPosition = cursorPosition
-	err = Pages.Push(p, "Tags")
+	err = Pages.Push(p, p.ID())
 	if err != nil {
 		err = errors.Join(err, fmt.Errorf("nvimboat/ShowTags"))
 		return

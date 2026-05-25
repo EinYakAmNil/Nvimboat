@@ -16,11 +16,13 @@ ON rss_feed.rssurl = feed_stats.feedurl
 WHERE rss_feed.rssurl = ?
 ORDER BY rss_feed.title;
 
--- name: CreateFeed :one
+-- name: InsertFeed :one
 INSERT INTO rss_feed (
 	rssurl, url, title
 	) VALUES (
-	?, ?, ?
+	sqlc.arg(rssurl),
+	sqlc.arg(url),
+	sqlc.arg(title)
 	)
 RETURNING *;
 
@@ -44,12 +46,28 @@ WHERE feedurl = ?
 AND deleted = 0
 ORDER BY pubDate DESC;
 
--- name: AddArticle :exec
+-- name: GetFeedGuids :many
+SELECT guid FROM rss_item
+WHERE feedurl = ?
+ORDER BY pubDate DESC;
+
+-- name: InsertArticle :exec
 INSERT INTO rss_item (
 	guid, title, author, url, feedurl, pubDate, content, unread, enclosure_url, flags, content_mime_type
 	) VALUES (
-	?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
-);
+	sqlc.arg(guid),
+	sqlc.arg(title),
+	sqlc.arg(author),
+	sqlc.arg(url),
+	sqlc.arg(feedurl),
+	sqlc.arg(pubDate),
+	sqlc.arg(content),
+	sqlc.arg(unread),
+	sqlc.arg(enclosure_url),
+	sqlc.arg(flags),
+	sqlc.arg(content_mime_type)
+	)
+RETURNING *;
 
 -- name: DeleteArticles :exec
 UPDATE rss_item

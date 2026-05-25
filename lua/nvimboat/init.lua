@@ -46,6 +46,7 @@ end
 function M.disable()
 end
 
+---@param opts nvimboat.Config
 function M.setup(opts)
 	opts = opts or {}
 	for key, value in pairs(opts) do

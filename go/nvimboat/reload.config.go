@@ -2,6 +2,7 @@ package nvimboat
 
 import (
 	"errors"
+	"net/http"
 	"regexp"
 
 	"github.com/EinYakAmNil/Nvimboat/go/engine/reload"
@@ -12,7 +13,7 @@ import (
 // Custom reloaders can be defined here.
 // Use a regex as the key value to decide, when your reloader should be used.
 var CustomReload = map[string]reload.Reloader{
-	"https://mangapill.com": new(mangapill.MangapillReloader),
+	`https://mangapill\.com`:            new(mangapill.MangapillReloader),
 }
 
 func ReloadFeeds(feedUrls []string) (err error) {
@@ -23,44 +24,58 @@ func ReloadFeeds(feedUrls []string) (err error) {
 		return
 	}
 	defer dbh.DB.Close()
-	var (
-		newFeed   rssdb.RssFeed
-		reloadErr error
-		addFeed   bool
-	)
-	knownFeeds, err := dbh.Queries.MapFeedUrls(dbh.Ctx)
-reloadFeed:
+	var useCustomReloader bool
+	urlReloaderMap := make(map[string]reload.Reloader)
+
+findReloader:
 	for _, feedUrl := range feedUrls {
-		if !knownFeeds[feedUrl] {
-			addFeed = true
-		}
 	matchCustomReloader:
 		for urlPattern, reloader := range CustomReload {
-			ok, err := regexp.MatchString(urlPattern, feedUrl)
+			useCustomReloader, err = regexp.MatchString(urlPattern, feedUrl)
 			if err != nil {
 				return errors.Join(err, errors.New("nvimboat/ReloadFeeds"))
 			}
-			if !ok {
+			if !useCustomReloader {
 				continue matchCustomReloader
 			}
-			newFeed, reloadErr = reloader.UpdateFeed(dbh, feedUrl, CacheTime, CachePath, addFeed)
-			if reloadErr != nil {
-				Log(reloadErr)
-			}
-			if addFeed {
-				Log("Added feed:", newFeed.Url)
-			}
-			addFeed = false
-			continue reloadFeed
+			urlReloaderMap[feedUrl] = reloader
+			continue findReloader
 		}
-		newFeed, reloadErr = standardReloader.UpdateFeed(dbh, feedUrl, CacheTime, CachePath, addFeed)
-		if reloadErr != nil {
-			Log(reloadErr)
+		urlReloaderMap[feedUrl] = standardReloader
+	}
+
+	for url, reloader := range urlReloaderMap {
+		err = reloadFeed(url, dbh, reloader)
+		if err != nil {
+			Log(err)
 		}
-		if addFeed {
-			Log("Added feed:", newFeed.Url)
-		}
-		addFeed = false
+	}
+	Log("Finished reloading.")
+	return
+}
+
+func reloadFeed(url string, dbh rssdb.DbHandle, reloader reload.Reloader) (err error) {
+	var (
+		rss_feed       *rssdb.InsertFeedParams
+		rss_items      map[string]*rssdb.InsertArticleParams
+		fromCache      bool
+	)
+	header := http.Header{
+		"User-Agent": {UserAgent},
+	}
+	rss_feed, rss_items, fromCache, err = reloader.GetRss(url, header, CacheTime, CachePath)
+	if err != nil {
+		err = errors.Join(err, errors.New("nvimboat/ReloadFeeds"))
+		return
+	}
+	if fromCache {
+		Log("Loaded " + url + " from cache")
+	} else {
+		Log("Requested " + url)
+	}
+	err = reloader.UpdateFeed(dbh, *rss_feed, rss_items)
+	if err != nil {
+		Log(err)
 	}
 	return
 }

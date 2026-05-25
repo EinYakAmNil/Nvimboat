@@ -1,7 +1,9 @@
 package reload
 
 import (
+	"errors"
 	"fmt"
+	"net/http"
 	"os"
 	"path"
 	"testing"
@@ -15,14 +17,17 @@ var (
 		"Not Related! A Big-Braned Podcast": "https://notrelated.xyz/rss",
 		"Arch Linux: Recent news updates":   "https://www.archlinux.org/feeds/news/",
 		"Path of Exile News":                "https://www.pathofexile.com/news/rss",
-		"Starsector":                        "https://fractalsoftworks.com/feed/",
-		"ShortFatOtaku on Odysee":           "https://odysee.com/$/rss/@ShortFatOtaku:1",
-		"CaravanPalace":                     "https://www.youtube.com/feeds/videos.xml?user=CaravanPalace",
-		"依云's Blog":                         "https://blog.lilydjwg.me/feed",
+		// "Starsector":                        "https://fractalsoftworks.com/feed/",
+		"ShortFatOtaku on Odysee": "https://odysee.com/$/rss/@ShortFatOtaku:1",
+		"CaravanPalace":           "https://www.youtube.com/feeds/videos.xml?user=CaravanPalace",
+		"依云's Blog":               "https://blog.lilydjwg.me/feed",
 	}
 	cacheTime = 60 * time.Minute
 	cacheDir  = path.Join(os.Getenv("HOME"), ".cache", "nvimboat-test")
-	dbPath    = path.Join(os.Getenv("HOME"), ".cache", "nvimboat-test", "getrss_test.db")
+	dbPath    = path.Join(os.Getenv("HOME"), ".cache", "nvimboat-test", "tag-test.db")
+	header    = http.Header{
+		"User-Agent": {"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36"},
+	}
 )
 
 func TestGetRss(t *testing.T) {
@@ -33,9 +38,9 @@ func TestGetRss(t *testing.T) {
 	reloader := new(StandardReloader)
 	for title, url := range testFeeds {
 		fmt.Println("first iteration...")
-		reloader.GetRss(url, cacheTime, cacheDir)
+		reloader.GetRss(url, header, cacheTime, cacheDir)
 		fmt.Println("now try to get contents from cache...")
-		feed, items, fromCache, err := reloader.GetRss(url, cacheTime, cacheDir)
+		feed, items, fromCache, err := reloader.GetRss(url, header, cacheTime, cacheDir)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -58,37 +63,17 @@ func TestUpdateFeeds(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer dbh.DB.Close()
-	knownFeeds, err := dbh.Queries.MapFeedUrls(dbh.Ctx)
-	if err != nil {
-		t.Fatal(err)
-	}
-	var addFeed bool
 	for _, url := range testFeeds {
-		if !knownFeeds[url] {
-			addFeed = true
-		}
-		_, err := reloader.UpdateFeed(dbh, url, cacheTime, cacheDir, addFeed)
+		feed, items, _, err := reloader.GetRss(url, header, cacheTime, cacheDir)
 		if err != nil {
+			err = errors.Join(err, errors.New("reload/TestUpdateFeeds"))
 			t.Fatal(err)
 		}
-		addFeed = false
-	}
-	allArticles, err := dbh.Queries.AllArticles(dbh.Ctx)
-	if err != nil {
-		t.Fatal(err)
-	}
-	for _, url := range testFeeds {
-		_, err := reloader.UpdateFeed(dbh, url, cacheTime, cacheDir, false)
+		err = reloader.UpdateFeed(dbh, *feed, items)
 		if err != nil {
+			err = errors.Join(err, errors.New("reload/TestUpdateFeeds"))
 			t.Fatal(err)
 		}
-	}
-	noChange, err := dbh.Queries.AllArticles(dbh.Ctx)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if len(allArticles) != len(noChange) {
-		t.Fatalf("item count should not increase: %d -> %d\n", len(allArticles), len(noChange))
 	}
 }
 

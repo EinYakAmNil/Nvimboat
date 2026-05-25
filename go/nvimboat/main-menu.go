@@ -3,13 +3,19 @@ package nvimboat
 import (
 	"errors"
 	"fmt"
+	"os/exec"
 	"slices"
+	"syscall"
 
 	"github.com/EinYakAmNil/Nvimboat/go/engine/rssdb"
 	"github.com/neovim/go-client/nvim"
 )
 
 type MainMenu struct {
+}
+
+func (mm *MainMenu) ID() string {
+	return "MainMenu"
 }
 
 // If the id is a URL then Select() assumes, that a feed is being searched.
@@ -40,6 +46,17 @@ func (mm *MainMenu) Select(dbh rssdb.DbHandle, id string) (p Page, err error) {
 		id,
 	)
 	err = errors.Join(err, errors.New("nvimboat/MainMenu.Select"))
+	return
+}
+
+func (mm *MainMenu) Open(urls ...string) (err error) {
+	cmd := exec.Command(LinkHandler, urls...)
+	cmd.SysProcAttr = &syscall.SysProcAttr{Setsid: true}
+	err = cmd.Start()
+	if err != nil {
+		err = errors.Join(err, errors.New("nvimboat/MainMenu.Open"))
+		return
+	}
 	return
 }
 

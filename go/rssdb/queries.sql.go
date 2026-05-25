@@ -11,45 +11,6 @@ import (
 	"strings"
 )
 
-const addArticle = `-- name: AddArticle :exec
-INSERT INTO rss_item (
-	guid, title, author, url, feedurl, pubDate, content, unread, enclosure_url, flags, content_mime_type
-	) VALUES (
-	?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
-)
-`
-
-type AddArticleParams struct {
-	Guid            string
-	Title           string
-	Author          string
-	Url             string
-	Feedurl         string
-	Pubdate         int64
-	Content         string
-	Unread          int
-	EnclosureUrl    sql.NullString
-	Flags           sql.NullString
-	ContentMimeType string
-}
-
-func (q *Queries) AddArticle(ctx context.Context, arg AddArticleParams) error {
-	_, err := q.db.ExecContext(ctx, addArticle,
-		arg.Guid,
-		arg.Title,
-		arg.Author,
-		arg.Url,
-		arg.Feedurl,
-		arg.Pubdate,
-		arg.Content,
-		arg.Unread,
-		arg.EnclosureUrl,
-		arg.Flags,
-		arg.ContentMimeType,
-	)
-	return err
-}
-
 const cleanupDeleted = `-- name: CleanupDeleted :exec
 DELETE FROM rss_item
 WHERE deleted = 1
@@ -58,35 +19,6 @@ WHERE deleted = 1
 func (q *Queries) CleanupDeleted(ctx context.Context) error {
 	_, err := q.db.ExecContext(ctx, cleanupDeleted)
 	return err
-}
-
-const createFeed = `-- name: CreateFeed :one
-INSERT INTO rss_feed (
-	rssurl, url, title
-	) VALUES (
-	?, ?, ?
-	)
-RETURNING rssurl, url, title, lastmodified, is_rtl, etag
-`
-
-type CreateFeedParams struct {
-	Rssurl string
-	Url    string
-	Title  string
-}
-
-func (q *Queries) CreateFeed(ctx context.Context, arg CreateFeedParams) (RssFeed, error) {
-	row := q.db.QueryRowContext(ctx, createFeed, arg.Rssurl, arg.Url, arg.Title)
-	var i RssFeed
-	err := row.Scan(
-		&i.Rssurl,
-		&i.Url,
-		&i.Title,
-		&i.Lastmodified,
-		&i.IsRtl,
-		&i.Etag,
-	)
-	return i, err
 }
 
 const deleteArticles = `-- name: DeleteArticles :exec
@@ -209,6 +141,35 @@ func (q *Queries) GetFeed(ctx context.Context, rssurl string) (GetFeedRow, error
 	return i, err
 }
 
+const getFeedGuids = `-- name: GetFeedGuids :many
+SELECT guid FROM rss_item
+WHERE feedurl = ?
+ORDER BY pubDate DESC
+`
+
+func (q *Queries) GetFeedGuids(ctx context.Context, feedurl string) ([]string, error) {
+	rows, err := q.db.QueryContext(ctx, getFeedGuids, feedurl)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []string
+	for rows.Next() {
+		var guid string
+		if err := rows.Scan(&guid); err != nil {
+			return nil, err
+		}
+		items = append(items, guid)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getFeedPage = `-- name: GetFeedPage :many
 SELECT unread, pubDate, author, title, url FROM rss_item
 WHERE feedurl = ?
@@ -251,6 +212,87 @@ func (q *Queries) GetFeedPage(ctx context.Context, feedurl string) ([]GetFeedPag
 		return nil, err
 	}
 	return items, nil
+}
+
+const insertArticle = `-- name: InsertArticle :exec
+INSERT INTO rss_item (
+	guid, title, author, url, feedurl, pubDate, content, unread, enclosure_url, flags, content_mime_type
+	) VALUES (
+	?1,
+	?2,
+	?3,
+	?4,
+	?5,
+	?6,
+	?7,
+	?8,
+	?9,
+	?10,
+	?11
+	)
+RETURNING id, guid, title, author, url, feedurl, pubdate, content, unread, enclosure_url, enclosure_type, enqueued, flags, deleted, base, content_mime_type, enclosure_description, enclosure_description_mime_type
+`
+
+type InsertArticleParams struct {
+	Guid            string
+	Title           string
+	Author          string
+	Url             string
+	Feedurl         string
+	Pubdate         int64
+	Content         string
+	Unread          int
+	EnclosureUrl    sql.NullString
+	Flags           sql.NullString
+	ContentMimeType string
+}
+
+func (q *Queries) InsertArticle(ctx context.Context, arg InsertArticleParams) error {
+	_, err := q.db.ExecContext(ctx, insertArticle,
+		arg.Guid,
+		arg.Title,
+		arg.Author,
+		arg.Url,
+		arg.Feedurl,
+		arg.Pubdate,
+		arg.Content,
+		arg.Unread,
+		arg.EnclosureUrl,
+		arg.Flags,
+		arg.ContentMimeType,
+	)
+	return err
+}
+
+const insertFeed = `-- name: InsertFeed :one
+INSERT INTO rss_feed (
+	rssurl, url, title
+	) VALUES (
+	?1,
+	?2,
+	?3
+	)
+RETURNING rssurl, url, title, lastmodified, is_rtl, etag
+`
+
+type InsertFeedParams struct {
+	Rssurl string
+	Url    string
+	Title  string
+}
+
+func (q *Queries) InsertFeed(ctx context.Context, arg InsertFeedParams) (RssFeed, error) {
+	row := q.db.QueryRowContext(ctx, insertFeed, arg.Rssurl, arg.Url, arg.Title)
+	var i RssFeed
+	err := row.Scan(
+		&i.Rssurl,
+		&i.Url,
+		&i.Title,
+		&i.Lastmodified,
+		&i.IsRtl,
+		&i.Etag,
+	)
+	return i, err
 }
 
 const queryFilter = `-- name: QueryFilter :many

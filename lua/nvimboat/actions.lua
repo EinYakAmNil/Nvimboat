@@ -16,6 +16,7 @@ local config = require("nvimboat.config")
 ---| "show-main"
 ---| "show-tags"
 ---| "toggle-read"
+---| "open"
 
 ---@type fun(action: Action, ...: string)
 local Nvimboat = vim.cmd.Nvimboat
@@ -51,7 +52,7 @@ function M.select()
 	local line = buf_lines[cursor_xy[1]]
 	local id = utils.get_select_id(line, pages[#pages], config.separator)
 	if pages[#pages].type == "Article" then
-		vim.system({ config.linkHandler, id })
+		vim.system({ config.linkHandler, id }, { detach = true })
 		return id
 	end
 	Nvimboat("select", id)
@@ -128,6 +129,32 @@ end
 
 function M.show_tags()
 	Nvimboat("show-tags")
+end
+
+function M.open()
+	local mode_map = {
+		n = function()
+			---@type integer[]
+			local cursor_xy = vim.api.nvim_win_get_cursor(0)
+			---@type string[]
+			local buf_lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
+			local line = buf_lines[cursor_xy[1]]
+			local id = utils.get_select_id(line, pages[#pages], config.separator)
+			Nvimboat("open", id)
+			return id
+		end,
+		v = function()
+			local ids = utils.multi_select_id(pages[#pages], config.separator)
+			Nvimboat("open", unpack(ids))
+			return unpack(ids)
+		end,
+		V = function()
+			local ids = utils.multi_select_id(pages[#pages], config.separator)
+			Nvimboat("open", unpack(ids))
+			return unpack(ids)
+		end,
+	}
+	return mode_map[vim.fn.mode()]()
 end
 
 return M

@@ -2,6 +2,7 @@ package mangapill
 
 import (
 	"fmt"
+	"net/http"
 	"time"
 
 	"github.com/EinYakAmNil/Nvimboat/go/engine/rssdb"
@@ -12,18 +13,18 @@ type MangapillReloader struct {
 
 func (mr *MangapillReloader) UpdateFeed(
 	dbh rssdb.DbHandle,
-	url string,
-	cacheTime time.Duration,
-	cacheDir string,
-	addFeed bool,
-) (newFeed rssdb.RssFeed, err error) {
-	fmt.Println("Using MangapillReloader for:", url)
+	feed rssdb.InsertFeedParams,
+	items map[string]*rssdb.InsertArticleParams,
+) (err error) {
+	fmt.Println("Using MangapillReloader for:", feed.Rssurl)
 	return
 }
 
-func (mr *MangapillReloader) GetRss(url string,
+func (mr *MangapillReloader) GetRss(
+	url string,
+	heaeder http.Header,
 	cacheTime time.Duration,
 	cacheDir string,
-) (feed *rssdb.RssFeed, items []*rssdb.RssItem, fromCache bool, err error) {
+) (feed *rssdb.InsertFeedParams, items map[string]*rssdb.InsertArticleParams, fromCache bool, err error) {
 	return
 }

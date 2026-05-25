@@ -28,6 +28,9 @@ local toggle_read = { rhs = actions.toggle_read, opts = keymap_opts }
 local select = { rhs = actions.select, opts = keymap_opts }
 
 ---@type RHS
+local open = { rhs = actions.open, opts = keymap_opts }
+
+---@type RHS
 local back = { rhs = actions.back, opts = keymap_opts }
 
 ---@type RHS
@@ -57,6 +60,7 @@ M.keymaps = {
 		a = toggle_read,
 		h = back,
 		l = select,
+		o = open,
 		q = show_main_menu,
 		y = copy,
 		D = delete,
@@ -71,6 +75,7 @@ M.keymaps = {
 	v = {
 		a = toggle_read,
 		D = delete,
+		o = open,
 	}
 }
 
@@ -92,7 +97,7 @@ local function save_overlap(mode, lhs)
 		if keymap.lhs == lhs then
 			M._buffer_overlap[mode][lhs] = {
 				opts = {
-					buffer = keymap.buffer,
+					buffer = 0,
 					expr = keymap.expr,
 					noremap = keymap.noremap,
 					nowait = keymap.nowait,

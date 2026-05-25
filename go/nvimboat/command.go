@@ -19,6 +19,7 @@ var actions = map[string]NvimboatAction{
 	"prev-unread":  (*Nvimboat).PrevUnread,
 	"reload":       (*Nvimboat).Reload,
 	"select":       (*Nvimboat).Select,
+	"open":         (*Nvimboat).Open,
 	"show-main":    (*Nvimboat).ShowMain,
 	"show-tags":    (*Nvimboat).ShowTags,
 	"toggle-read":  (*Nvimboat).ToggleRead,

@@ -3,7 +3,9 @@ package nvimboat
 import (
 	"errors"
 	"fmt"
+	"os/exec"
 	"slices"
+	"syscall"
 
 	"github.com/EinYakAmNil/Nvimboat/go/engine/rssdb"
 	"github.com/neovim/go-client/nvim"
@@ -16,6 +18,10 @@ type Filter struct {
 	IncludeTags       map[string]bool
 	ExcludeTags       map[string]bool
 	Articles          []rssdb.QueryFilterRow
+}
+
+func (f *Filter) ID() string {
+	return f.Name
 }
 
 func (f *Filter) Select(dbh rssdb.DbHandle, id string) (p Page, err error) {
@@ -47,6 +53,17 @@ func (f *Filter) Select(dbh rssdb.DbHandle, id string) (p Page, err error) {
 			Feeds[feedUrl] = feed
 			return
 		}, nil,
+	}
+	return
+}
+
+func (f *Filter) Open(urls ...string) (err error) {
+	cmd := exec.Command(LinkHandler, urls...)
+	cmd.SysProcAttr = &syscall.SysProcAttr{Setsid: true}
+	err = cmd.Start()
+	if err != nil {
+		err = errors.Join(err, errors.New("nvimboat/Filter.Open"))
+		return
 	}
 	return
 }

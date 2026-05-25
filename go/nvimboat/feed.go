@@ -3,7 +3,9 @@ package nvimboat
 import (
 	"errors"
 	"fmt"
+	"os/exec"
 	"slices"
+	"syscall"
 
 	"github.com/EinYakAmNil/Nvimboat/go/engine/rssdb"
 	"github.com/neovim/go-client/nvim"
@@ -13,8 +15,10 @@ type Feed struct {
 	rssdb.GetFeedRow
 	Tags     map[string]bool
 	Articles []rssdb.GetFeedPageRow
-	// ArticleCount int64
-	// UnreadCount  int64
+}
+
+func (f *Feed) ID() string {
+	return f.Rssurl
 }
 
 func (f *Feed) Select(dbh rssdb.DbHandle, id string) (p Page, err error) {
@@ -53,6 +57,17 @@ func (f *Feed) Select(dbh rssdb.DbHandle, id string) (p Page, err error) {
 		}
 		return
 	}, nil}
+	return
+}
+
+func (f *Feed) Open(urls ...string) (err error) {
+	cmd := exec.Command(LinkHandler, urls...)
+	cmd.SysProcAttr = &syscall.SysProcAttr{Setsid: true}
+	err = cmd.Start()
+	if err != nil {
+		err = errors.Join(err, errors.New("nvimboat/Feed.Open"))
+		return
+	}
 	return
 }
 

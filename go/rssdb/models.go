@@ -15,13 +15,6 @@ type GoogleReplay struct {
 	Ts    int64
 }
 
-type MainPageFeed struct {
-	Title        string
-	Feedurl      string
-	UnreadCount  sql.NullFloat64
-	ArticleCount int64
-}
-
 type Metadata struct {
 	DbSchemaVersionMajor int64
 	DbSchemaVersionMinor int64

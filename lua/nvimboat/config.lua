@@ -1,3 +1,4 @@
+---@class nvimboat.Config
 local M = {}
 
 ---@return string
@@ -18,5 +19,9 @@ M.logPath = M.pluginPath .. "nvimboat.log"
 M.dbPath = M.cachePath .. "cache.db"
 M.userAgent = "nvimboat/v0.3"
 M.separator = " │ "
+
+M.feeds = {}
+M.filters = {}
+M.keymaps = {}
 
 return M

@@ -16,11 +16,19 @@ type TagsOverview struct {
 	PrevCursorPosition [2]int
 }
 
+func (tp *TagsOverview) ID() string {
+	return "Tags"
+}
+
 func (tp *TagsOverview) Select(dbh rssdb.DbHandle, id string) (p Page, err error) {
 	tag := new(TagFeeds)
 	tag.Name = id
 	tag.Urls = TagConfig[id]
 	return tag, err
+}
+
+func (tp *TagsOverview) Open(urls ...string) (err error) {
+	return
 }
 
 func (tp *TagsOverview) Render(nv *nvim.Nvim, buf nvim.Buffer) (err error) {

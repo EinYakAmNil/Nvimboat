@@ -3,6 +3,8 @@ package nvimboat
 import (
 	"errors"
 	"fmt"
+	"os/exec"
+	"syscall"
 
 	"github.com/EinYakAmNil/Nvimboat/go/engine/rssdb"
 	"github.com/neovim/go-client/nvim"
@@ -11,6 +13,10 @@ import (
 type TagFeeds struct {
 	Name string
 	Urls []string
+}
+
+func (tf *TagFeeds) ID() string {
+	return tf.Name
 }
 
 func (tf *TagFeeds) Feeds() (feeds []*Feed, err error) {
@@ -24,6 +30,17 @@ func (tf *TagFeeds) Feeds() (feeds []*Feed, err error) {
 		feedSubset[url] = Feeds[url]
 	}
 	feeds = sortFeeds(feedSubset)
+	return
+}
+
+func (tf *TagFeeds) Open(urls ...string) (err error) {
+	cmd := exec.Command(LinkHandler, urls...)
+	cmd.SysProcAttr = &syscall.SysProcAttr{Setsid: true}
+	err = cmd.Start()
+	if err != nil {
+		err = errors.Join(err, errors.New("nvimboat/TagFeeds.Open"))
+		return
+	}
 	return
 }
 

@@ -3,7 +3,9 @@ package nvimboat
 import (
 	"errors"
 	"fmt"
+	"os/exec"
 	"slices"
+	"syscall"
 
 	"github.com/EinYakAmNil/Nvimboat/go/engine/rssdb"
 	"github.com/neovim/go-client/nvim"
@@ -13,8 +15,24 @@ type Article struct {
 	rssdb.GetArticleRow
 }
 
+func (a *Article) ID() string {
+	return a.Url
+}
+
 // TODO: Call link handler
 func (a *Article) Select(dbh rssdb.DbHandle, id string) (p Page, err error) {
+	err = a.Open(id)
+	return
+}
+
+func (a *Article) Open(urls ...string) (err error) {
+	cmd := exec.Command(LinkHandler, urls...)
+	cmd.SysProcAttr = &syscall.SysProcAttr{Setsid: true}
+	err = cmd.Start()
+	if err != nil {
+		err = errors.Join(err, errors.New("nvimboat/Article.Open"))
+		return
+	}
 	return
 }
 
