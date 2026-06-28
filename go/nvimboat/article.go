@@ -33,6 +33,13 @@ func (a *Article) Open(urls ...string) (err error) {
 		err = errors.Join(err, errors.New("nvimboat/Article.Open"))
 		return
 	}
+	err = cmd.Process.Release()
+	if err != nil {
+		err = fmt.Errorf("cmd.Process.Release: %w\n"+
+			"nvimboat/Article.Open", err,
+		)
+		return
+	}
 	return
 }
 
