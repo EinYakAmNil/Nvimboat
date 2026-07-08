@@ -67,14 +67,31 @@ func TestPrintFeed(t *testing.T) {
 }
 
 func TestParseFeed(t *testing.T) {
-	var testFiles = map[string][]string{
-		"https://archlinux.org/feeds/news/":                          {path.Join(os.Getenv("HOME"), ".cache", "nvimboat-test", "851066edb1ff2ed061430a9b89a3ab2657d9416f"), "https://archlinux.org/news/"},
-		"https://www.pathofexile.com/news/rss":                       {path.Join(os.Getenv("HOME"), ".cache", "nvimboat-test", "3f2f2d4f33359839e533e70f5eb770fb1ba8d2b6"), "http://www.pathofexile.com"},
-		"https://notrelated.xyz/rss":                                 {path.Join(os.Getenv("HOME"), ".cache", "nvimboat-test", "1dcd3a50b1a7b0f55b48e40b9a2babdbae932475"), "https://notrelated.xyz"},
-		"https://fractalsoftworks.com/feed/":                         {path.Join(os.Getenv("HOME"), ".cache", "nvimboat-test", "47f781c383cefb9f11cf37fc6d6ecebec92ac7d9"), "https://fractalsoftworks.com"},
-		"http://www.youtube.com/feeds/videos.xml?user=CaravanPalace": {path.Join(os.Getenv("HOME"), ".cache", "nvimboat-test", "a1c549e0bf1aee1f7c1c9858b5654352a62a3acf"), "https://www.youtube.com/channel/UCKH9HfYY_GEcyltl2mbD5lA"},
-		"https://blog.lilydjwg.me/feed":                              {path.Join(os.Getenv("HOME"), ".cache", "nvimboat-test", "b8afac7b449f2270a30ddd9b6a7c1fd5da4d75c4"), "https://blog.lilydjwg.me/"},
-	}
+	var (
+		cacheDir  = []string{os.Getenv("HOME"), ".cache", "nvimboat-test"}
+		testFiles = map[string][]string{
+			"https://archlinux.org/feeds/news/": {
+				path.Join(append(cacheDir, "851066edb1ff2ed061430a9b89a3ab2657d9416f")...),
+				"https://archlinux.org/news/",
+			},
+			"https://www.pathofexile.com/news/rss": {
+				path.Join(append(cacheDir, "3f2f2d4f33359839e533e70f5eb770fb1ba8d2b6")...),
+				"https://www.pathofexile.com/",
+			},
+			"https://notrelated.xyz/rss": {
+				path.Join(append(cacheDir, "1dcd3a50b1a7b0f55b48e40b9a2babdbae932475")...),
+				"https://notrelated.xyz",
+			},
+			"https://fractalsoftworks.com/feed/": {
+				path.Join(append(cacheDir, "47f781c383cefb9f11cf37fc6d6ecebec92ac7d9")...),
+				"https://fractalsoftworks.com",
+			},
+			"https://blog.lilydjwg.me/feed": {
+				path.Join(append(cacheDir, "b8afac7b449f2270a30ddd9b6a7c1fd5da4d75c4")...),
+				"https://blog.lilydjwg.me/",
+			},
+		}
+	)
 	for url, testParams := range testFiles {
 		raw, err := os.ReadFile(testParams[0])
 		if err != nil {

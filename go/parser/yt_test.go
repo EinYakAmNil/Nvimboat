@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"fmt"
 	"os"
 	"path"
 	"testing"
@@ -13,6 +14,9 @@ func TestParseYtFeed(t *testing.T) {
 		t.Fatal(err)
 	}
 	feed, articles, err := ParseYtFeed(raw, "")
+	for _, a := range articles {
+		fmt.Println(a.Unread)
+	}
 	if err != nil {
 		t.Fatal(err)
 	}

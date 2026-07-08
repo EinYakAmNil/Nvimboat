@@ -39,12 +39,11 @@ func (sr *StandardReloader) UpdateFeed(
 	for _, g := range knownGuids {
 		guidMap[g] = struct{}{}
 	}
-	log.Println(guidMap)
-	log.Println(items)
 	newArticles := make(map[string]*rssdb.InsertArticleParams)
 	for g, item := range items {
 		if _, ok := guidMap[g]; !ok {
 			newArticles[g] = item
+			newArticles[g].Unread = 1
 		}
 	}
 
@@ -122,7 +121,9 @@ func (sr *StandardReloader) GetRss(
 	}
 	feed, items, err = parser.ParseFeed(content, url)
 	if err != nil {
-		err = errors.Join(err, errors.New("reload/StandardReloader.GetRss"))
+		err = fmt.Errorf("parser.ParseFeed: %w\n"+
+			"reload/StandardReloader.GetRss", err,
+		)
 		return
 	}
 	return

@@ -53,10 +53,11 @@ func ParseYtFeed(xmlBytes []byte, url string) (
 		return
 	}
 	feed.Title = ytFeed.Title
+
+	// YouTube shows http instead of https. This respects the users protocol
+	feed.Rssurl = url
+
 	for _, link := range ytFeed.Links {
-		if link.Rel == "self" {
-			feed.Rssurl = link.Href
-		}
 		if link.Rel == "alternate" {
 			feed.Url = link.Href
 		}
@@ -69,7 +70,7 @@ func ParseYtFeed(xmlBytes []byte, url string) (
 		}
 		articles[entry.Guid] = &rssdb.InsertArticleParams{
 			Pubdate: pubDate.Unix(),
-			Feedurl: feed.Rssurl,
+			Feedurl: url,
 			Author:  entry.Author.Name,
 			Guid:    entry.Guid,
 			Title:   entry.Title,

@@ -117,7 +117,6 @@ findChannelUrl:
 			Guid:    a.Guid,
 			Title:   a.Title,
 			Url:     a.Url,
-			Unread:  1,
 			// ContentMimeType: ,
 		}
 	}
