@@ -94,3 +94,49 @@ func TestParseFeed(t *testing.T) {
 		}
 	}
 }
+
+func TestParseDefaultFeed(t *testing.T) {
+	var (
+		cacheDir  = []string{os.Getenv("HOME"), ".cache", "nvimboat-test"}
+		testFiles = map[string][]string{
+			"https://archlinux.org/feeds/news/": {
+				path.Join(append(cacheDir, "851066edb1ff2ed061430a9b89a3ab2657d9416f")...),
+				"https://archlinux.org/news/",
+			},
+			"https://www.pathofexile.com/news/rss": {
+				path.Join(append(cacheDir, "3f2f2d4f33359839e533e70f5eb770fb1ba8d2b6")...),
+				"https://www.pathofexile.com/",
+			},
+			"https://notrelated.xyz/rss": {
+				path.Join(append(cacheDir, "1dcd3a50b1a7b0f55b48e40b9a2babdbae932475")...),
+				"https://notrelated.xyz",
+			},
+			"https://fractalsoftworks.com/feed/": {
+				path.Join(append(cacheDir, "47f781c383cefb9f11cf37fc6d6ecebec92ac7d9")...),
+				"https://fractalsoftworks.com",
+			},
+			"https://blog.lilydjwg.me/feed": {
+				path.Join(append(cacheDir, "b8afac7b449f2270a30ddd9b6a7c1fd5da4d75c4")...),
+				"https://blog.lilydjwg.me/",
+			},
+		}
+	)
+	for url, testParams := range testFiles {
+		raw, err := os.ReadFile(testParams[0])
+		if err != nil {
+			t.Fatal(err)
+		}
+		feed, err := ParseDefaultFeed2(raw, url)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if url != "https://www.pathofexile.com/news/rss" {
+			if feed.FeedItems[0].Author == "" {
+				t.Fatal("No author parsed", url)
+			}
+		}
+		if feed.Url != testParams[1] {
+			t.Fatalf(`feed.Url: expected "%s" got:"%s"`, testParams[1], feed.Url)
+		}
+	}
+}
