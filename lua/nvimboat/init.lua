@@ -7,6 +7,7 @@ M.config = require("nvimboat.config")
 M.actions = require("nvimboat.actions")
 M.pages = require("nvimboat.pages")
 M.keymaps = require("nvimboat.keymaps")
+M.utils = require("nvimboat.utils")
 
 local function start_engine()
 	return vim.fn.jobstart({ M.config.engine }, {
@@ -50,7 +51,9 @@ end
 function M.setup(opts)
 	opts = opts or {}
 	for key, value in pairs(opts) do
-		M.config[key] = value
+		if key ~= "keymaps" then
+			M.config[key] = value
+		end
 	end
 	M.feeds = opts.feeds or {}
 	M.filters = opts.filters or {}
