@@ -116,11 +116,55 @@ function M.prev_article()
 end
 
 function M.next_unread()
-	Nvimboat("next-unread")
+	if pages[#pages].type == "TagsOverview" then
+		return
+	end
+	if pages[#pages].type == "Article" then
+		Nvimboat("next-unread")
+	end
+	local ts_root = assert(vim.treesitter.get_parser():parse()[1]:root(),
+		"tree-sitter parsing failed. `ts_root` is nil")
+	local count = ts_root:named_child_count()
+	local row, col = unpack(vim.api.nvim_win_get_cursor(0))
+	local treesitter_unread_set = {
+		unread_feed = true,
+		unread_filter = true,
+		unread_article = true,
+	}
+	for i = 0, count - 1 do
+		local child = assert(ts_root:named_child((row + i) % count),
+			"tree-sitter parsing failed. `ts_root` is nil")
+		if treesitter_unread_set[child:type()] then
+			vim.api.nvim_win_set_cursor(0, { child:start() + 1, col })
+			return
+		end
+	end
 end
 
 function M.prev_unread()
-	Nvimboat("prev-unread")
+	if pages[#pages].type == "TagsOverview" then
+		return
+	end
+	if pages[#pages].type == "Article" then
+		Nvimboat("prev-unread")
+	end
+	local ts_root = assert(vim.treesitter.get_parser():parse()[1]:root(),
+		"tree-sitter parsing failed. `ts_root` is nil")
+	local count = ts_root:named_child_count()
+	local row, col = unpack(vim.api.nvim_win_get_cursor(0))
+	local treesitter_unread_set = {
+		unread_feed = true,
+		unread_filter = true,
+		unread_article = true,
+	}
+	for i = 0, count - 1 do
+		local child = assert(ts_root:named_child((row - i - 2) % count),
+			"tree-sitter parsing failed. `ts_root` is nil")
+		if treesitter_unread_set[child:type()] then
+			vim.api.nvim_win_set_cursor(0, { child:start() + 1, col })
+			return
+		end
+	end
 end
 
 function M.reload()

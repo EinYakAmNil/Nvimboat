@@ -18,8 +18,6 @@ type (
 		ChildIdx(p Page) (idx int, err error)
 		Back() (cursor_x int, err error)
 		ToggleRead(dbh rssdb.DbHandle, ids []string) (pos [2][2]int, err error)
-		NextUnread(dbh rssdb.DbHandle) (err error)
-		PrevUnread(dbh rssdb.DbHandle) (err error)
 		Delete(dbh rssdb.DbHandle, ids []string) (err error)
 	}
 	PageStack []Page

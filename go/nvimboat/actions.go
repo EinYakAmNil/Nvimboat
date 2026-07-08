@@ -229,28 +229,52 @@ func (nb *Nvimboat) Back(nv *nvim.Nvim, args ...string) (err error) {
 }
 
 func (nb *Nvimboat) NextUnread(nv *nvim.Nvim, args ...string) (err error) {
-	dbh, err := rssdb.ConnectDb(DbPath)
-	if err != nil {
-		err = errors.Join(err, fmt.Errorf("nvimboat/NextUnread"))
+	article, ok := Pages.Top().(*Article)
+	if !ok {
+		err = fmt.Errorf(`not called on a page of type "*Article"`)
+		err = fmt.Errorf("Pages.Top().(*Article): %w\n"+
+			"nvimboat/Nvimboat.NextUnread", err,
+		)
 		return
 	}
-	err = Pages.Top().NextUnread(dbh)
+	dbh, err := rssdb.ConnectDb(DbPath)
 	if err != nil {
-		err = errors.Join(err, fmt.Errorf("nvimboat/NextUnread"))
+		err = fmt.Errorf("rssdb.ConnectDb: %w\n"+
+			"nvimboat/Nvimboat.NextUnread", err,
+		)
+		return
+	}
+	err = article.NextUnread(dbh)
+	if err != nil {
+		err = fmt.Errorf("article.NextUnread: %w\n"+
+			"nvimboat/Nvimboat.NextUnread", err,
+		)
 		return
 	}
 	return
 }
 
 func (nb *Nvimboat) PrevUnread(nv *nvim.Nvim, args ...string) (err error) {
-	dbh, err := rssdb.ConnectDb(DbPath)
-	if err != nil {
-		err = errors.Join(err, fmt.Errorf("nvimboat/PrevUnread"))
+	article, ok := Pages.Top().(*Article)
+	if !ok {
+		err = fmt.Errorf(`not called on a page of type "*Article"`)
+		err = fmt.Errorf("Pages.Top().(*Article): %w\n"+
+			"nvimboat/Nvimboat.PrevUnread", err,
+		)
 		return
 	}
-	err = Pages.Top().PrevUnread(dbh)
+	dbh, err := rssdb.ConnectDb(DbPath)
 	if err != nil {
-		err = errors.Join(err, fmt.Errorf("nvimboat/PrevUnread"))
+		err = fmt.Errorf("rssdb.ConnectDb: %w\n"+
+			"nvimboat/Nvimboat.PrevUnread", err,
+		)
+		return
+	}
+	err = article.PrevUnread(dbh)
+	if err != nil {
+		err = fmt.Errorf("article.PrevUnread: %w\n"+
+			"nvimboat/Nvimboat.PrevUnread", err,
+		)
 		return
 	}
 	return

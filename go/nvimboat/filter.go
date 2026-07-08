@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"os/exec"
-	"slices"
 	"syscall"
 
 	"github.com/EinYakAmNil/Nvimboat/go/engine/rssdb"
@@ -250,95 +249,6 @@ checkAnyUnread:
 				}
 			}
 		}
-	}
-	return
-}
-
-func (f *Filter) NextUnread(dbh rssdb.DbHandle) (err error) {
-	cursorPosition, err := Nvim.WindowCursor(*NvWindow)
-	if err != nil {
-		err = errors.Join(err, errors.New("nvimboat/Filter.NextUnread"))
-		return
-	}
-	cursorRow := cursorPosition[0]
-	if len(f.Articles) < cursorRow {
-		err = fmt.Errorf(
-			`Cursor row (%d) is outside of this filter's article range: %d.`,
-			cursorRow,
-			len(f.Articles),
-		)
-		err = errors.Join(err, errors.New("nvimboat/Filter.NextUnread"))
-		return
-	}
-	for i, article := range append(f.Articles[cursorRow:], f.Articles[:cursorRow]...) {
-		if article.Unread == 1 {
-			err = setCursorUnread(
-				(i+cursorRow)%len(f.Articles)+1,
-				cursorPosition[1],
-				len(f.Articles),
-				article,
-			)
-			if err != nil {
-				err = errors.Join(err, errors.New("nvimboat/Filter.NextUnread"))
-				return
-			}
-			return
-		}
-	}
-	err = Nvim.Echo([]nvim.TextChunk{{
-		Text: "No more unread articles in this filter.",
-	}},
-		false,
-		make(map[string]any),
-	)
-	if err != nil {
-		err = errors.Join(err, errors.New("nvimboat/Filter.NextUnread"))
-		return
-	}
-	return
-}
-
-func (f *Filter) PrevUnread(dbh rssdb.DbHandle) (err error) {
-	cursorPosition, err := Nvim.WindowCursor(*NvWindow)
-	if err != nil {
-		err = errors.Join(err, errors.New("nvimboat/Filter.NextUnread"))
-		return
-	}
-	cursorRow := cursorPosition[0] - 1
-	if len(f.Articles) < cursorRow {
-		err = fmt.Errorf(
-			`Cursor row (%d) is outside of this filter's article range: %d.`,
-			cursorRow,
-			len(f.Articles),
-		)
-		err = errors.Join(err, errors.New("nvimboat/Filter.NextUnread"))
-		return
-	}
-	for i, article := range slices.Backward(
-		append(f.Articles[cursorRow:], f.Articles[:cursorRow]...)) {
-		if article.Unread == 1 {
-			err = setCursorUnread(
-				(i+cursorRow)%len(f.Articles)+1,
-				cursorPosition[1],
-				len(f.Articles),
-				article,
-			)
-			if err != nil {
-				err = errors.Join(err, errors.New("nvimboat/Filter.PrevUnread"))
-				return
-			}
-			return
-		}
-	}
-	err = Nvim.Echo([]nvim.TextChunk{{
-		Text: "No more unread articles in this filter.",
-	}},
-		false,
-		make(map[string]any),
-	)
-	if err != nil {
-		err = errors.Join(err, errors.New("nvimboat/Filter.NextUnread"))
-		return
 	}
 	return
 }
