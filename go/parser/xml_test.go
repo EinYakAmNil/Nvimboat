@@ -80,13 +80,15 @@ func TestParseFeed(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		feed, err := ParseFeed(raw, url)
+		feed, articles, err := ParseFeed(raw, url)
 		if err != nil {
 			t.Fatal(err)
 		}
 		if url != "https://www.pathofexile.com/news/rss" {
-			if feed.FeedItems[0].Author == "" {
-				t.Fatal("No author parsed", url)
+			for _, a := range articles {
+				if a.Author == "" {
+					t.Fatal("No author parsed", url)
+				}
 			}
 		}
 		if feed.Url != testParams[1] {
@@ -126,13 +128,15 @@ func TestParseDefaultFeed(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		feed, err := ParseDefaultFeed2(raw, url)
+		feed, articles, err := ParseDefaultFeed(raw, url)
 		if err != nil {
 			t.Fatal(err)
 		}
 		if url != "https://www.pathofexile.com/news/rss" {
-			if feed.FeedItems[0].Author == "" {
-				t.Fatal("No author parsed", url)
+			for _, a := range articles {
+				if a.Author == "" {
+					t.Fatal("No author parsed", url)
+				}
 			}
 		}
 		if feed.Url != testParams[1] {

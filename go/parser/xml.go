@@ -2,7 +2,6 @@ package parser
 
 import (
 	"encoding/xml"
-	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -10,102 +9,46 @@ import (
 	"github.com/EinYakAmNil/Nvimboat/go/engine/rssdb"
 )
 
-type Rss struct {
-	XMLName xml.Name `xml:""`
-	Channel Channel  `xml:"channel"`
-}
+type (
+	Rss struct {
+		Channel Channel `xml:"channel"`
+	}
+	Channel struct {
+		Items []Item    `xml:"item"`
+		Urls  []RssLink `xml:"link"`
+		Title string    `xml:"title"`
+	}
+	RssLink struct {
+		Text string `xml:",chardata"`
+		Href string `xml:"href,attr"`
+	}
+	Item struct {
+		Author      string `xml:"author"`
+		Creator     string `xml:"creator"`
+		Content     string `xml:"content"`
+		Description string `xml:"description"`
+		Encoded     string `xml:"encoded"`
+		Guid        string `xml:"guid"`
+		PubDate     string `xml:"pubDate"`
+		Title       string `xml:"title"`
+		Url         string `xml:"link"`
+	}
+)
 
-type Channel struct {
-	Items []Item
-	Urls  []string
-	Title string
-}
-
-type Item struct {
-	Author  string
-	Content string
-	Guid    string
-	Pubdate string
-	Title   string
-	Url     string
-}
-
-func (c *Channel) UnmarshalXML(d *xml.Decoder, start xml.StartElement) (err error) {
-	var (
-		url string
-		i   Item
-	)
-	for {
-		token, err := d.Token()
-		if err != nil {
-			return err
-		}
-		switch se := token.(type) {
-		case xml.StartElement:
-			switch se.Name.Local {
-			case "item":
-				d.DecodeElement(&i, &se)
-				c.Items = append(c.Items, i)
-			case "link":
-				d.DecodeElement(&url, &se)
-				if url == "" {
-					for _, attr := range se.Attr {
-						if attr.Name.Local == "href" {
-							url = attr.Value
-						}
-					}
-				}
-				c.Urls = append(c.Urls, strings.Trim(url, "\n\t "))
-			case "title":
-				if c.Title == "" {
-					d.DecodeElement(&c.Title, &se)
-				}
-			}
-		case xml.EndElement:
-			if se.Name.Local == start.Name.Local {
-				return nil
-			}
+func firstNonEmpty(values ...string) string {
+	for _, v := range values {
+		if v != "" {
+			return v
 		}
 	}
+	return ""
 }
 
-func (i *Item) UnmarshalXML(d *xml.Decoder, start xml.StartElement) (err error) {
-	for {
-		token, err := d.Token()
-		if err != nil {
-			return err
-		}
-		switch se := token.(type) {
-		case xml.StartElement:
-			switch se.Name.Local {
-			case "author", "creator":
-				d.DecodeElement(&i.Author, &se)
-			case "description", "content", "encoded":
-				d.DecodeElement(&i.Content, &se)
-			case "guid":
-				d.DecodeElement(&i.Guid, &se)
-			case "pubDate":
-				d.DecodeElement(&i.Pubdate, &se)
-			case "title":
-				d.DecodeElement(&i.Title, &se)
-			case "link":
-				d.DecodeElement(&i.Url, &se)
-			}
-		case xml.EndElement:
-			if se.Name.Local == start.Name.Local {
-				return nil
-			}
-		}
-	}
-}
-
-func ParseDefaultFeed(raw []byte, url string) (feed Feed, err error) {
+func (raw Item) Item() (a rssdb.GetArticleRow, err error) {
 	var (
-		feedItem     = rssdb.GetArticleRow{Unread: 1, Feedurl: url}
-		rss          Rss
-		pubDate      time.Time
-		timeParseErr error
+		pubDate time.Time
 	)
+	const trims = "\n\t "
 	timeFormats := []string{
 		time.RFC1123,
 		time.RFC1123Z,
@@ -114,43 +57,69 @@ func ParseDefaultFeed(raw []byte, url string) (feed Feed, err error) {
 		time.RFC822,
 		time.RFC822Z,
 	}
-	err = xml.Unmarshal(raw, &rss)
+	for _, format := range timeFormats {
+		pubDate, err = time.Parse(format, raw.PubDate)
+		if err == nil {
+			break
+		}
+	}
 	if err != nil {
-		err = errors.Join(err, errors.New("parser/ParseDefaultFeed"))
+		err = fmt.Errorf(": %w\n"+
+			"parser/Item", err,
+		)
 		return
 	}
-	feed.Title = strings.Trim(rss.Channel.Title, "\n\t ")
+	a.Pubdate = pubDate.Unix()
+	a.Author = strings.Trim(firstNonEmpty(raw.Author, raw.Creator),
+		trims)
+	a.Content = strings.Trim(firstNonEmpty(raw.Content, raw.Description, raw.Encoded), trims)
+	a.Guid = raw.Guid
+	a.Title = raw.Title
+	a.Url = raw.Url
+	return
+}
+
+func ParseDefaultFeed(raw []byte, url string) (
+	feed *rssdb.InsertFeedParams,
+	articles map[string]*rssdb.InsertArticleParams,
+	err error,
+) {
+	var rss Rss
+	feed = new(rssdb.InsertFeedParams)
+	articles = make(map[string]*rssdb.InsertArticleParams)
+
+	err = xml.Unmarshal(raw, &rss)
+	if err != nil {
+		err = fmt.Errorf("xml.Unmarshal: %w\n"+
+			"parser/ParseDefaultFeed", err,
+		)
+		return
+	}
 findChannelUrl:
 	for _, u := range rss.Channel.Urls {
-		if strings.Trim(u, "\\") != strings.Trim(url, "\\") {
-			feed.Url = u
+		if u.Text != "" {
+			feed.Url = u.Text
 			break findChannelUrl
 		}
 	}
 	for _, item := range rss.Channel.Items {
-		feedItem.Author = strings.Trim(item.Author, "\n\t ")
-		feedItem.Guid = strings.Trim(item.Guid, "\n\t ")
-		feedItem.Content = strings.Trim(item.Content, "\n\t ")
-		feedItem.Title = strings.Trim(item.Title, "\n\t ")
-		feedItem.Url = strings.Trim(item.Url, "\n\t ")
-	timeParseLoop:
-		for _, layout := range timeFormats {
-			pubDate, timeParseErr = time.Parse(layout, item.Pubdate)
-			if timeParseErr == nil {
-				break timeParseLoop
-			}
-		}
-		if timeParseErr != nil {
-			err = fmt.Errorf(
-				`Could not parse "%s" in feed "%s" with available time formats`,
-				item.Pubdate,
-				url,
+		a, itemErr := item.Item()
+		if itemErr != nil {
+			err = fmt.Errorf(": %w\n"+
+				"parser/ParseDefaultFeed", itemErr,
 			)
-			err = errors.Join(err, errors.New("parser/ParseDefaultFeed"))
 			return
 		}
-		feedItem.Pubdate = pubDate.Unix()
-		feed.FeedItems = append(feed.FeedItems, feedItem)
+		articles[a.Guid] = &rssdb.InsertArticleParams{
+			Author:  a.Author,
+			Pubdate: a.Pubdate,
+			Content: a.Content,
+			Guid:    a.Guid,
+			Title:   a.Title,
+			Url:     a.Url,
+			Unread:  1,
+			// ContentMimeType: ,
+		}
 	}
 	return
 }

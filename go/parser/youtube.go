@@ -10,7 +10,6 @@ import (
 
 type (
 	YTFeed struct {
-		XMLName xml.Name  `xml:"feed"`
 		Links   []YTLink  `xml:"link"`
 		Title   string    `xml:"title"`
 		Entries []YTEntry `xml:"entry"`
@@ -37,12 +36,17 @@ type (
 	}
 )
 
-func ParseYtFeed(xmlBytes []byte, url string) (feed Feed, err error) {
+func ParseYtFeed(xmlBytes []byte, url string) (
+	feed *rssdb.InsertFeedParams,
+	articles map[string]*rssdb.InsertArticleParams,
+	err error,
+) {
 	var (
-		feedItem = rssdb.GetArticleRow{Unread: 1}
-		pubDate  time.Time
-		ytFeed   YTFeed
+		pubDate time.Time
+		ytFeed  YTFeed
 	)
+	feed = new(rssdb.InsertFeedParams)
+	articles = make(map[string]*rssdb.InsertArticleParams)
 	err = xml.Unmarshal(xmlBytes, &ytFeed)
 	if err != nil {
 		err = errors.Join(err, errors.New("parser/ParseYtFeed"))
@@ -57,20 +61,21 @@ func ParseYtFeed(xmlBytes []byte, url string) (feed Feed, err error) {
 			feed.Url = link.Href
 		}
 	}
-	feedItem.Feedurl = feed.Rssurl
 	for _, entry := range ytFeed.Entries {
 		pubDate, err = time.Parse(time.RFC3339, entry.Pubdate)
 		if err != nil {
 			err = errors.Join(err, errors.New("parser/ParseYtFeed"))
 			return
 		}
-		feedItem.Pubdate = pubDate.Unix()
-		feedItem.Author = entry.Author.Name
-		feedItem.Guid = entry.Guid
-		feedItem.Title = entry.Title
-		feedItem.Url = entry.Url.Href
-		feedItem.Content = entry.Content.Description
-		feed.FeedItems = append(feed.FeedItems, feedItem)
+		articles[entry.Guid] = &rssdb.InsertArticleParams{
+			Pubdate: pubDate.Unix(),
+			Feedurl: feed.Rssurl,
+			Author:  entry.Author.Name,
+			Guid:    entry.Guid,
+			Title:   entry.Title,
+			Url:     entry.Url.Href,
+			Content: entry.Content.Description,
+		}
 	}
 	return
 }

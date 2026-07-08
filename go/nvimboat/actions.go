@@ -68,7 +68,9 @@ func (nb *Nvimboat) Reload(nv *nvim.Nvim, args ...string) (err error) {
 	Global.ChanAsync <- Async{func(a ...any) (err error) {
 		err = ReloadFeeds(feedUrls)
 		if err != nil {
-			err = errors.Join(err, fmt.Errorf("nvimboat/Reload"))
+			err = fmt.Errorf("ReloadFeeds: %w\n"+
+				"nvimboat/Nvimboat.Reload", err,
+			)
 			return
 		}
 		return

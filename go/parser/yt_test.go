@@ -12,11 +12,14 @@ func TestParseYtFeed(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	feed, err := ParseYtFeed(raw, "")
+	feed, articles, err := ParseYtFeed(raw, "")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(feed.FeedItems) == 0 {
+	if len(articles) == 0 {
+		t.Fail()
+	}
+	if feed.Rssurl == "" {
 		t.Fail()
 	}
 }

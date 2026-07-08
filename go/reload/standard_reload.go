@@ -14,9 +14,7 @@ import (
 	"github.com/EinYakAmNil/Nvimboat/go/engine/rssdb"
 )
 
-type StandardReloader struct {
-	attemptedDBMigration bool
-}
+type StandardReloader struct{}
 
 func (sr *StandardReloader) UpdateFeed(
 	dbh rssdb.DbHandle,
@@ -122,29 +120,10 @@ func (sr *StandardReloader) GetRss(
 			return
 		}
 	}
-	feedParsed, err := parser.ParseFeed(content, url)
+	feed, items, err = parser.ParseFeed(content, url)
 	if err != nil {
 		err = errors.Join(err, errors.New("reload/StandardReloader.GetRss"))
 		return
-	}
-	feed = &rssdb.InsertFeedParams{
-		Rssurl: url,
-		Url:    feedParsed.Url,
-		Title:  feedParsed.Title,
-	}
-
-	items = make(map[string]*rssdb.InsertArticleParams)
-	for _, item := range feedParsed.FeedItems {
-		items[item.Guid] = &rssdb.InsertArticleParams{
-			Guid:    item.Guid,
-			Title:   item.Title,
-			Author:  item.Author,
-			Url:     item.Url,
-			Feedurl: url,
-			Pubdate: item.Pubdate,
-			Content: item.Content,
-			Unread:  1,
-		}
 	}
 	return
 }
