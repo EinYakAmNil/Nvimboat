@@ -7,7 +7,7 @@ import (
 
 	"github.com/EinYakAmNil/Nvimboat/go/engine/reload"
 	"github.com/EinYakAmNil/Nvimboat/go/engine/reload/mangapill"
-	"github.com/EinYakAmNil/Nvimboat/go/engine/reload/pixiv"
+	// "github.com/EinYakAmNil/Nvimboat/go/engine/reload/pixiv"
 	"github.com/EinYakAmNil/Nvimboat/go/engine/rssdb"
 )
 
@@ -15,7 +15,7 @@ import (
 // Use a regex as the key value to decide, when your reloader should be used.
 var CustomReload = map[string]reload.Reloader{
 	`https://mangapill\.com`:            new(mangapill.MangapillReloader),
-	`https://(?:www\.)?www\.pixiv\.net`: new(pixiv.PixivReloader),
+	// `https://(?:www\.)?www\.pixiv\.net`: new(pixiv.PixivReloader),
 }
 
 func ReloadFeeds(feedUrls []string) (err error) {

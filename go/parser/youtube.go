@@ -69,13 +69,13 @@ func ParseYtFeed(xmlBytes []byte, url string) (
 			return
 		}
 		articles[entry.Guid] = &rssdb.InsertArticleParams{
-			Pubdate: pubDate.Unix(),
-			Feedurl: url,
 			Author:  entry.Author.Name,
+			Content: entry.Content.Description,
+			Feedurl: url,
 			Guid:    entry.Guid,
+			Pubdate: pubDate.Unix(),
 			Title:   entry.Title,
 			Url:     entry.Url.Href,
-			Content: entry.Content.Description,
 		}
 	}
 	return

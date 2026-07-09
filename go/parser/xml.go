@@ -95,6 +95,7 @@ func ParseDefaultFeed(raw []byte, url string) (
 		)
 		return
 	}
+	feed.Rssurl = url
 findChannelUrl:
 	for _, u := range rss.Channel.Urls {
 		if u.Text != "" {
@@ -112,12 +113,12 @@ findChannelUrl:
 		}
 		articles[a.Guid] = &rssdb.InsertArticleParams{
 			Author:  a.Author,
-			Pubdate: a.Pubdate,
 			Content: a.Content,
+			Feedurl: url,
 			Guid:    a.Guid,
+			Pubdate: a.Pubdate,
 			Title:   a.Title,
 			Url:     a.Url,
-			// ContentMimeType: ,
 		}
 	}
 	return
