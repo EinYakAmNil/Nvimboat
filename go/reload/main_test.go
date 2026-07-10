@@ -35,12 +35,11 @@ func TestGetRss(t *testing.T) {
 	if err != nil {
 		t.Fatal("cannot create cache directory")
 	}
-	reloader := new(StandardReloader)
 	for title, url := range testFeeds {
 		fmt.Println("first iteration...")
-		reloader.GetRss(url, header, cacheTime, cacheDir)
+		GetRss(url, header, cacheTime, cacheDir)
 		fmt.Println("now try to get contents from cache...")
-		feed, items, fromCache, err := reloader.GetRss(url, header, cacheTime, cacheDir)
+		feed, items, fromCache, err := GetRss(url, header, cacheTime, cacheDir)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -57,19 +56,18 @@ func TestGetRss(t *testing.T) {
 }
 
 func TestUpdateFeeds(t *testing.T) {
-	reloader := new(StandardReloader)
 	dbh, err := rssdb.ConnectDb(dbPath)
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer dbh.DB.Close()
 	for _, url := range testFeeds {
-		feed, items, _, err := reloader.GetRss(url, header, cacheTime, cacheDir)
+		feed, items, _, err := GetRss(url, header, cacheTime, cacheDir)
 		if err != nil {
 			err = errors.Join(err, errors.New("reload/TestUpdateFeeds"))
 			t.Fatal(err)
 		}
-		err = reloader.UpdateFeed(dbh, *feed, items)
+		err = UpdateFeed(dbh, *feed, items)
 		if err != nil {
 			err = errors.Join(err, errors.New("reload/TestUpdateFeeds"))
 			t.Fatal(err)

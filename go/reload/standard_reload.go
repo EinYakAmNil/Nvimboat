@@ -14,9 +14,7 @@ import (
 	"github.com/EinYakAmNil/Nvimboat/go/engine/rssdb"
 )
 
-type StandardReloader struct{}
-
-func (sr *StandardReloader) UpdateFeed(
+func UpdateFeed(
 	dbh rssdb.DbHandle,
 	feed rssdb.InsertFeedParams,
 	items map[string]*rssdb.InsertArticleParams,
@@ -76,7 +74,7 @@ func (sr *StandardReloader) UpdateFeed(
 // Requests the URL if not found in cacheDir or if the modification time of the cache file is too old.
 // The request will be cached in cacheDir.
 // Indicates with the return value fromCache if cache was used.
-func (sr *StandardReloader) GetRss(
+func GetRss(
 	url string,
 	header http.Header,
 	cacheTime time.Duration,
