@@ -66,36 +66,6 @@ func sortFeeds(feedMap map[string]*Feed) (feeds []*Feed) {
 	return
 }
 
-func setCursorUnread(row, col, maxRows int, matched any) (err error) {
-	newCursorPosition := [2]int{
-		row,
-		col,
-	}
-	err = Nvim.SetWindowCursor(*NvWindow,
-		newCursorPosition,
-	)
-	if err != nil {
-		errPosition := fmt.Errorf(
-			`Got: %+v, max row count: %d, %d`,
-			newCursorPosition,
-			row,
-			maxRows,
-		)
-		errArticle := fmt.Errorf(
-			`Matched: %+v`,
-			prettyStruct(matched),
-		)
-		err = errors.Join(
-			err,
-			errPosition,
-			errArticle,
-			errors.New("nvimboat/setCursorNextUnread"),
-		)
-		return
-	}
-	return
-}
-
 func updateFilters(dbh rssdb.DbHandle) (err error) {
 	for _, filter := range FilterConfig {
 		filter.Articles, err = dbh.Queries.QueryFilter(dbh.Ctx, filter.QueryFilterParams)
@@ -132,10 +102,9 @@ func parseFilter(rawFilter map[string]any) (filter Filter, err error) {
 	}
 	if filter.Name == "" {
 		err = fmt.Errorf(
-			"No name for filter in: %+v",
+			"No name for filter in: %+v\nnvimboat/parseFilter",
 			prettyStruct(filter),
 		)
-		err = errors.Join(err, errors.New("nvimboat/parseFilter"))
 		return
 	}
 	if value, ok := rawFilter["unread"].(int64); ok {

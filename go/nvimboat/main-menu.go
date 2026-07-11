@@ -72,20 +72,24 @@ func (mm *MainMenu) Render(nv *nvim.Nvim, buf nvim.Buffer) (err error) {
 				unreadCount++
 			}
 		}
-		unreadArticlesRatio = append(unreadArticlesRatio, makeUnreadRatio(unreadCount, int64(len(f.Articles))))
+		unreadArticlesRatio = append(unreadArticlesRatio,
+			makeUnreadRatio(unreadCount, int64(len(f.Articles))))
 		titleCol = append(titleCol, f.Name)
 		urlCol = append(urlCol, f.FilterDescription)
 		unreadCount = 0
 	}
 	for _, f := range sortFeeds(Feeds) {
-		unreadArticlesRatio = append(unreadArticlesRatio, makeUnreadRatio(f.UnreadCount, f.ArticleCount))
+		unreadArticlesRatio = append(unreadArticlesRatio,
+			makeUnreadRatio(f.UnreadCount, f.ArticleCount))
 		titleCol = append(titleCol, f.Title)
 		urlCol = append(urlCol, f.Rssurl)
 	}
 	for _, c := range [][]string{unreadArticlesRatio, titleCol, urlCol} {
 		err = addColumn(nv, buf, c)
 		if err != nil {
-			err = errors.Join(err, errors.New("nvimboat/MainMenu.Render"))
+			err = fmt.Errorf("addColumn: %w\n"+
+				"nvimboat/MainMenu.Render", err,
+			)
 			return
 		}
 	}
