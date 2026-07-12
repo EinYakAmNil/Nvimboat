@@ -11,7 +11,29 @@ It aims to be fully compatible with the database schema of [newsboat](https://ne
 4. Vim movements are more comfortable.
 5. Because you can.
 
-# Components 
+# Installation
+
+## Lazy.nvim
+```lua
+{
+    "EinYakAmNil/Nvimboat",
+    build = function()
+        local nvimboat_go_path = vim.fn.stdpath("data") .. "/lazy/Nvimboat/go"
+        vim.fn.jobstart("go build -C " .. nvimboat_go_path)
+    end
+    cmd = "Nvimboat",
+    config = function()
+        local nvimboat = require("nvimboat")
+        nvimboat.setup({
+            feeds = {
+                -- see Configuration
+            }
+        })
+    end
+}
+```
+
+# Requirements
 
 ## Neovim
 
@@ -21,9 +43,10 @@ It aims to be fully compatible with the database schema of [newsboat](https://ne
 
 ## [Go](https://pkg.go.dev/github.com/neovim/go-client/nvim)
 
-- Backend of the plugin
+- Engine of the plugin
 - Handles formatting and display logic
 - Interacts with the database to fetch/update the required information
+- Requests RSS feeds
 
 ## [SQLite](https://www.sqlite.org/index.html)
 
@@ -36,30 +59,30 @@ It aims to be fully compatible with the database schema of [newsboat](https://ne
 - Creates a special mode with slightly different keymaps
 - Colorscheme is based on [treesitter](https://tree-sitter.github.io/tree-sitter/) nodes
 
-# Installation
+# Configuration
 
-## Lazy.nvim
-```lua
+## LSP
+
+I recommend adding a ```.luarc.json``` file to whereever you configure this plugin.
+It should include the Nvimboat installation directory.
+
+```json
 {
-    "EinYakAmNil/Nvimboat",
-    build = function()
-        local nvimboat_go_path = vim.fn.stdpath("data") .. "/lazy/Nvimboat/go"
-        vim.fn.jobstart("go build -C " .. nvimboat_go_path)
-    end
-},
+	"workspace.library": [
+		"${3rd}/luassert/library",
+		"/usr/share/nvim/runtime/lua/",
+		"~/.local/share/nvim/lazy/Nvimboat/lua/nvimboat/"
+	],
+	"runtime.version": "Lua 5.1"
+}
 ```
-## Default values
-```lua
-nvimboat.godir = runtime_path .. "go/"
-nvimboat.cachedir = runtime_path .. "cache/"
-nvimboat.cachetime = 600
-nvimboat.dbpath = nvimboat.cachedir .. "cache.db"
-nvimboat.log = runtime_path .. "nvimboat.log"
-```
-## Configuration
-- Feeds can be tagged to put them into categories and mark them for filters
-- A feed needs to have all the tags defined in a filter to be shown
-- Putting an exclamation mark in front of a tag can be used to exclude any feed that has been tagged by that
+
+## Nvimboat
+
+- Feeds can be tagged to put them into categories and mark them for filters.
+- A feed with any matching tags of a filter will be included.
+- Putting an exclamation mark in front of a tag can be used to exclude any feed that has been tagged by that.
+
 ```lua
 local nvimboat = require("nvimboat")
 
@@ -74,27 +97,44 @@ nvimboat.setup({
         {
             rssurl = "https://twitter.com/DoctorLalve",
             tags = { "YouTube", "Animation" },
-            reloader = "/path/to/custom/reloader" -- Custom reloaders can be defined
         },
     },
     filters = {
         {
            name = "New YouTube tech videos, but not music",
-           query = "unread = 1",
+           unread = 1,
            tags = { "YouTube", "Tech", "!Music" },
         },
         {
            name = "New Music",
-           query = "unread = 1",
+           unread = 1,
            tags = { "Music" },
         },
-    -- These values don't have to be configured, but they can be.
-    db = 'path/to/database'
-    separator = " | " -- separator for UI, changing it will break treesitter
-    cache_dir = "/path/to/xml/cache"
-    cache_time = 1200 -- time for which cache is valid
+    keymaps = {
+        n = { -- keymaps for normal mode
+            w = { -- key to be mapped
+                rhs = function()
+                -- do something
+                end,
+                opts = {}
+            },
+        }
+        v = { -- keymaps for visual mode
+            -- values are merged into default maps
+            -- this doesn't remove the preconfigured keymaps for this mode
+        }
+    }
+    -- Default values for the other options
+    pluginPath = "~/.local/share/nvim/lazy/Nvimboat" -- Default will be determined dynamically
+    logPath = pluginPath .. "nvimboat.log"
+    cacheTime = "10m" -- Format: https://pkg.go.dev/time#Duration. Caches HTTP requests for this duration...
+    cachePath = pluginPath .. "cache/" -- ... in this directory
+    dbPath = cachePath .. "cache.db" -- You should set this to somewhere else, if you don't want it to be lost by deinstalling Nvimboat.
+    userAgent = "nvimboat/v1.0"
+    separator = " │ " -- separator for UI, changing it will break treesitter
 })
 ```
+
 # Usage
 
 To start use the command: **Nvimboat enable** or use the included *nvimboat.desktop* file.
@@ -102,17 +142,28 @@ When in Nvimboat mode remaps are done for the local buffer. Disabling Nvimboat m
 
 Keymaps:
 - **l** selects an item, while **h** goes back to the last page. The pages are stored in the Go plugin as a sort of stack.
-- **n** shows or puts the cursor on the next unread feed/article. **N**/**p** does it for the previous one. **TODO**: implement periodic behaviour, maybe with a ring buffer?
+- **n** shows or puts the cursor on the next unread feed/article. **N**/**p** does it for the previous one
 - **t** shows all the tags similar to newsboat and let's you select them to view all feeds of a specific tag.
-- While inside an article **J** and **K** can be used to show the next/previous article in the feed/filter. **TODO**: Show first article of next feed when reaching the end of one feed. 
-- **o** in normal and visual mode: will attempt to play selected articles when mpv is installed. **TODO**: Make it more general, but maybe a link handler shouldn't be part of this project. 
+- While inside an article **J** and **K** can be used to show the next/previous article in the feed/filter.
+- **o** in normal and visual mode: will attempt to play selected articles when mpv is installed.
 - **q** goes back to the main menu.
-- **R** updates all the feeds. **TODO**: rework state tracking in neovim so individual feed reload can be done.
+- **R** updates all the feeds.
 
-# Custom reload scripts
+# Custom reload scripts (removed, write your own RSS Feed converter instead)
 
-When reloading, the plugin first sorts the feeds by their reloader an then passes all the URLs of each reloader as a long line of arguments.
-This should be taken into account when making custom scripts.
+~When reloading, the plugin first sorts the feeds by their reloader an then passes all the URLs of each reloader as a long line of arguments.~
+~This should be taken into account when making custom scripts.~
+
+During the rewrite I decided to remove the Python script that would reload the feeds and reimplement it in Go.
+This improved database handling as there were bugs with Go and Python (and any other reload scripts) locking each other out of the database.
+Maintaining and testing the code also was much easier this way.
+
+My first thought then was to implement the custom reloading logic in Go.
+That turned out to be possible, but really inconvenient for the user, because you had to modify the plugin source code and recompile the engine.
+This would probably lead to conflicts in plugin updates.
+
+So my solution for my own custom reload scripts was to convert them into webservers which would serve parsable RSS feeds instead.
+Most of the logic was there anyway and I only needed to read the [RSS specs](https://www.rssboard.org/rss-specification) to put the values into HTML instead of my database.
 
 # Migration from newsboat
 
