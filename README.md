@@ -19,7 +19,11 @@ It aims to be fully compatible with the database schema of [newsboat](https://ne
     "EinYakAmNil/Nvimboat",
     build = function()
         local nvimboat_go_path = vim.fn.stdpath("data") .. "/lazy/Nvimboat/go"
-        vim.fn.jobstart("go build -C " .. nvimboat_go_path)
+		vim.system({ "go", "build" },
+			{ cwd = nvimboat_path .. "go" })
+		vim.system(
+			{ "gcc", "-shared", "-o", "../parser/nvimboat.so", "-I./src", "src/parser.c", "-Os" },
+			{ cwd = nvimboat_path .. 'treesitter' }
     end
     cmd = "Nvimboat",
     config = function()
