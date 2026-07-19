@@ -16,6 +16,7 @@ It aims to be fully compatible with the database schema of [newsboat](https://ne
 # Installation
 
 ## Lazy.nvim
+
 ```lua
 return {
     "EinYakAmNil/Nvimboat",
@@ -26,6 +27,10 @@ return {
 		vim.system(
 			{ "gcc", "-shared", "-o", "../parser/nvimboat.so", "-I./src", "src/parser.c", "-Os" },
 			{ cwd = nvimboat_path .. 'treesitter' })
+		vim.system({ "cp", "nvimboat-logo.svg", vim.fn.expand("~/.local/share/icons/hicolor/48x48/apps") },
+			{ cwd = nvimboat_path })
+		vim.system({ "cp", "nvimboat.desktop", vim.fn.expand("~/.local/share/applications") },
+			{ cwd = nvimboat_path })
     end,
     cmd = "Nvimboat",
     config = function()

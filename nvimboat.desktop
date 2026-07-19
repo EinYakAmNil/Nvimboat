@@ -1,6 +1,6 @@
 [Desktop Entry]
 Name=Nvimboat
 Exec=nvim -c "Nvimboat enable" .nvimboat
-Icon=/usr/share/icons/Papirus-Dark/symbolic/mimetypes/application-rss+xml-symbolic.svg
+Icon=nvimboat-logo
 Terminal=true
 Type=Application
