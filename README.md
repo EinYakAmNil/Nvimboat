@@ -1,7 +1,6 @@
-<h1>
-Nvimboat
 <img src="nvimboat-logo.svg" width="30%" alt="nvimboat-logo">
-</h1>
+
+# Nvimboat
 
 A RSS/Atom feed reader in Neovim.
 It aims to be fully compatible with the database schema of [newsboat](https://newsboat.org/), so migration can be done seamlessly.
