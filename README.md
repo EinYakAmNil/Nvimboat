@@ -1,3 +1,5 @@
+<img src="nvimboat-logo.svg" width="30%" alt="nvimboat-logo">
+
 # Nvimboat
 
 A RSS/Atom feed reader in Neovim.
@@ -15,16 +17,16 @@ It aims to be fully compatible with the database schema of [newsboat](https://ne
 
 ## Lazy.nvim
 ```lua
-{
+return {
     "EinYakAmNil/Nvimboat",
     build = function()
-        local nvimboat_go_path = vim.fn.stdpath("data") .. "/lazy/Nvimboat/go"
+        local nvimboat_path = vim.fn.stdpath("data") .. "/lazy/Nvimboat/"
 		vim.system({ "go", "build" },
 			{ cwd = nvimboat_path .. "go" })
 		vim.system(
 			{ "gcc", "-shared", "-o", "../parser/nvimboat.so", "-I./src", "src/parser.c", "-Os" },
-			{ cwd = nvimboat_path .. 'treesitter' }
-    end
+			{ cwd = nvimboat_path .. 'treesitter' })
+    end,
     cmd = "Nvimboat",
     config = function()
         local nvimboat = require("nvimboat")
@@ -91,7 +93,7 @@ It should include the Nvimboat installation directory.
 local nvimboat = require("nvimboat")
 
 nvimboat.setup({
-    urls = {
+    feeds = {
         {
             rssurl = "https://www.youtube.com/feeds/videos.xml?user=Harry101UK",
             tags = { "YouTube", "Animation" },
